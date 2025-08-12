@@ -21,10 +21,11 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import expo.modules.calendar.next.records.EventRecord
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
-  private val contentResolver
+  public val contentResolver
     get() = (appContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
 
   private lateinit var createEventLauncher: AppContextActivityResultLauncher<CreatedEventOptions, CreateEventIntentResult>
@@ -62,7 +63,7 @@ class CalendarNextModule : Module() {
 
     Class(ExpoCalendar::class) {
       Constructor { id: String ->
-        ExpoCalendar(id)
+        ExpoCalendar(contentResolver, id)
       }
 
       Property("id") { expoCalendar: ExpoCalendar ->
@@ -120,75 +121,77 @@ class CalendarNextModule : Module() {
           }
         }
       }
-    }
 
+      AsyncFunction("createEvent") { expoCalendar: ExpoCalendar, record: EventRecord, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val expoCalendarEvent = expoCalendar.createEvent(contentResolver, record)
+              promise.resolve(expoCalendarEvent)
+            } catch (e: Exception) {
+              promise.reject("E_EVENT_NOT_CREATED", "Event could not be created", e)
+            }
+          }
+        }
+      }
+    }
+    
     Class(ExpoCalendarEvent::class) {
       Constructor { id: String ->
-        ExpoCalendarEvent(id)
+        ExpoCalendarEvent(contentResolver)
       }
 
       Property("id") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.id
+        expoCalendarEvent.eventRecord?.id
       }
 
       Property("calendarId") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.calendarId
+        expoCalendarEvent.eventRecord?.calendarId
       }
 
       Property("title") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.title
+        expoCalendarEvent.eventRecord?.title
       }
 
       Property("notes") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.notes
+        expoCalendarEvent.eventRecord?.notes
       }
 
       Property("startDate") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.startDate
+        expoCalendarEvent.eventRecord?.startDate
       }
 
       Property("endDate") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.endDate
+        expoCalendarEvent.eventRecord?.endDate
       }
 
       Property("allDay") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.allDay
+        expoCalendarEvent.eventRecord?.allDay
       }
 
       Property("location") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.location
+        expoCalendarEvent.eventRecord?.location
       }
 
       Property("availability") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.availability
+        expoCalendarEvent.eventRecord?.availability
       }
-
-      Property("organizerEmail") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.organizerEmail
-      }
-
+      
       Property("timeZone") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.timeZone
+        expoCalendarEvent.eventRecord?.timeZone
       }
 
       Property("endTimeZone") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.endTimeZone
+        expoCalendarEvent.eventRecord?.endTimeZone
       }
 
-      Property("guestsCanModify") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.guestsCanModify
-      }
-
-      Property("guestsCanInviteOthers") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.guestsCanInviteOthers
-      }
-
-      Property("guestsCanSeeGuests") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.guestsCanSeeGuests
-      }
-
-      Property("originalId") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.originalId
+      Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String> ->
+        val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
+        if (updatedRecord == null) {
+          throw Exception("Event record is null")
+        }
+        expoCalendarEvent.saveEvent(updatedRecord)
+        expoCalendarEvent.eventRecord = updatedRecord
       }
     }
 
@@ -216,7 +219,7 @@ class CalendarNextModule : Module() {
   private fun serializeExpoCalendars(cursor: Cursor): List<ExpoCalendar> {
     val results: MutableList<ExpoCalendar> = ArrayList()
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendar(cursor))
+      results.add(ExpoCalendar(contentResolver, cursor))
     }
     return results
   }

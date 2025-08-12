@@ -76,7 +76,8 @@ const EventsScreen = ({ route }: Props) => {
     const nextYear = new Date();
     nextYear.setFullYear(nextYear.getFullYear() + 1);
     const events = await calendar.listEvents(yesterday, nextYear);
-    setEvents(events);
+    const sortedEvents = events.sort((a, b) => Number(a.id) - Number(b.id));
+    setEvents(sortedEvents);
   };
 
   const calendar = route.params?.calendar;
@@ -96,7 +97,8 @@ const EventsScreen = ({ route }: Props) => {
 
     try {
       const newEvent = prepareEvent(calendar.id, recurring);
-      calendar.createEvent(newEvent);
+      const event = await calendar.createEvent(newEvent);
+      console.log('event', JSON.stringify(event, null, 2));
       Alert.alert('Event saved successfully');
       findEvents(calendar);
     } catch (e) {
@@ -140,7 +142,7 @@ const EventsScreen = ({ route }: Props) => {
       endDate,
     };
     try {
-      event.update(newEvent, {
+      await event.update(newEvent, {
         futureEvents: false,
       });
       Alert.alert('Event saved successfully');
@@ -224,7 +226,7 @@ const EventsScreen = ({ route }: Props) => {
       {events.map((event) => (
         <EventRow
           event={event}
-          key={`${event.id}${event.startDate}`}
+          key={`${event.id}`}
           getEvent={getEvent}
           getAttendees={getAttendees}
           updateEvent={updateEvent}

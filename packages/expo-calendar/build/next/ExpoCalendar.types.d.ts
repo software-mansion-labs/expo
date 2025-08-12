@@ -62,7 +62,7 @@ export declare class ExpoCalendar {
      * @param eventData A map of details for the event to be created.
      * @return An instance of the created event.
      */
-    createEvent(eventData: Omit<Partial<Event>, 'id' | 'organizer'>): ExpoCalendarEvent;
+    createEvent(eventData: Omit<Partial<Event>, 'id' | 'organizer'>): Promise<ExpoCalendarEvent>;
     /**
      * Creates a new reminder in the calendar.
      * @param reminderData A map of details for the reminder to be created.
@@ -190,7 +190,7 @@ export declare class ExpoCalendarEvent {
      * @param details A map of properties to be updated.
      * @param recurringEventOptions A map of options for recurring events.
      */
-    update(details: Partial<ModifiableEventProperties>, recurringEventOptions?: RecurringEventOptions, nullableFields?: (keyof ModifiableEventProperties)[]): void;
+    update(details: Partial<ModifiableEventProperties>, recurringEventOptions?: RecurringEventOptions, nullableFields?: (keyof ModifiableEventProperties)[]): Promise<void>;
     /**
      * Deletes the event.
      * @param recurringEventOptions A map of options for recurring events.
