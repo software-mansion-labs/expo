@@ -9,6 +9,7 @@ import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
+import expo.modules.calendar.accessStringMatchingConstant
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
@@ -62,6 +63,13 @@ class ExpoCalendarEvent : SharedObject {
       availability = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.AVAILABILITY),
       timeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_TIMEZONE),
       endTimeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_END_TIMEZONE),
+      status = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.STATUS),
+      organizerEmail = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.ORGANIZER),
+      accessLevel = accessStringMatchingConstant(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.ACCESS_LEVEL)),
+      guestsCanModify = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_MODIFY) != 0,
+      guestsCanInviteOthers = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS) != 0,
+      guestsCanSeeGuests = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_SEE_GUESTS) != 0,
+      originalId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.ORIGINAL_ID),
     )
   }
 

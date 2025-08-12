@@ -136,7 +136,7 @@ class CalendarNextModule : Module() {
         }
       }
     }
-    
+
     Class(ExpoCalendarEvent::class) {
       Constructor { id: String ->
         ExpoCalendarEvent(contentResolver)
@@ -174,16 +174,44 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.location
       }
 
-      Property("availability") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.availability
-      }
-      
       Property("timeZone") { expoCalendarEvent: ExpoCalendarEvent ->
         expoCalendarEvent.eventRecord?.timeZone
       }
 
       Property("endTimeZone") { expoCalendarEvent: ExpoCalendarEvent ->
         expoCalendarEvent.eventRecord?.endTimeZone
+      }
+
+      Property("availability") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.availability
+      }
+
+      Property("status") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.status
+      }
+
+      Property("organizerEmail") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.organizerEmail
+      }
+
+      Property("accessLevel") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.accessLevel
+      }
+
+      Property("guestsCanModify") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.guestsCanModify
+      }
+
+      Property("guestsCanInviteOthers") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.guestsCanInviteOthers
+      }
+
+      Property("guestsCanSeeGuests") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.guestsCanSeeGuests
+      }
+
+      Property("originalId") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.originalId
       }
 
       Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String> ->

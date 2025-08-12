@@ -26,6 +26,22 @@ data class EventRecord (
   val allDay: Boolean? = null,
   @Field
   val availability: String? = null,
+  @Field
+  val status: String? = null,
+  @Field
+  val organizerEmail: String? = null,
+  @Field
+  val accessLevel: String? = null,
+  @Field
+  val guestsCanModify: Boolean? = null,
+  @Field
+  val guestsCanInviteOthers: Boolean? = null,
+  @Field
+  val guestsCanSeeGuests: Boolean? = null,
+  @Field
+  val originalId: String? = null,
+  @Field
+  val instanceId: String? = null,
 ) : Record {
   fun getUpdatedRecord(other: EventRecord, nullableFields: List<String>? = null): EventRecord {
     val nullableSet = nullableFields?.toSet() ?: emptySet()
@@ -41,7 +57,14 @@ data class EventRecord (
       startDate = if ("startDate" in nullableSet) null else other.startDate ?: this.startDate,
       endDate = if ("endDate" in nullableSet) null else other.endDate ?: this.endDate,
       allDay = if ("allDay" in nullableSet) null else other.allDay ?: this.allDay,
-      availability = if ("availability" in nullableSet) null else other.availability ?: this.availability
+      availability = if ("availability" in nullableSet) null else other.availability ?: this.availability,
+      status = if ("status" in nullableSet) null else other.status ?: this.status,
+      organizerEmail = if ("organizerEmail" in nullableSet) null else other.organizerEmail ?: this.organizerEmail,
+      accessLevel = if ("accessLevel" in nullableSet) null else other.accessLevel ?: this.accessLevel,
+      guestsCanModify = if ("guestsCanModify" in nullableSet) null else other.guestsCanModify ?: this.guestsCanModify,
+      guestsCanInviteOthers = if ("guestsCanInviteOthers" in nullableSet) null else other.guestsCanInviteOthers ?: this.guestsCanInviteOthers,
+      guestsCanSeeGuests = if ("guestsCanSeeGuests" in nullableSet) null else other.guestsCanSeeGuests ?: this.guestsCanSeeGuests,
+      originalId = if ("originalId" in nullableSet) null else other.originalId ?: this.originalId,
     )
   }
 }
