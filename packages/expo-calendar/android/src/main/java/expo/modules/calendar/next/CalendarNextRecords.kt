@@ -52,3 +52,8 @@ data class AlarmRecord (
   @Field
   val method: Int,
 ) : Record
+
+data class RecurringEventOptions(
+  @Field
+  val instanceStartDate: String? = null,
+) : Record

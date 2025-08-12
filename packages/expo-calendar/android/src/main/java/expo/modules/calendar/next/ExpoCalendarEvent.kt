@@ -2,11 +2,15 @@ package expo.modules.calendar.next
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
+import android.util.Log
+import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.next.records.EventRecord
+import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -45,7 +49,7 @@ class ExpoCalendarEvent : SharedObject {
     if (endDate != null) {
       foundEndDate = CalendarUtils.sdf.format(Date(endDate.toLong()));
     }
-    
+
     this.eventRecord = EventRecord(
       id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID),
       calendarId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
@@ -116,5 +120,39 @@ class ExpoCalendarEvent : SharedObject {
       val eventID = eventUri.lastPathSegment!!.toInt()
       return eventID
     }
+  }
+
+  fun deleteEvent(recurringEventOptions: RecurringEventOptions): Boolean {
+    val rows: Int
+    val eventID = eventRecord?.id?.toInt()
+    if (eventID == null) {
+      throw InvalidArgumentException("Event ID is required")
+    }
+    if (recurringEventOptions.instanceStartDate == null) {
+      val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
+      rows = contentResolver.delete(uri, null, null)
+      return rows > 0
+    } else {
+      // TODO: Verify if this branch is working
+      val exceptionValues = ContentValues()
+      val startCal = Calendar.getInstance()
+      val instanceStartDate = recurringEventOptions.instanceStartDate
+      try {
+        val parsedDate = sdf.parse(instanceStartDate)
+        if (parsedDate != null) {
+          startCal.time = parsedDate
+          exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)
+        } else {
+          Log.e(TAG, "Parsed date is null")
+        }
+      } catch (e: ParseException) {
+        Log.e(TAG, "error", e)
+        throw e
+      }
+      exceptionValues.put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CANCELED)
+      val exceptionUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_EXCEPTION_URI, eventID.toLong())
+      contentResolver.insert(exceptionUri, exceptionValues)
+    }
+    return true
   }
 }

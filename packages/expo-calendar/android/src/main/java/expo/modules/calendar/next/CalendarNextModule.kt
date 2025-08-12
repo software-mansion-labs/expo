@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import expo.modules.calendar.next.records.EventRecord
+import expo.modules.calendar.next.records.RecurringEventOptions
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -192,6 +193,10 @@ class CalendarNextModule : Module() {
         }
         expoCalendarEvent.saveEvent(updatedRecord)
         expoCalendarEvent.eventRecord = updatedRecord
+      }
+
+      Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
+        expoCalendarEvent.deleteEvent(recurringEventOptions)
       }
     }
 
