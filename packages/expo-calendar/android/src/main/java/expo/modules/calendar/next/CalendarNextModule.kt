@@ -3,7 +3,6 @@ package expo.modules.calendar.next
 import android.Manifest
 import android.database.Cursor
 import android.provider.CalendarContract
-import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
@@ -12,6 +11,9 @@ import expo.modules.calendar.dialogs.ViewEventContract
 import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.findCalendarsQueryParameters
+import expo.modules.calendar.next.records.CalendarEntity
+import expo.modules.calendar.next.records.CalendarRecordNext
+import expo.modules.core.arguments.ReadableArguments
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
 import expo.modules.kotlin.apifeatures.EitherType
@@ -21,6 +23,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -55,6 +58,26 @@ class CalendarNextModule : Module() {
             promise.resolve(expoCalendars)
           } catch (e: Exception) {
             promise.reject("E_CALENDARS_NOT_FOUND", "Calendars could not be found", e)
+          }
+        }
+      }
+    }
+
+    AsyncFunction("createCalendarNext") { calendarRecord: ReadableArguments, promise: Promise ->
+      withPermissions(promise) {
+        launchAsyncWithModuleScope(promise) {
+          try {
+            val calendarRecordNext = CalendarRecordNext.fromReadableArguments(calendarRecord)
+
+            if (calendarRecordNext.entityType == CalendarEntity.REMINDER) {
+              promise.reject("E_CALENDAR_CREATION_FAILED", "Calendars of type `reminder` are not supported on Android", null)
+              return@launchAsyncWithModuleScope
+            }
+
+            val newCalendar = ExpoCalendar(calendarRecordNext)
+            promise.resolve(newCalendar)
+          } catch (e: Exception) {
+            promise.reject("E_CALENDAR_CREATION_FAILED", "Failed to create calendar", e)
           }
         }
       }

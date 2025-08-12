@@ -1,11 +1,19 @@
 package expo.modules.calendar.next
 
+import android.content.ContentUris
+import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
+import android.text.TextUtils
 import expo.modules.calendar.CalendarUtils
+import expo.modules.calendar.availabilityConstantMatchingString
+import expo.modules.calendar.next.records.CalendarRecordNext
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
+import java.security.MessageDigest
+import java.util.TimeZone
+import java.util.UUID
 
 @OptIn(EitherType::class)
 class ExpoCalendar : SharedObject {
@@ -52,6 +60,24 @@ class ExpoCalendar : SharedObject {
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
     this.cursor = cursor
+  }
+
+  constructor(calendarRecord: CalendarRecordNext) {
+    this.id = calendarRecord.id ?: generateCalendarId()
+    this.title = calendarRecord.title
+    this.isPrimary = calendarRecord.isPrimary
+    this.name = calendarRecord.name
+    this.color = calendarRecord.color
+    this.ownerAccount = calendarRecord.source?.name
+    this.timeZone = calendarRecord.timeZone
+    this.isVisible = calendarRecord.isVisible
+    this.isSynced = calendarRecord.isSynced
+    this.allowsModifications = calendarRecord.allowsModifications
+    this.cursor = null
+  }
+
+  private fun generateCalendarId(): String {
+    return "cal_${UUID.randomUUID().toString().take(8)}"
   }
 
   fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
