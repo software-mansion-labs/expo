@@ -8,7 +8,6 @@ import expo.modules.calendar.CalendarEventBuilder
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.next.records.EventRecord
-import expo.modules.calendar.utils.CalendarEventUtils.saveEvent
 import expo.modules.core.arguments.ReadableArguments
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.apifeatures.EitherType
