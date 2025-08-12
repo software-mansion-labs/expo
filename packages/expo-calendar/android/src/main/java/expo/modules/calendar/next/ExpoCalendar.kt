@@ -8,12 +8,11 @@ import android.text.TextUtils
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.next.records.CalendarRecordNext
+import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
-import java.security.MessageDigest
 import java.util.TimeZone
-import java.util.UUID
 
 @OptIn(EitherType::class)
 class ExpoCalendar : SharedObject {
@@ -31,17 +30,31 @@ class ExpoCalendar : SharedObject {
   private val contentResolver
     get() = (appContext?.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
 
+  constructor(calendar: CalendarRecordNext) {
+    this.id = calendar.id
+    this.title = calendar.title
+    this.isPrimary = calendar.isPrimary
+    this.name = calendar.name
+    this.color = calendar.color
+    this.ownerAccount = null
+    this.timeZone = calendar.timeZone
+    this.isVisible = calendar.isVisible
+    this.isSynced = calendar.isSynced
+    this.allowsModifications = calendar.allowsModifications
+    this.cursor = null
+  }
+
   constructor(id: String) {
     this.id = id
     this.title = null
-    this.isPrimary = false
+    this.isPrimary = true
     this.name = null
     this.color = null
     this.ownerAccount = null
     this.timeZone = null
-    this.isVisible = false
-    this.isSynced = false
-    this.allowsModifications = false
+    this.isVisible = true
+    this.isSynced = true
+    this.allowsModifications = true
     this.cursor = null
   }
 
@@ -62,24 +75,6 @@ class ExpoCalendar : SharedObject {
     this.cursor = cursor
   }
 
-  constructor(calendarRecord: CalendarRecordNext) {
-    this.id = calendarRecord.id ?: generateCalendarId()
-    this.title = calendarRecord.title
-    this.isPrimary = calendarRecord.isPrimary
-    this.name = calendarRecord.name
-    this.color = calendarRecord.color
-    this.ownerAccount = calendarRecord.source?.name
-    this.timeZone = calendarRecord.timeZone
-    this.isVisible = calendarRecord.isVisible
-    this.isSynced = calendarRecord.isSynced
-    this.allowsModifications = calendarRecord.allowsModifications
-    this.cursor = null
-  }
-
-  private fun generateCalendarId(): String {
-    return "cal_${UUID.randomUUID().toString().take(8)}"
-  }
-
   fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
     if (id == null) {
       throw Exception("Calendar id is null")
@@ -95,4 +90,80 @@ class ExpoCalendar : SharedObject {
     }
     return results
   }
+  companion object {
+    fun createCalendarNext(calendarRecord: CalendarRecordNext, appContext: AppContext): ExpoCalendar {
+      if (calendarRecord.title == null) {
+        throw Exception("new calendars require `title`")
+      }
+      if (calendarRecord.name == null) {
+        throw Exception("new calendars require `name`")
+      }
+      if (calendarRecord.source == null) {
+        throw Exception("new calendars require `source`")
+      }
+      if (calendarRecord.color == null) {
+        throw Exception("new calendars require `color`")
+      }
+
+      val source = calendarRecord.source!!
+      if (source.name == null) {
+        throw Exception("new calendars require a `source` object with a `name`")
+      }
+
+      val colorValue = when (val color = calendarRecord.color) {
+        is String -> {
+          val hexColor = color.removePrefix("#")
+          try {
+            hexColor.toInt(16)
+          } catch (e: NumberFormatException) {
+            throw Exception("Invalid color format: $color")
+          }
+        }
+        else -> throw Exception("Color must be a string (hex)")
+      }
+
+      val values = ContentValues().apply {
+        put(CalendarContract.Calendars.NAME, calendarRecord.name)
+        put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, calendarRecord.title)
+        put(CalendarContract.Calendars.VISIBLE, calendarRecord.isVisible)
+        put(CalendarContract.Calendars.SYNC_EVENTS, calendarRecord.isSynced)
+        put(CalendarContract.Calendars.ACCOUNT_NAME, source.name)
+        put(CalendarContract.Calendars.ACCOUNT_TYPE, if (source.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else source.type)
+        put(CalendarContract.Calendars.CALENDAR_COLOR, colorValue)
+        put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CalendarContract.Calendars.CAL_ACCESS_OWNER)
+        put(CalendarContract.Calendars.OWNER_ACCOUNT, source.name)
+
+        if (calendarRecord.timeZone != null) {
+          put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, calendarRecord.timeZone)
+        } else {
+          put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, TimeZone.getDefault().id)
+        }
+
+        if (calendarRecord.allowedAvailabilities.isNotEmpty()) {
+          val availabilityValues = calendarRecord.allowedAvailabilities.mapNotNull { availability ->
+            availabilityConstantMatchingString(availability)
+          }
+          if (availabilityValues.isNotEmpty()) {
+            put(CalendarContract.Calendars.ALLOWED_AVAILABILITY, TextUtils.join(",", availabilityValues))
+          }
+        }
+      }
+
+      val uriBuilder = CalendarContract.Calendars.CONTENT_URI
+        .buildUpon()
+        .appendQueryParameter(CalendarContract.CALLER_IS_SYNCADAPTER, "true")
+        .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, source.name)
+        .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, if (source.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else source.type)
+
+      val calendarsUri = uriBuilder.build()
+      val contentResolver = (appContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
+      val calendarUri = contentResolver.insert(calendarsUri, values)
+        ?: throw Exception("Failed to create calendar")
+
+      val calendarId = calendarUri.lastPathSegment!!
+      calendarRecord.id = calendarId
+      return ExpoCalendar(calendarRecord)
+    }
+  }
+
 }

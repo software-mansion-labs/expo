@@ -3,6 +3,7 @@ package expo.modules.calendar.next
 import android.Manifest
 import android.database.Cursor
 import android.provider.CalendarContract
+import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
@@ -23,7 +24,6 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -74,7 +74,7 @@ class CalendarNextModule : Module() {
               return@launchAsyncWithModuleScope
             }
 
-            val newCalendar = ExpoCalendar(calendarRecordNext)
+            val newCalendar = ExpoCalendar.createCalendarNext(calendarRecordNext, appContext)
             promise.resolve(newCalendar)
           } catch (e: Exception) {
             promise.reject("E_CALENDAR_CREATION_FAILED", "Failed to create calendar", e)

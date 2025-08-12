@@ -7,33 +7,30 @@ import java.io.Serializable
 
 class CalendarRecordNext (
   @Field
-  val id: String? = null,
+  var id: String? = null,
   @Field
   val title: String? = null,
   @Field
-  val isPrimary: Boolean = false,
-  @Field
   val name: String? = null,
-  @Field
-  val sourceId: String? = null,
   @Field
   val source: Source? = null,
   @Field
-  val type: String? = null,
-  @Field
   val color: String? = null,
+  @Field
+  val isVisible: Boolean = true,
+  @Field
+  val isSynced: Boolean = true,
+  @Field
+  val timeZone: String? = null,
+  @Field
+  val isPrimary: Boolean = false,
   @Field
   val entityType: CalendarEntity? = null,
   @Field
   val allowsModifications: Boolean = true,
   @Field
   val allowedAvailabilities: List<String> = emptyList(),
-  @Field
-  val timeZone: String? = null,
-  @Field
-  val isVisible: Boolean = true,
-  @Field
-  val isSynced: Boolean = true
+
 ) : Record, Serializable {
   companion object {
     fun fromReadableArguments(args: ReadableArguments): CalendarRecordNext {
@@ -42,12 +39,10 @@ class CalendarRecordNext (
         title = if (args.containsKey("title")) args.getString("title") else null,
         isPrimary = if(args.containsKey("isPrimary")) args.getBoolean("isPrimary") else false,
         name = if (args.containsKey("name")) args.getString("name") else null,
-        sourceId = if (args.containsKey("sourceId")) args.getString("sourceId") else null,
         source = if (args.containsKey("source")) {
           val sourceArgs = args.getArguments("source")
           Source.fromReadableArguments(sourceArgs)
         } else null,
-        type = if (args.containsKey("type")) args.getString("type") else null,
         color = if (args.containsKey("color")) args.getString("color") else null,
         entityType = if (args.containsKey("entityType")) {
           when (args.getString("entityType")) {

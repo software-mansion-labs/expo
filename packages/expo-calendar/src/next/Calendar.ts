@@ -163,9 +163,6 @@ export async function getCalendarsNext(type?: EntityTypes): Promise<ExpoCalendar
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
 export function createCalendarNext(details: Partial<Calendar> = {}): ExpoCalendar {
-  if (Platform.OS === 'android' || !InternalExpoCalendar.createCalendarNext) {
-    throw new UnavailabilityError('Calendar', 'createCalendarNext');
-  }
   const color = details.color ? processColor(details.color) : undefined;
   const newDetails = { ...details, id: undefined, color: color || undefined };
   const createdCalendar = InternalExpoCalendar.createCalendarNext(newDetails);
