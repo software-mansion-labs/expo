@@ -10,6 +10,7 @@ import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.accessStringMatchingConstant
+import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
@@ -162,5 +163,27 @@ class ExpoCalendarEvent : SharedObject {
       contentResolver.insert(exceptionUri, exceptionValues)
     }
     return true
+  }
+
+  fun getAttendees(): List<ExpoCalendarAttendee> {
+    val attendees = mutableListOf<ExpoCalendarAttendee>()
+    val eventID = eventRecord?.id?.toLong()
+    if (eventID == null) {
+      throw InvalidArgumentException("Event ID is required")
+    }
+    val cursor = CalendarContract.Attendees.query(
+      contentResolver,
+      eventID,
+      findAttendeesByEventIdQueryParameters
+    )
+    return cursor.use { serializeExpoCalendarAttendees(it) }
+  }
+
+  private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {
+    val results: MutableList<ExpoCalendarAttendee> = ArrayList()
+    while (cursor.moveToNext()) {
+      results.add(ExpoCalendarAttendee(contentResolver, cursor))
+    }
+    return results
   }
 }

@@ -80,3 +80,18 @@ data class RecurringEventOptions(
   @Field
   val instanceStartDate: String? = null,
 ) : Record
+
+data class AttendeeRecord(
+  @Field
+  val id: String? = null,
+  @Field
+  val name: String? = null,
+  @Field
+  val role: String? = null,
+  @Field
+  val status: String? = null,
+  @Field
+  val type: String? = null,
+  @Field
+  val email: String? = null,
+) : Record

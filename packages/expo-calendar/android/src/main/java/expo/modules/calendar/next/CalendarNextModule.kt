@@ -214,6 +214,14 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.originalId
       }
 
+      AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
+        // TODO: Support recurringEventOptions. Legacy Calendar API doesn't support it, check if we can support it.
+        launchAsyncWithModuleScope(promise) {
+          val attendees = expoCalendarEvent.getAttendees()
+          promise.resolve(attendees.map { it.attendeeRecord })
+        }
+      }
+
       Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String> ->
         val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
         if (updatedRecord == null) {
@@ -230,7 +238,7 @@ class CalendarNextModule : Module() {
 
     Class(ExpoCalendarAttendee::class) {
       Constructor { id: String ->
-        ExpoCalendarAttendee(id)
+        ExpoCalendarAttendee(contentResolver)
       }
     }
 

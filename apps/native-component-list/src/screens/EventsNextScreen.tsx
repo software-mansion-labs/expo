@@ -120,7 +120,7 @@ const EventsScreen = ({ route }: Props) => {
 
   const getAttendees = async (event: ExpoCalendarEvent) => {
     try {
-      const attendees = event.getAttendees();
+      const attendees = await event.getAttendees();
       Alert.alert('Attendees found using getAttendees', JSON.stringify(attendees));
     } catch (e) {
       Alert.alert('Error finding attendees', e.message);
