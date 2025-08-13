@@ -3,6 +3,8 @@ package expo.modules.calendar.next
 import android.Manifest
 import android.database.Cursor
 import android.provider.CalendarContract
+import android.util.Log
+import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.dialogs.CreateEventContract
@@ -23,6 +25,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
+import expo.modules.kotlin.functions.Coroutine
+import kotlinx.coroutines.cancel
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -43,6 +47,14 @@ class CalendarNextModule : Module() {
       viewEventLauncher = registerForActivityResult(
         ViewEventContract()
       )
+    }
+
+    OnDestroy {
+      try {
+        moduleCoroutineScope.cancel(ModuleDestroyedException())
+      } catch (e: IllegalStateException) {
+        Log.e(TAG, "The scope does not have a job in it")
+      }
     }
 
     AsyncFunction("getCalendars") { type: String?, promise: Promise ->
@@ -216,6 +228,19 @@ class CalendarNextModule : Module() {
 
       Property("originalId") { expoCalendarEvent: ExpoCalendarEvent ->
         expoCalendarEvent.eventRecord?.originalId
+      }
+
+      AsyncFunction("openInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions ->
+        val eventId = expoCalendarEvent.eventRecord?.id;
+        if (eventId == null) {
+          throw Exception("Event id is null")
+        }
+        val params = ViewedEventOptions(
+          id = eventId,
+          startNewActivityTask = rawParams.startNewActivityTask
+        )
+        val result = viewEventLauncher.launch(params)
+        return@Coroutine result
       }
 
       AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
