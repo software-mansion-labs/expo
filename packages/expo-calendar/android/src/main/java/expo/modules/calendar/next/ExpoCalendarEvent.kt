@@ -190,30 +190,36 @@ class ExpoCalendarEvent : SharedObject {
     if (rrule == null) {
       return null
     }
-    val recurrenceRules = rrule.split(";").toTypedArray()
-    val frequency = recurrenceRules[0].split("=").toTypedArray()[1].lowercase(Locale.getDefault())
-    var interval: Int? = null
+    val ruleMap = mutableMapOf<String, String>()
+    rrule.split(";").forEach { part ->
+      val keyValue = part.split("=")
+      if (keyValue.size == 2) {
+        ruleMap[keyValue[0].uppercase(Locale.getDefault())] = keyValue[1]
+      }
+    }
+
+    val frequency = ruleMap["FREQ"]?.lowercase(Locale.getDefault())
+    val interval = ruleMap["INTERVAL"]?.toIntOrNull()
     var endDate: String? = null
     var occurrence: Int? = null
-    if (recurrenceRules.size >= 2 && recurrenceRules[1].split("=").toTypedArray()[0] == "INTERVAL") {
-      interval = recurrenceRules[1].split("=").toTypedArray()[1].toInt()
-    }
-    if (recurrenceRules.size >= 3) {
-      val terminationRules = recurrenceRules[2].split("=").toTypedArray()
-      if (terminationRules.size >= 2) {
-        if (terminationRules[0] == "UNTIL") {
-          try {
-            endDate = sdf.parse(terminationRules[1])?.toString()
-          } catch (e: ParseException) {
-            Log.e(TAG, "Couldn't parse the `endDate` property.", e)
-          } catch (e: NullPointerException) {
-            Log.e(TAG, "endDate is null", e)
-          }
-        } else if (terminationRules[0] == "COUNT") {
-          occurrence = recurrenceRules[2].split("=").toTypedArray()[1].toInt()
+
+    ruleMap["UNTIL"]?.let { untilValue ->
+      try {
+        // Try to parse the UNTIL value using the known date format, fallback to raw string if parsing fails
+        endDate = try {
+          sdf.parse(untilValue)?.toString()
+        } catch (e: ParseException) {
+          Log.e(TAG, "Couldn't parse the `endDate` property.", e)
+          untilValue
         }
+      } catch (e: Exception) {
+        Log.e(TAG, "endDate is null or invalid", e)
+        endDate = untilValue
       }
-      Log.e(TAG, "Couldn't parse termination rules: '${recurrenceRules[2]}'.", null)
+    }
+
+    ruleMap["COUNT"]?.let { countValue ->
+      occurrence = countValue.toIntOrNull()
     }
     return RecurrenceRuleRecord(
       endDate = endDate,
