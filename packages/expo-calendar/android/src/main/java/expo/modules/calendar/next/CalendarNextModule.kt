@@ -151,6 +151,19 @@ class CalendarNextModule : Module() {
           }
         }
       }
+
+      AsyncFunction("update") { expoCalendar: ExpoCalendar, details: CalendarRecord, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              expoCalendar.update(details)
+              promise.resolve(null)
+            } catch (e: Exception) {
+              promise.reject("E_CALENDAR_UPDATE_FAILED", "Failed to update calendar", e)
+            }
+          }
+        }
+      }
     }
 
     Class(ExpoCalendarEvent::class) {
