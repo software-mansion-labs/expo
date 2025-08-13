@@ -275,7 +275,7 @@ class CalendarNextModule : Module() {
         // TODO: Support recurringEventOptions. Legacy Calendar API doesn't support it, check if we can support it.
         launchAsyncWithModuleScope(promise) {
           val attendees = expoCalendarEvent.getAttendees()
-          promise.resolve(attendees.map { it.attendeeRecord })
+          promise.resolve(attendees)
         }
       }
 
@@ -296,6 +296,30 @@ class CalendarNextModule : Module() {
     Class(ExpoCalendarAttendee::class) {
       Constructor { id: String ->
         ExpoCalendarAttendee(appContext)
+      }
+
+      Property("id") { expoCalendarAttendee: ExpoCalendarAttendee ->
+        expoCalendarAttendee.attendeeRecord?.id
+      }
+
+      Property("name") { expoCalendarAttendee: ExpoCalendarAttendee ->
+        expoCalendarAttendee.attendeeRecord?.name
+      }
+
+      Property("role") { expoCalendarAttendee: ExpoCalendarAttendee ->
+        expoCalendarAttendee.attendeeRecord?.role
+      }
+
+      Property("status") { expoCalendarAttendee: ExpoCalendarAttendee ->
+        expoCalendarAttendee.attendeeRecord?.status
+      }
+
+      Property("type") { expoCalendarAttendee: ExpoCalendarAttendee ->
+        expoCalendarAttendee.attendeeRecord?.type
+      }
+
+      Property("email") { expoCalendarAttendee: ExpoCalendarAttendee ->
+        expoCalendarAttendee.attendeeRecord?.email
       }
 
       AsyncFunction("updateAttendee") { expoCalendarAttendee: ExpoCalendarAttendee, attendeeRecord: AttendeeRecord, promise: Promise ->

@@ -266,7 +266,8 @@ class ExpoCalendarEvent : SharedObject {
       throw Exception("Missing event id")
     }
     val newEventId = attendee.saveAttendee(attendeeRecord, eventId)
-    attendee.attendeeRecord?.id = newEventId;
+    attendee.attendeeRecord = attendeeRecord
+    attendee.attendeeRecord?.id = newEventId
     return attendee
   }
 }
