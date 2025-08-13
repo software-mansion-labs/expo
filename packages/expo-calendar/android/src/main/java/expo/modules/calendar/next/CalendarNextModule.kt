@@ -243,6 +243,20 @@ class CalendarNextModule : Module() {
         return@Coroutine result
       }
 
+       AsyncFunction("editInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions? ->
+         val eventId = expoCalendarEvent.eventRecord?.id;
+         if (eventId == null) {
+           throw Exception("Event id is null")
+         }
+         val params = ViewedEventOptions(
+           id = eventId,
+           startNewActivityTask = rawParams?.startNewActivityTask ?: true
+         )
+         viewEventLauncher.launch(params)
+         val editResult = CreateEventIntentResult()
+         return@Coroutine editResult
+       }
+
       AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
         // TODO: Support recurringEventOptions. Legacy Calendar API doesn't support it, check if we can support it.
         launchAsyncWithModuleScope(promise) {
