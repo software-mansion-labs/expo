@@ -1,6 +1,5 @@
 package expo.modules.calendar.next.records
 
-import android.database.Cursor
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 
@@ -31,13 +30,10 @@ data class CalendarRecord (
   val allowedAvailabilities: List<String> = emptyList(),
   @Field
   var ownerAccount: String? = null,
-  @Field
-  var cursor: Cursor? = null
-
 ) : Record
 
-enum class CalendarEntity {
-  EVENT, REMINDER
+enum class CalendarEntity(val value: String) {
+  EVENT("event"), REMINDER("reminder")
 }
 
 data class Source (

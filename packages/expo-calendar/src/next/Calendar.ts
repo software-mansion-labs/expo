@@ -162,10 +162,10 @@ export async function getCalendarsNext(type?: EntityTypes): Promise<ExpoCalendar
  * @param details A map of details for the calendar to be created.
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
-export function createCalendarNext(details: Partial<Calendar> = {}): ExpoCalendar {
+export async function createCalendarNext(details: Partial<Calendar> = {}): Promise<ExpoCalendar> {
   const color = details.color ? processColor(details.color) : undefined;
   const newDetails = { ...details, id: undefined, color: color || undefined };
-  const createdCalendar = InternalExpoCalendar.createCalendarNext(newDetails);
+  const createdCalendar = await InternalExpoCalendar.createCalendarNext(newDetails);
   Object.setPrototypeOf(createdCalendar, ExpoCalendar.prototype);
   return createdCalendar;
 }

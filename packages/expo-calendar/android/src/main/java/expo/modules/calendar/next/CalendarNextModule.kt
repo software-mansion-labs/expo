@@ -81,6 +81,10 @@ class CalendarNextModule : Module() {
     }
 
     Class(ExpoCalendar::class) {
+      Constructor { calendarRecord: CalendarRecord ->
+        ExpoCalendar(calendarRecord)
+      }
+
       Property("id") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.id
       }

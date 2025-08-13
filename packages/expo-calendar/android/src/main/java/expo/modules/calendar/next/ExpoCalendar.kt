@@ -36,7 +36,6 @@ class ExpoCalendar : SharedObject {
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_OWNER ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR,
-    cursor = cursor
     )
   }
 
@@ -77,7 +76,7 @@ class ExpoCalendar : SharedObject {
       }
 
       val colorValue = when (val color = calendarRecord.color) {
-        is String -> {
+        else -> {
           val hexColor = color.removePrefix("#")
           try {
             hexColor.toInt(16)
@@ -85,7 +84,6 @@ class ExpoCalendar : SharedObject {
             throw Exception("Invalid color format: $color")
           }
         }
-        else -> throw Exception("Color must be a string (hex)")
       }
 
       val values = ContentValues().apply {
@@ -106,7 +104,7 @@ class ExpoCalendar : SharedObject {
         }
 
         if (calendarRecord.allowedAvailabilities.isNotEmpty()) {
-          val availabilityValues = calendarRecord.allowedAvailabilities.mapNotNull { availability ->
+          val availabilityValues = calendarRecord.allowedAvailabilities.map { availability ->
             availabilityConstantMatchingString(availability)
           }
           if (availabilityValues.isNotEmpty()) {

@@ -105,13 +105,12 @@ export default function CalendarsNextScreen({ navigation }: { navigation: StackN
     const newCalendar = {
       title: 'cool new calendar',
       entityType: Calendar.EntityTypes.EVENT,
-      color: '#c0ff33',
+      // color: '#c0ff33',
       ...sourceDetails,
       name: 'coolNewCalendar',
-      accessLevel: Calendar.CalendarAccessLevel.OWNER,
     };
     try {
-      const calendar = createCalendarNext(newCalendar);
+      const calendar = await createCalendarNext(newCalendar);
       Alert.alert('Calendar saved successfully with id: ' + calendar.id);
       findCalendars();
     } catch (e) {
