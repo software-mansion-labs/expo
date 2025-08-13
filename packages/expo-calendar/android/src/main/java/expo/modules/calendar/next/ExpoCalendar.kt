@@ -1,13 +1,12 @@
 package expo.modules.calendar.next
 
-import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
 import android.text.TextUtils
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.availabilityConstantMatchingString
-import expo.modules.calendar.next.records.CalendarRecordNext
+import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
@@ -16,70 +15,37 @@ import java.util.TimeZone
 
 @OptIn(EitherType::class)
 class ExpoCalendar : SharedObject {
-  val id: String?
-  val title: String?
-  val isPrimary: Boolean
-  val name: String?
-  val color: String?
-  val ownerAccount: String?
-  val timeZone: String?
-  val isVisible: Boolean
-  val isSynced: Boolean
-  val allowsModifications: Boolean
-  val cursor: Cursor?
-  private val contentResolver
-    get() = (appContext?.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
+  val calendarRecord: CalendarRecord?
 
-  constructor(calendar: CalendarRecordNext) {
-    this.id = calendar.id
-    this.title = calendar.title
-    this.isPrimary = calendar.isPrimary
-    this.name = calendar.name
-    this.color = calendar.color
-    this.ownerAccount = null
-    this.timeZone = calendar.timeZone
-    this.isVisible = calendar.isVisible
-    this.isSynced = calendar.isSynced
-    this.allowsModifications = calendar.allowsModifications
-    this.cursor = null
-  }
-
-  constructor(id: String) {
-    this.id = id
-    this.title = null
-    this.isPrimary = true
-    this.name = null
-    this.color = null
-    this.ownerAccount = null
-    this.timeZone = null
-    this.isVisible = true
-    this.isSynced = true
-    this.allowsModifications = true
-    this.cursor = null
+  constructor(calendar: CalendarRecord) {
+    this.calendarRecord = calendar
   }
 
   constructor(cursor: Cursor) {
-    this.id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars._ID)
-    this.title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
-    this.isPrimary = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.IS_PRIMARY) == 1
-    this.name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.NAME)
-    this.color = String.format("#%06X", 0xFFFFFF and CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_COLOR))
-    this.ownerAccount = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.OWNER_ACCOUNT)
-    this.timeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_TIME_ZONE)
-    this.isVisible = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.VISIBLE) != 0
-    this.isSynced = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.SYNC_EVENTS) != 0
-    this.allowsModifications = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_ROOT ||
+    this.calendarRecord = CalendarRecord(
+    id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars._ID),
+    title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME),
+    isPrimary = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.IS_PRIMARY) == 1,
+    name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.NAME),
+    color = String.format("#%06X", 0xFFFFFF and CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_COLOR)),
+    ownerAccount = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.OWNER_ACCOUNT),
+    timeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_TIME_ZONE),
+    isVisible = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.VISIBLE) != 0,
+    isSynced = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.SYNC_EVENTS) != 0,
+    allowsModifications = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_ROOT ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_OWNER ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
-      CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
-    this.cursor = cursor
+      CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR,
+    cursor = cursor
+    )
   }
 
   fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
-    if (id == null) {
+    if (calendarRecord?.id == null) {
       throw Exception("Calendar id is null")
     }
-    val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate, listOf(id))
+    val contentResolver = (appContext?.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
+    val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate, listOf(calendarRecord.id ?: ""))
     return cursor.use { serializeExpoCalendarEvents(cursor) }
   }
 
@@ -91,7 +57,7 @@ class ExpoCalendar : SharedObject {
     return results
   }
   companion object {
-    fun createCalendarNext(calendarRecord: CalendarRecordNext, appContext: AppContext): ExpoCalendar {
+    fun saveCalendar(calendarRecord: CalendarRecord, appContext: AppContext): Int {
       if (calendarRecord.title == null) {
         throw Exception("new calendars require `title`")
       }
@@ -160,9 +126,8 @@ class ExpoCalendar : SharedObject {
       val calendarUri = contentResolver.insert(calendarsUri, values)
         ?: throw Exception("Failed to create calendar")
 
-      val calendarId = calendarUri.lastPathSegment!!
-      calendarRecord.id = calendarId
-      return ExpoCalendar(calendarRecord)
+      val calendarId = calendarUri.lastPathSegment!!.toInt()
+      return calendarId
     }
   }
 

@@ -3,7 +3,6 @@ package expo.modules.calendar.next
 import android.Manifest
 import android.database.Cursor
 import android.provider.CalendarContract
-import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
@@ -13,8 +12,7 @@ import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.findCalendarsQueryParameters
 import expo.modules.calendar.next.records.CalendarEntity
-import expo.modules.calendar.next.records.CalendarRecordNext
-import expo.modules.core.arguments.ReadableArguments
+import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
 import expo.modules.kotlin.apifeatures.EitherType
@@ -63,18 +61,17 @@ class CalendarNextModule : Module() {
       }
     }
 
-    AsyncFunction("createCalendarNext") { calendarRecord: ReadableArguments, promise: Promise ->
+    AsyncFunction("createCalendarNext") { calendarRecord: CalendarRecord, promise: Promise ->
       withPermissions(promise) {
         launchAsyncWithModuleScope(promise) {
           try {
-            val calendarRecordNext = CalendarRecordNext.fromReadableArguments(calendarRecord)
-
-            if (calendarRecordNext.entityType == CalendarEntity.REMINDER) {
+            if (calendarRecord.entityType == CalendarEntity.REMINDER) {
               promise.reject("E_CALENDAR_CREATION_FAILED", "Calendars of type `reminder` are not supported on Android", null)
               return@launchAsyncWithModuleScope
             }
-
-            val newCalendar = ExpoCalendar.createCalendarNext(calendarRecordNext, appContext)
+            val calendarId = ExpoCalendar.saveCalendar(calendarRecord, appContext)
+            val newCalendarRecord = calendarRecord.copy(id = calendarId.toString())
+            val newCalendar = ExpoCalendar(newCalendarRecord)
             promise.resolve(newCalendar)
           } catch (e: Exception) {
             promise.reject("E_CALENDAR_CREATION_FAILED", "Failed to create calendar", e)
@@ -84,54 +81,50 @@ class CalendarNextModule : Module() {
     }
 
     Class(ExpoCalendar::class) {
-      Constructor { id: String ->
-        ExpoCalendar(id)
-      }
-
       Property("id") { expoCalendar: ExpoCalendar ->
-        expoCalendar.id
+        expoCalendar.calendarRecord?.id
       }
 
       Property("title") { expoCalendar: ExpoCalendar ->
-        expoCalendar.title
+        expoCalendar.calendarRecord?.title
       }
 
       Property("isPrimary") { expoCalendar: ExpoCalendar ->
-        expoCalendar.isPrimary
+        expoCalendar.calendarRecord?.isPrimary
       }
 
       Property("name") { expoCalendar: ExpoCalendar ->
-        expoCalendar.name
+        expoCalendar.calendarRecord?.name
       }
 
       Property("color") { expoCalendar: ExpoCalendar ->
-        expoCalendar.color
+        expoCalendar.calendarRecord?.color
       }
 
       Property("ownerAccount") { expoCalendar: ExpoCalendar ->
-        expoCalendar.ownerAccount
+        expoCalendar.calendarRecord?.ownerAccount
       }
 
       Property("timeZone") { expoCalendar: ExpoCalendar ->
-        expoCalendar.timeZone
+        expoCalendar.calendarRecord?.timeZone
       }
 
       Property("isVisible") { expoCalendar: ExpoCalendar ->
-        expoCalendar.isVisible
+        expoCalendar.calendarRecord?.isVisible
       }
 
       Property("isSynced") { expoCalendar: ExpoCalendar ->
-        expoCalendar.isSynced
+        expoCalendar.calendarRecord?.isSynced
       }
 
       Property("allowsModifications") { expoCalendar: ExpoCalendar ->
-        expoCalendar.allowsModifications
+        expoCalendar.calendarRecord?.allowsModifications
       }
 
       AsyncFunction("listEvents") { expoCalendar: ExpoCalendar, startDate: Any, endDate: Any, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
-            if (expoCalendar.id == null) {
+            if (expoCalendar.calendarRecord?.id == null) {
               throw Exception("Calendar id is null")
             }
             try {
