@@ -19,6 +19,8 @@ data class EventRecord (
   @Field
   val notes: String? = null,
   @Field
+  val recurrenceRule: RecurrenceRuleRecord? = null,
+  @Field
   val startDate: String? = null,
   @Field
   val endDate: String? = null,
@@ -74,6 +76,17 @@ data class AlarmRecord (
   val relativeOffset: Int,
   @Field
   val method: Int,
+) : Record
+
+data class RecurrenceRuleRecord(
+  @Field
+  val endDate: String? = null,
+  @Field
+  val frequency: String? = null,
+  @Field
+  val interval: Int? = null,
+  @Field
+  val occurrence: Int? = null,
 ) : Record
 
 data class RecurringEventOptions(

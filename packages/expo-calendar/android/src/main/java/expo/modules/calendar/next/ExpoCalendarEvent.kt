@@ -9,6 +9,8 @@ import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
+import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
+import expo.modules.calendar.EventRecurrenceUtils.extractRecurrence
 import expo.modules.calendar.accessStringMatchingConstant
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
@@ -96,9 +98,27 @@ class ExpoCalendarEvent : SharedObject {
       }
     }
 
+    if (eventRecord.recurrenceRule != null) {
+      val recurrenceRule = eventRecord.recurrenceRule
+      if (recurrenceRule.frequency != null) {
+        if (recurrenceRule.endDate == null && recurrenceRule.occurrence == null) {
+          val eventStartDate = eventBuilder.getAsLong(CalendarContract.Events.DTSTART)
+          val eventEndDate = eventBuilder.getAsLong(CalendarContract.Events.DTEND)
+          val duration = (eventEndDate - eventStartDate) / 1000
+          eventBuilder
+            .putNull(CalendarContract.Events.LAST_DATE)
+            .putNull(CalendarContract.Events.DTEND)
+            .put(CalendarContract.Events.DURATION, "PT${duration}S")
+        }
+        val rule = createRecurrenceRule(recurrenceRule)
+        eventBuilder.put(CalendarContract.Events.RRULE, rule)
+      }
+    }
+
     if (eventRecord.title != null) {
       eventBuilder.put(CalendarContract.Events.TITLE, eventRecord.title)
     }
+
     if (eventRecord.notes != null) {
       eventBuilder.put(CalendarContract.Events.DESCRIPTION, eventRecord.notes)
     }
