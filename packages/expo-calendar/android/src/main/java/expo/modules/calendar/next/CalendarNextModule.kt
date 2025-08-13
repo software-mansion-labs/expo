@@ -11,7 +11,6 @@ import expo.modules.calendar.dialogs.ViewEventContract
 import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.findCalendarsQueryParameters
-import expo.modules.calendar.next.records.CalendarEntity
 import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
@@ -65,10 +64,6 @@ class CalendarNextModule : Module() {
       withPermissions(promise) {
         launchAsyncWithModuleScope(promise) {
           try {
-            if (calendarRecord.entityType == CalendarEntity.REMINDER) {
-              promise.reject("E_CALENDAR_CREATION_FAILED", "Calendars of type `reminder` are not supported on Android", null)
-              return@launchAsyncWithModuleScope
-            }
             val calendarId = ExpoCalendar.saveCalendar(calendarRecord, appContext)
             val newCalendarRecord = calendarRecord.copy(id = calendarId.toString())
             val newCalendar = ExpoCalendar(newCalendarRecord)
@@ -123,6 +118,22 @@ class CalendarNextModule : Module() {
 
       Property("allowsModifications") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.allowsModifications
+      }
+
+      Property("source") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.source
+      }
+
+      Property("allowedReminders") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.allowedReminders
+      }
+
+      Property("allowedAttendeeTypes") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.allowedAttendeeTypes
+      }
+
+      Property("accessLevel") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.accessLevel
       }
 
       AsyncFunction("listEvents") { expoCalendar: ExpoCalendar, startDate: Any, endDate: Any, promise: Promise ->

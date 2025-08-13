@@ -7,6 +7,9 @@ import android.text.TextUtils
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.next.records.CalendarRecord
+import expo.modules.calendar.next.records.CalendarAccessLevel
+import expo.modules.calendar.next.records.AttendeeType
+import expo.modules.calendar.next.records.AlarmMethod
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
@@ -27,7 +30,7 @@ class ExpoCalendar : SharedObject {
     title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME),
     isPrimary = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.IS_PRIMARY) == 1,
     name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.NAME),
-    color = String.format("#%06X", 0xFFFFFF and CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_COLOR)),
+    color = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_COLOR),
     ownerAccount = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.OWNER_ACCOUNT),
     timeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_TIME_ZONE),
     isVisible = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.VISIBLE) != 0,
@@ -36,6 +39,27 @@ class ExpoCalendar : SharedObject {
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_OWNER ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR,
+    accessLevel = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL)?.let { accessLevelString ->
+      try {
+        CalendarAccessLevel.values().find { it.value == accessLevelString } ?: CalendarAccessLevel.NONE
+      } catch (e: Exception) {
+        CalendarAccessLevel.NONE
+      }
+    } ?: CalendarAccessLevel.NONE,
+    allowedReminders = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.ALLOWED_REMINDERS)?.split(",")?.filter { it.isNotEmpty() }?.mapNotNull { reminderString ->
+      try {
+        AlarmMethod.values().find { it.value == reminderString } ?: AlarmMethod.DEFAULT
+      } catch (e: Exception) {
+        AlarmMethod.DEFAULT
+      }
+    } ?: emptyList(),
+    allowedAttendeeTypes = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES)?.split(",")?.filter { it.isNotEmpty() }?.mapNotNull { attendeeTypeString ->
+      try {
+        AttendeeType.values().find { it.value == attendeeTypeString } ?: AttendeeType.NONE
+      } catch (e: Exception) {
+        AttendeeType.NONE
+      }
+    } ?: emptyList(),
     )
   }
 
@@ -75,17 +99,6 @@ class ExpoCalendar : SharedObject {
         throw Exception("new calendars require a `source` object with a `name`")
       }
 
-      val colorValue = when (val color = calendarRecord.color) {
-        else -> {
-          val hexColor = color.removePrefix("#")
-          try {
-            hexColor.toInt(16)
-          } catch (e: NumberFormatException) {
-            throw Exception("Invalid color format: $color")
-          }
-        }
-      }
-
       val values = ContentValues().apply {
         put(CalendarContract.Calendars.NAME, calendarRecord.name)
         put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, calendarRecord.title)
@@ -93,8 +106,20 @@ class ExpoCalendar : SharedObject {
         put(CalendarContract.Calendars.SYNC_EVENTS, calendarRecord.isSynced)
         put(CalendarContract.Calendars.ACCOUNT_NAME, source.name)
         put(CalendarContract.Calendars.ACCOUNT_TYPE, if (source.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else source.type)
-        put(CalendarContract.Calendars.CALENDAR_COLOR, colorValue)
-        put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CalendarContract.Calendars.CAL_ACCESS_OWNER)
+        put(CalendarContract.Calendars.CALENDAR_COLOR, calendarRecord.color)
+        put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, calendarRecord.accessLevel?.let { accessLevel ->
+          when (accessLevel) {
+            CalendarAccessLevel.OWNER -> CalendarContract.Calendars.CAL_ACCESS_OWNER
+            CalendarAccessLevel.EDITOR -> CalendarContract.Calendars.CAL_ACCESS_EDITOR
+            CalendarAccessLevel.CONTRIBUTOR -> CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
+            CalendarAccessLevel.READ -> CalendarContract.Calendars.CAL_ACCESS_READ
+            CalendarAccessLevel.RESPOND -> CalendarContract.Calendars.CAL_ACCESS_RESPOND
+            CalendarAccessLevel.FREEBUSY -> CalendarContract.Calendars.CAL_ACCESS_FREEBUSY
+            CalendarAccessLevel.OVERRIDE -> CalendarContract.Calendars.CAL_ACCESS_OVERRIDE
+            CalendarAccessLevel.ROOT -> CalendarContract.Calendars.CAL_ACCESS_ROOT
+            CalendarAccessLevel.NONE -> CalendarContract.Calendars.CAL_ACCESS_NONE
+          }
+        } ?: CalendarContract.Calendars.CAL_ACCESS_OWNER)
         put(CalendarContract.Calendars.OWNER_ACCOUNT, source.name)
 
         if (calendarRecord.timeZone != null) {
@@ -111,6 +136,14 @@ class ExpoCalendar : SharedObject {
             put(CalendarContract.Calendars.ALLOWED_AVAILABILITY, TextUtils.join(",", availabilityValues))
           }
         }
+
+        if (calendarRecord.allowedReminders.isNotEmpty()) {
+          put(CalendarContract.Calendars.ALLOWED_REMINDERS, TextUtils.join(",", calendarRecord.allowedReminders.map { it.value }))
+        }
+
+        if (calendarRecord.allowedAttendeeTypes.isNotEmpty()) {
+          put(CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES, TextUtils.join(",", calendarRecord.allowedAttendeeTypes.map { it.value }))
+        }
       }
 
       val uriBuilder = CalendarContract.Calendars.CONTENT_URI
@@ -122,9 +155,8 @@ class ExpoCalendar : SharedObject {
       val calendarsUri = uriBuilder.build()
       val contentResolver = (appContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
       val calendarUri = contentResolver.insert(calendarsUri, values)
-        ?: throw Exception("Failed to create calendar")
 
-      val calendarId = calendarUri.lastPathSegment!!.toInt()
+      val calendarId = calendarUri?.lastPathSegment!!.toInt()
       return calendarId
     }
   }

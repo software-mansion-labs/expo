@@ -13,7 +13,9 @@ data class CalendarRecord (
   @Field
   val source: Source? = null,
   @Field
-  val color: String? = null,
+  // Note: For this moment we are using ProcessedColorValue on the TypeScript side which forces here
+  // the use of mapping to Int, we will change this to String after removing ProcessedColorValue
+  val color: Int? = null,
   @Field
   val isVisible: Boolean = true,
   @Field
@@ -23,17 +25,44 @@ data class CalendarRecord (
   @Field
   val isPrimary: Boolean = false,
   @Field
-  val entityType: CalendarEntity? = null,
-  @Field
   val allowsModifications: Boolean = true,
   @Field
   val allowedAvailabilities: List<String> = emptyList(),
   @Field
+  val allowedReminders: List<AlarmMethod> = emptyList(),
+  @Field
+  val allowedAttendeeTypes: List<AttendeeType> = emptyList(),
+  @Field
   var ownerAccount: String? = null,
+  @Field
+  val accessLevel: CalendarAccessLevel? = null,
 ) : Record
 
-enum class CalendarEntity(val value: String) {
-  EVENT("event"), REMINDER("reminder")
+enum class AlarmMethod(val value: String) {
+  ALARM("alarm"),
+  ALERT("alert"),
+  EMAIL("email"),
+  SMS("sms"),
+  DEFAULT("default")
+}
+
+enum class AttendeeType(val value: String) {
+  RESOURCE("resource"),
+  OPTIONAL("optional"),
+  REQUIRED("required"),
+  NONE("none")
+}
+
+enum class CalendarAccessLevel(val value: String) {
+  CONTRIBUTOR("contributor"),
+  EDITOR("editor"),
+  FREEBUSY("freebusy"),
+  OVERRIDE("override"),
+  OWNER("owner"),
+  READ("read"),
+  RESPOND("respond"),
+  ROOT("root"),
+  NONE("none")
 }
 
 data class Source (
