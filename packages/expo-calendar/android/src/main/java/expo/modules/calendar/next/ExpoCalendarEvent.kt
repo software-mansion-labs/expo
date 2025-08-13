@@ -18,6 +18,10 @@ import expo.modules.calendar.next.records.RecurrenceRuleRecord
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
+import expo.modules.calendar.attendeeRelationshipConstantMatchingString
+import expo.modules.calendar.attendeeTypeConstantMatchingString
+import expo.modules.calendar.attendeeStatusConstantMatchingString
+import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -253,5 +257,16 @@ class ExpoCalendarEvent : SharedObject {
       results.add(ExpoCalendarAttendee(localAppContext, cursor))
     }
     return results
+  }
+
+  fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
+    val attendee = ExpoCalendarAttendee(localAppContext)
+    val eventId = this.eventRecord?.id?.toIntOrNull();
+    if (eventId == null) {
+      throw Exception("Missing event id")
+    }
+    val newEventId = attendee.saveAttendee(attendeeRecord, eventId)
+    attendee.attendeeRecord?.id = newEventId;
+    return attendee
   }
 }

@@ -27,6 +27,7 @@ import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.kotlin.functions.Coroutine
 import kotlinx.coroutines.cancel
+import expo.modules.calendar.next.records.AttendeeRecord
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -152,6 +153,19 @@ class CalendarNextModule : Module() {
     Class(ExpoCalendarEvent::class) {
       Constructor { id: String ->
         ExpoCalendarEvent(appContext)
+      }
+
+      AsyncFunction("createAttendee") { expoCalendarEvent: ExpoCalendarEvent, record: AttendeeRecord, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val attendee = expoCalendarEvent.createAttendee(record)
+              promise.resolve(attendee)
+            } catch (e: Exception) {
+              promise.reject("E_ATTENDEE_NOT_CREATED", "Attendee could not be created", e)
+            }
+          }
+        }
       }
 
       Property("id") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -282,6 +296,24 @@ class CalendarNextModule : Module() {
     Class(ExpoCalendarAttendee::class) {
       Constructor { id: String ->
         ExpoCalendarAttendee(appContext)
+      }
+
+      AsyncFunction("updateAttendee") { expoCalendarAttendee: ExpoCalendarAttendee, attendeeRecord: AttendeeRecord, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val updatedRecord = expoCalendarAttendee.attendeeRecord?.getUpdatedRecord(attendeeRecord, emptyList())
+              if (updatedRecord == null) {
+                throw Exception("Event record is null")
+              }
+              expoCalendarAttendee.saveAttendee(updatedRecord)
+              expoCalendarAttendee.attendeeRecord = updatedRecord
+              promise.resolve()
+            } catch (e: Exception) {
+              promise.reject("E_ATTENDEE_NOT_UPDATED", "Attendee could not be updated", e)
+            }
+          }
+        }
       }
     }
 

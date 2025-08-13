@@ -274,6 +274,21 @@ export declare class ExpoCalendarEvent {
    * @param recurringEventOptions A map of options for recurring events.
    */
   delete(recurringEventOptions: RecurringEventOptions): void;
+
+  /**
+   * Creates a new attendee and adds it to this event.
+   */
+  createAttendee(
+    attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email' | 'role' | 'type' | 'status'> &
+      Partial<ExpoCalendarAttendee>
+  ): Promise<ExpoCalendarAttendee>;
+
+  /**
+   * Updates an existing attendee of this event.
+   */
+  updateAttendee(
+    attendee: Partial<ExpoCalendarAttendee> & { id: string }
+  ): Promise<ExpoCalendarAttendee>;
 }
 
 export declare class ExpoCalendarReminder {
@@ -355,6 +370,12 @@ export declare class ExpoCalendarReminder {
  */
 export declare class ExpoCalendarAttendee {
   /**
+   * Email of the attendee.
+   * @required
+   * @platform android
+   */
+  email: string;
+  /**
    * Indicates whether or not this attendee is the current OS user.
    */
   isCurrentUser?: boolean;
@@ -364,6 +385,7 @@ export declare class ExpoCalendarAttendee {
   name: string;
   /**
    * Role of the attendee at the event.
+   * @required
    */
   role: AttendeeRole;
   /**

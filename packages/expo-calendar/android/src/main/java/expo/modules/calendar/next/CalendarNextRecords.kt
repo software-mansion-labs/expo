@@ -97,7 +97,7 @@ data class RecurringEventOptions(
 
 data class AttendeeRecord(
   @Field
-  val id: String? = null,
+  var id: String? = null,
   @Field
   val name: String? = null,
   @Field
@@ -108,4 +108,17 @@ data class AttendeeRecord(
   val type: String? = null,
   @Field
   val email: String? = null,
-) : Record
+) : Record {
+  fun getUpdatedRecord(other: AttendeeRecord, nullableFields: List<String>? = null): AttendeeRecord {
+    val nullableSet = nullableFields?.toSet() ?: emptySet()
+
+    return AttendeeRecord(
+      id = this.id,
+      name = if ("name" in nullableSet) null else other.name ?: this.name,
+      role = if ("role" in nullableSet) null else other.role ?: this.role,
+      status = if ("status" in nullableSet) null else other.status ?: this.status,
+      type = if ("type" in nullableSet) null else other.type ?: this.type,
+      email = if ("email" in nullableSet) null else other.email ?: this.email,
+    )
+  }
+}
