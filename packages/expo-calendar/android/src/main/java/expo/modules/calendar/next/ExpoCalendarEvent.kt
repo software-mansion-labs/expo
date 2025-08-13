@@ -191,6 +191,7 @@ class ExpoCalendarEvent : SharedObject {
       val exceptionUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_EXCEPTION_URI, eventID.toLong())
       contentResolver.insert(exceptionUri, exceptionValues)
     }
+    eventRecord = null
     return true
   }
 

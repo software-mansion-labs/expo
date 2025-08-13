@@ -4,6 +4,7 @@ type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresenta
 export type ModifiableCalendarProperties = Pick<Calendar, 'color' | 'title'>;
 export type ModifiableEventProperties = Pick<Event, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'availability' | 'startDate' | 'endDate' | 'allDay'>;
 export type ModifiableReminderProperties = Pick<Reminder, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'startDate' | 'dueDate' | 'completed' | 'completionDate'>;
+export type ModifiableAttendeeProperties = ExpoCalendarAttendee;
 export declare class ExpoCalendar {
     constructor(id: string);
     /**
@@ -310,6 +311,16 @@ export declare class ExpoCalendarAttendee {
      * URL for the attendee.
      */
     url?: string;
+    /**
+     * Updates the attendee.
+     * @platform android
+     */
+    update(details: Partial<ModifiableAttendeeProperties>): void;
+    /**
+     * Deletes the attendee.
+     * @platform android
+     */
+    delete(): void;
 }
 export {};
 //# sourceMappingURL=ExpoCalendar.types.d.ts.map

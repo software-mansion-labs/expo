@@ -50,11 +50,12 @@ class ExpoCalendarAttendee : SharedObject {
     val attendeeValues = buildAttendeeContentValues(attendeeRecord, eventId)
     if (isNew) {
       if (eventId == null) {
-        throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED", )
+        throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
       }
       val attendeeUri = contentResolver.insert(CalendarContract.Attendees.CONTENT_URI, attendeeValues)
-        ?: throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED", )
-      val attendeeId = attendeeUri.lastPathSegment ?: throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED", )
+        ?: throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
+      val attendeeId = attendeeUri.lastPathSegment
+        ?: throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
       return attendeeId
     } else {
       val attendeeID = attendeeRecord.id
@@ -65,6 +66,19 @@ class ExpoCalendarAttendee : SharedObject {
       contentResolver.update(updateUri, attendeeValues, null, null)
       return attendeeID;
     }
+  }
+
+  @Throws(SecurityException::class)
+  fun deleteAttendee(): Boolean {
+    val rows: Int
+    val attendeeID = attendeeRecord?.id?.toIntOrNull()
+    if (attendeeID == null) {
+      throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_DELETED")
+    }
+    val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
+    rows = contentResolver.delete(uri, null, null)
+    attendeeRecord = null
+    return rows > 0
   }
 
   private fun buildAttendeeContentValues(attendeeRecord: AttendeeRecord, eventId: Int?): ContentValues {

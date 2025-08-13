@@ -257,19 +257,19 @@ class CalendarNextModule : Module() {
         return@Coroutine result
       }
 
-       AsyncFunction("editInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions? ->
-         val eventId = expoCalendarEvent.eventRecord?.id;
-         if (eventId == null) {
-           throw Exception("Event id is null")
-         }
-         val params = ViewedEventOptions(
-           id = eventId,
-           startNewActivityTask = rawParams?.startNewActivityTask ?: true
-         )
-         viewEventLauncher.launch(params)
-         val editResult = CreateEventIntentResult()
-         return@Coroutine editResult
-       }
+      AsyncFunction("editInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions? ->
+        val eventId = expoCalendarEvent.eventRecord?.id;
+        if (eventId == null) {
+          throw Exception("Event id is null")
+        }
+        val params = ViewedEventOptions(
+          id = eventId,
+          startNewActivityTask = rawParams?.startNewActivityTask ?: true
+        )
+        viewEventLauncher.launch(params)
+        val editResult = CreateEventIntentResult()
+        return@Coroutine editResult
+      }
 
       AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
         // TODO: Support recurringEventOptions. Legacy Calendar API doesn't support it, check if we can support it.
@@ -322,7 +322,7 @@ class CalendarNextModule : Module() {
         expoCalendarAttendee.attendeeRecord?.email
       }
 
-      AsyncFunction("updateAttendee") { expoCalendarAttendee: ExpoCalendarAttendee, attendeeRecord: AttendeeRecord, promise: Promise ->
+      AsyncFunction("update") { expoCalendarAttendee: ExpoCalendarAttendee, attendeeRecord: AttendeeRecord, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
             try {
@@ -335,6 +335,19 @@ class CalendarNextModule : Module() {
               promise.resolve()
             } catch (e: Exception) {
               promise.reject("E_ATTENDEE_NOT_UPDATED", "Attendee could not be updated", e)
+            }
+          }
+        }
+      }
+
+      AsyncFunction("delete") { expoCalendarAttendee: ExpoCalendarAttendee, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            val successful = expoCalendarAttendee.deleteAttendee()
+            if (successful) {
+              promise.resolve(null)
+            } else {
+              promise.reject("E_ATTENDEE_NOT_DELETED", "Attendee could not be deleted", null)
             }
           }
         }
