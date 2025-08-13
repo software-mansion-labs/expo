@@ -15,9 +15,11 @@ import expo.modules.calendar.accessStringMatchingConstant
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurrenceRuleRecord
+import expo.modules.kotlin.exception.Exceptions
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.apifeatures.EitherType
+import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import java.text.ParseException
 import java.util.*
@@ -28,20 +30,22 @@ class ExpoCalendarEvent : SharedObject {
   var eventRecord: EventRecord?
 
   val sdf = CalendarUtils.sdf
-  private val contentResolver: ContentResolver;
+  private val localAppContext: AppContext
+  private val contentResolver
+    get() = (localAppContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
 
-  constructor(contentResolver: ContentResolver) {
-    this.contentResolver = contentResolver;
+  constructor(appContext: AppContext) {
+    this.localAppContext = appContext;
     this.eventRecord = null
   }
 
-  constructor(contentResolver: ContentResolver, eventRecord: EventRecord) {
-    this.contentResolver = contentResolver
+  constructor(appContext: AppContext, eventRecord: EventRecord) {
+    this.localAppContext = appContext;
     this.eventRecord = eventRecord
   }
 
-  constructor(contentResolver: ContentResolver, cursor: Cursor) {
-    this.contentResolver = contentResolver;
+  constructor(appContext: AppContext, cursor: Cursor) {
+    this.localAppContext = appContext;
     var foundStartDate: String? = null;
     var foundEndDate: String? = null;
 
@@ -246,7 +250,7 @@ class ExpoCalendarEvent : SharedObject {
   private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {
     val results: MutableList<ExpoCalendarAttendee> = ArrayList()
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendarAttendee(contentResolver, cursor))
+      results.add(ExpoCalendarAttendee(localAppContext, cursor))
     }
     return results
   }

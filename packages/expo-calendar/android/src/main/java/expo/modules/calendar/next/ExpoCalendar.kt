@@ -8,10 +8,10 @@ import expo.modules.calendar.CalendarEventBuilder
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.next.records.EventRecord
-import expo.modules.core.arguments.ReadableArguments
-import expo.modules.core.errors.InvalidArgumentException
-import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
+import expo.modules.core.errors.InvalidArgumentException
+import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.sharedobjects.SharedObject
 import java.text.ParseException
 
@@ -28,9 +28,11 @@ class ExpoCalendar : SharedObject {
   val isSynced: Boolean
   val allowsModifications: Boolean
   val cursor: Cursor?
-  private val contentResolver: ContentResolver;
+  private val localAppContext: AppContext
+  private val contentResolver
+    get() = (localAppContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
 
-  constructor(contentResolver: ContentResolver, id: String) {
+  constructor(appContext: AppContext, id: String) {
     this.id = id
     this.title = null
     this.isPrimary = false
@@ -42,10 +44,10 @@ class ExpoCalendar : SharedObject {
     this.isSynced = false
     this.allowsModifications = false
     this.cursor = null
-    this.contentResolver = contentResolver
+    this.localAppContext = appContext
   }
 
-  constructor(contentResolver: ContentResolver, cursor: Cursor) {
+  constructor(appContext: AppContext, cursor: Cursor) {
     this.id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars._ID)
     this.title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
     this.isPrimary = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.IS_PRIMARY) == 1
@@ -60,7 +62,7 @@ class ExpoCalendar : SharedObject {
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
       CalendarUtils.optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
     this.cursor = cursor
-    this.contentResolver = contentResolver;
+    this.localAppContext = appContext
   }
 
   fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
@@ -72,8 +74,8 @@ class ExpoCalendar : SharedObject {
   }
 
   @Throws(EventNotSavedException::class, ParseException::class, SecurityException::class, InvalidArgumentException::class)
-  fun createEvent(contentResolver: ContentResolver, record: EventRecord): ExpoCalendarEvent? {
-    val event = ExpoCalendarEvent(contentResolver, record)
+  fun createEvent(record: EventRecord): ExpoCalendarEvent? {
+    val event = ExpoCalendarEvent(localAppContext, record)
     if (this.id == null) {
       throw Exception("Calendar id is null")
     }
@@ -85,7 +87,7 @@ class ExpoCalendar : SharedObject {
   private fun serializeExpoCalendarEvents(cursor: Cursor): List<ExpoCalendarEvent> {
     val results: MutableList<ExpoCalendarEvent> = ArrayList()
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendarEvent(contentResolver, cursor))
+      results.add(ExpoCalendarEvent(localAppContext, cursor))
     }
     return results
   }

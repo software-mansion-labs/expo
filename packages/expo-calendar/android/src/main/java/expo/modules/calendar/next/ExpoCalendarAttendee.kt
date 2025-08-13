@@ -8,19 +8,20 @@ import expo.modules.calendar.attendeeRelationshipStringMatchingConstant
 import expo.modules.calendar.attendeeStatusStringMatchingConstant
 import expo.modules.calendar.attendeeTypeStringMatchingConstant
 import expo.modules.calendar.next.records.AttendeeRecord
+import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
 class ExpoCalendarAttendee : SharedObject {
   var attendeeRecord: AttendeeRecord?
-  var contentResolver: ContentResolver
+  var localAppContext: AppContext
 
-  constructor(contentResolver: ContentResolver) {
-    this.contentResolver = contentResolver
+  constructor(appContext: AppContext) {
+    this.localAppContext = appContext
     this.attendeeRecord = null;
   }
 
-  constructor(contentResolver: ContentResolver, cursor: Cursor) {
-    this.contentResolver = contentResolver
+  constructor(appContext: AppContext, cursor: Cursor) {
+    this.localAppContext = appContext
     this.attendeeRecord = AttendeeRecord(
       id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees._ID),
       name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_NAME),

@@ -64,7 +64,7 @@ class CalendarNextModule : Module() {
 
     Class(ExpoCalendar::class) {
       Constructor { id: String ->
-        ExpoCalendar(contentResolver, id)
+        ExpoCalendar(appContext, id)
       }
 
       Property("id") { expoCalendar: ExpoCalendar ->
@@ -127,7 +127,7 @@ class CalendarNextModule : Module() {
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
             try {
-              val expoCalendarEvent = expoCalendar.createEvent(contentResolver, record)
+              val expoCalendarEvent = expoCalendar.createEvent(record)
               promise.resolve(expoCalendarEvent)
             } catch (e: Exception) {
               promise.reject("E_EVENT_NOT_CREATED", "Event could not be created", e)
@@ -139,7 +139,7 @@ class CalendarNextModule : Module() {
 
     Class(ExpoCalendarEvent::class) {
       Constructor { id: String ->
-        ExpoCalendarEvent(contentResolver)
+        ExpoCalendarEvent(appContext)
       }
 
       Property("id") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -242,7 +242,7 @@ class CalendarNextModule : Module() {
 
     Class(ExpoCalendarAttendee::class) {
       Constructor { id: String ->
-        ExpoCalendarAttendee(contentResolver)
+        ExpoCalendarAttendee(appContext)
       }
     }
 
@@ -264,7 +264,7 @@ class CalendarNextModule : Module() {
   private fun serializeExpoCalendars(cursor: Cursor): List<ExpoCalendar> {
     val results: MutableList<ExpoCalendar> = ArrayList()
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendar(contentResolver, cursor))
+      results.add(ExpoCalendar(appContext, cursor))
     }
     return results
   }
