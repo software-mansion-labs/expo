@@ -226,7 +226,7 @@ const EventsScreen = ({ route }: Props) => {
       {events.map((event) => (
         <EventRow
           event={event}
-          key={`${event.id}`}
+          key={`${event.id}${event.startDate}`}
           getEvent={getEvent}
           getAttendees={getAttendees}
           updateEvent={updateEvent}

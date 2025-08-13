@@ -158,6 +158,10 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.notes
       }
 
+      Property("recurrenceRule") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.recurrenceRule
+      }
+
       Property("startDate") { expoCalendarEvent: ExpoCalendarEvent ->
         expoCalendarEvent.eventRecord?.startDate
       }

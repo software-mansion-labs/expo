@@ -14,6 +14,7 @@ import expo.modules.calendar.EventRecurrenceUtils.extractRecurrence
 import expo.modules.calendar.accessStringMatchingConstant
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
+import expo.modules.calendar.next.records.RecurrenceRuleRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.apifeatures.EitherType
@@ -59,6 +60,7 @@ class ExpoCalendarEvent : SharedObject {
       calendarId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
       title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.TITLE),
       notes = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.DESCRIPTION),
+      recurrenceRule = extractRecurrenceRuleFromString(CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.RRULE)),
       startDate = foundStartDate,
       endDate = foundEndDate,
       allDay = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.ALL_DAY) != 0,
@@ -118,7 +120,6 @@ class ExpoCalendarEvent : SharedObject {
     if (eventRecord.title != null) {
       eventBuilder.put(CalendarContract.Events.TITLE, eventRecord.title)
     }
-
     if (eventRecord.notes != null) {
       eventBuilder.put(CalendarContract.Events.DESCRIPTION, eventRecord.notes)
     }
@@ -183,6 +184,43 @@ class ExpoCalendarEvent : SharedObject {
       contentResolver.insert(exceptionUri, exceptionValues)
     }
     return true
+  }
+
+  private fun extractRecurrenceRuleFromString(rrule: String?): RecurrenceRuleRecord? {
+    if (rrule == null) {
+      return null
+    }
+    val recurrenceRules = rrule.split(";").toTypedArray()
+    val frequency = recurrenceRules[0].split("=").toTypedArray()[1].lowercase(Locale.getDefault())
+    var interval: Int? = null
+    var endDate: String? = null
+    var occurrence: Int? = null
+    if (recurrenceRules.size >= 2 && recurrenceRules[1].split("=").toTypedArray()[0] == "INTERVAL") {
+      interval = recurrenceRules[1].split("=").toTypedArray()[1].toInt()
+    }
+    if (recurrenceRules.size >= 3) {
+      val terminationRules = recurrenceRules[2].split("=").toTypedArray()
+      if (terminationRules.size >= 2) {
+        if (terminationRules[0] == "UNTIL") {
+          try {
+            endDate = sdf.parse(terminationRules[1])?.toString()
+          } catch (e: ParseException) {
+            Log.e(TAG, "Couldn't parse the `endDate` property.", e)
+          } catch (e: NullPointerException) {
+            Log.e(TAG, "endDate is null", e)
+          }
+        } else if (terminationRules[0] == "COUNT") {
+          occurrence = recurrenceRules[2].split("=").toTypedArray()[1].toInt()
+        }
+      }
+      Log.e(TAG, "Couldn't parse termination rules: '${recurrenceRules[2]}'.", null)
+    }
+    return RecurrenceRuleRecord(
+      endDate = endDate,
+      frequency = frequency,
+      interval = interval,
+      occurrence = occurrence,
+    )
   }
 
   fun getAttendees(): List<ExpoCalendarAttendee> {

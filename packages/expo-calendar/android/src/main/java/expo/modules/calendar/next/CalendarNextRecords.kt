@@ -56,6 +56,7 @@ data class EventRecord (
       timeZone = if ("timeZone" in nullableSet) null else other.timeZone ?: this.timeZone,
       endTimeZone = if ("endTimeZone" in nullableSet) null else other.endTimeZone ?: this.endTimeZone,
       notes = if ("notes" in nullableSet) null else other.notes ?: this.notes,
+      recurrenceRule = if ("recurrenceRule" in nullableSet) null else other.recurrenceRule ?: this.recurrenceRule,
       startDate = if ("startDate" in nullableSet) null else other.startDate ?: this.startDate,
       endDate = if ("endDate" in nullableSet) null else other.endDate ?: this.endDate,
       allDay = if ("allDay" in nullableSet) null else other.allDay ?: this.allDay,
