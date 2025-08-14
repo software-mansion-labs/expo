@@ -19,7 +19,7 @@ import java.util.TimeZone
 
 @OptIn(EitherType::class)
 class ExpoCalendar : SharedObject {
-  val calendarRecord: CalendarRecord?
+  var calendarRecord: CalendarRecord?
 
   constructor(calendar: CalendarRecord) {
     this.calendarRecord = calendar
@@ -75,65 +75,8 @@ class ExpoCalendar : SharedObject {
       throw Exception("Calendar id is null")
     }
     val contentResolver = (appContext?.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
-    val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate, listOf(calendarRecord.id ?: ""))
+    val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate, listOf(calendarRecord?.id ?: ""))
     return cursor.use { serializeExpoCalendarEvents(cursor) }
-  }
-
-  fun update(details: CalendarRecord) {
-    if (calendarRecord?.id == null) {
-      throw Exception("Calendar id is null")
-    }
-    
-    val contentResolver = (appContext?.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
-    val uri = CalendarContract.Calendars.CONTENT_URI.buildUpon().appendPath(calendarRecord.id).build()
-    
-    val values = ContentValues().apply {
-      details.title?.let { put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, it) }
-      details.name?.let { put(CalendarContract.Calendars.NAME, it) }
-      details.color?.let { put(CalendarContract.Calendars.CALENDAR_COLOR, it) }
-      details.isVisible?.let { put(CalendarContract.Calendars.VISIBLE, if (it) 1 else 0) }
-      details.isSynced?.let { put(CalendarContract.Calendars.SYNC_EVENTS, if (it) 1 else 0) }
-      details.timeZone?.let { put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, it) }
-      details.isPrimary?.let { put(CalendarContract.Calendars.IS_PRIMARY, if (it) 1 else 0) }
-      details.allowsModifications?.let { put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, if (it) CalendarContract.Calendars.CAL_ACCESS_OWNER else CalendarContract.Calendars.CAL_ACCESS_READ) }
-      details.accessLevel?.let { accessLevel ->
-        val accessLevelValue = when (accessLevel) {
-          CalendarAccessLevel.OWNER -> CalendarContract.Calendars.CAL_ACCESS_OWNER
-          CalendarAccessLevel.EDITOR -> CalendarContract.Calendars.CAL_ACCESS_EDITOR
-          CalendarAccessLevel.CONTRIBUTOR -> CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
-          CalendarAccessLevel.READ -> CalendarContract.Calendars.CAL_ACCESS_READ
-          CalendarAccessLevel.RESPOND -> CalendarContract.Calendars.CAL_ACCESS_RESPOND
-          CalendarAccessLevel.FREEBUSY -> CalendarContract.Calendars.CAL_ACCESS_FREEBUSY
-          CalendarAccessLevel.OVERRIDE -> CalendarContract.Calendars.CAL_ACCESS_OVERRIDE
-          CalendarAccessLevel.ROOT -> CalendarContract.Calendars.CAL_ACCESS_ROOT
-          CalendarAccessLevel.NONE -> CalendarContract.Calendars.CAL_ACCESS_NONE
-        }
-        put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, accessLevelValue)
-      }
-      details.ownerAccount?.let { put(CalendarContract.Calendars.OWNER_ACCOUNT, it) }
-      
-      if (details.allowedAvailabilities?.isNotEmpty() == true) {
-        val availabilityValues = details.allowedAvailabilities!!.map { availability ->
-          availabilityConstantMatchingString(availability)
-        }
-        if (availabilityValues.isNotEmpty()) {
-          put(CalendarContract.Calendars.ALLOWED_AVAILABILITY, TextUtils.join(",", availabilityValues))
-        }
-      }
-      
-      if (details.allowedReminders?.isNotEmpty() == true) {
-        put(CalendarContract.Calendars.ALLOWED_REMINDERS, TextUtils.join(",", details.allowedReminders!!.map { it.value }))
-      }
-      
-      if (details.allowedAttendeeTypes?.isNotEmpty() == true) {
-        put(CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES, TextUtils.join(",", details.allowedAttendeeTypes!!.map { it.value }))
-      }
-    }
-    
-    val rowsUpdated = contentResolver.update(uri, values, null, null)
-    if (rowsUpdated == 0) {
-      throw Exception("Failed to update calendar")
-    }
   }
 
   private fun serializeExpoCalendarEvents(cursor: Cursor): List<ExpoCalendarEvent> {
@@ -145,51 +88,66 @@ class ExpoCalendar : SharedObject {
   }
   companion object {
     fun saveCalendar(calendarRecord: CalendarRecord, appContext: AppContext): Int {
-      if (calendarRecord.title == null) {
-        throw Exception("new calendars require `title`")
-      }
-      if (calendarRecord.name == null) {
-        throw Exception("new calendars require `name`")
-      }
-      if (calendarRecord.source == null) {
-        throw Exception("new calendars require `source`")
-      }
-      if (calendarRecord.color == null) {
-        throw Exception("new calendars require `color`")
+      return updateCalendar(calendarRecord, appContext, isNew = true)
+    }
+    
+    fun updateCalendar(calendarRecord: CalendarRecord, appContext: AppContext, isNew: Boolean = false): Int {
+      if (isNew) {
+        if (calendarRecord.title == null) {
+          throw Exception("new calendars require `title`")
+        }
+        if (calendarRecord.name == null) {
+          throw Exception("new calendars require `name`")
+        }
+        if (calendarRecord.source == null) {
+          throw Exception("new calendars require `source`")
+        }
+        if (calendarRecord.color == null) {
+          throw Exception("new calendars require `color`")
+        }
       }
 
-      val source = calendarRecord.source!!
-      if (source.name == null) {
+      val source = calendarRecord.source
+      if (isNew && (source?.name == null)) {
         throw Exception("new calendars require a `source` object with a `name`")
       }
 
       val values = ContentValues().apply {
-        put(CalendarContract.Calendars.NAME, calendarRecord.name)
-        put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, calendarRecord.title)
-        put(CalendarContract.Calendars.VISIBLE, calendarRecord.isVisible)
-        put(CalendarContract.Calendars.SYNC_EVENTS, calendarRecord.isSynced)
-        put(CalendarContract.Calendars.ACCOUNT_NAME, source.name)
-        put(CalendarContract.Calendars.ACCOUNT_TYPE, if (source.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else source.type)
-        put(CalendarContract.Calendars.CALENDAR_COLOR, calendarRecord.color)
-        put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, calendarRecord.accessLevel?.let { accessLevel ->
-          when (accessLevel) {
-            CalendarAccessLevel.OWNER -> CalendarContract.Calendars.CAL_ACCESS_OWNER
-            CalendarAccessLevel.EDITOR -> CalendarContract.Calendars.CAL_ACCESS_EDITOR
-            CalendarAccessLevel.CONTRIBUTOR -> CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
-            CalendarAccessLevel.READ -> CalendarContract.Calendars.CAL_ACCESS_READ
-            CalendarAccessLevel.RESPOND -> CalendarContract.Calendars.CAL_ACCESS_RESPOND
-            CalendarAccessLevel.FREEBUSY -> CalendarContract.Calendars.CAL_ACCESS_FREEBUSY
-            CalendarAccessLevel.OVERRIDE -> CalendarContract.Calendars.CAL_ACCESS_OVERRIDE
-            CalendarAccessLevel.ROOT -> CalendarContract.Calendars.CAL_ACCESS_ROOT
-            CalendarAccessLevel.NONE -> CalendarContract.Calendars.CAL_ACCESS_NONE
-          }
-        } ?: CalendarContract.Calendars.CAL_ACCESS_OWNER)
-        put(CalendarContract.Calendars.OWNER_ACCOUNT, source.name)
+        calendarRecord.name?.let { put(CalendarContract.Calendars.NAME, it) }
+        calendarRecord.title?.let { put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, it) }
+        calendarRecord.isVisible?.let { put(CalendarContract.Calendars.VISIBLE, it) }
+        calendarRecord.isSynced?.let { put(CalendarContract.Calendars.SYNC_EVENTS, it) }
 
-        if (calendarRecord.timeZone != null) {
-          put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, calendarRecord.timeZone)
-        } else {
-          put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, TimeZone.getDefault().id)
+        if (isNew) {
+          source?.name?.let { put(CalendarContract.Calendars.ACCOUNT_NAME, it) }
+          source?.let { put(CalendarContract.Calendars.ACCOUNT_TYPE, if (it.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else it.type) }
+        }
+        
+        calendarRecord.color?.let { put(CalendarContract.Calendars.CALENDAR_COLOR, it) }
+
+        if (isNew) {
+          calendarRecord.accessLevel?.let { accessLevel ->
+            val accessLevelValue = when (accessLevel) {
+              CalendarAccessLevel.OWNER -> CalendarContract.Calendars.CAL_ACCESS_OWNER
+              CalendarAccessLevel.EDITOR -> CalendarContract.Calendars.CAL_ACCESS_EDITOR
+              CalendarAccessLevel.CONTRIBUTOR -> CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR
+              CalendarAccessLevel.READ -> CalendarContract.Calendars.CAL_ACCESS_READ
+              CalendarAccessLevel.RESPOND -> CalendarContract.Calendars.CAL_ACCESS_RESPOND
+              CalendarAccessLevel.FREEBUSY -> CalendarContract.Calendars.CAL_ACCESS_FREEBUSY
+              CalendarAccessLevel.OVERRIDE -> CalendarContract.Calendars.CAL_ACCESS_OVERRIDE
+              CalendarAccessLevel.ROOT -> CalendarContract.Calendars.CAL_ACCESS_ROOT
+              CalendarAccessLevel.NONE -> CalendarContract.Calendars.CAL_ACCESS_NONE
+            }
+            put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, accessLevelValue)
+          }
+        }
+        if (isNew) {
+          calendarRecord.ownerAccount?.let { put(CalendarContract.Calendars.OWNER_ACCOUNT, it) }
+        }
+
+        if (isNew) {
+          calendarRecord.timeZone?.let { put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, it) }
+            ?: put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, TimeZone.getDefault().id)
         }
 
         if (calendarRecord.allowedAvailabilities.isNotEmpty()) {
@@ -210,18 +168,27 @@ class ExpoCalendar : SharedObject {
         }
       }
 
-      val uriBuilder = CalendarContract.Calendars.CONTENT_URI
-        .buildUpon()
-        .appendQueryParameter(CalendarContract.CALLER_IS_SYNCADAPTER, "true")
-        .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, source.name)
-        .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, if (source.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else source.type)
-
-      val calendarsUri = uriBuilder.build()
       val contentResolver = (appContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
-      val calendarUri = contentResolver.insert(calendarsUri, values)
+      
+      return if (isNew) {
+        val uriBuilder = CalendarContract.Calendars.CONTENT_URI
+          .buildUpon()
+          .appendQueryParameter(CalendarContract.CALLER_IS_SYNCADAPTER, "true")
+          .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, source!!.name)
+          .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, if (source.isLocalAccount) CalendarContract.ACCOUNT_TYPE_LOCAL else source.type)
 
-      val calendarId = calendarUri?.lastPathSegment!!.toInt()
-      return calendarId
+        val calendarsUri = uriBuilder.build()
+        val calendarUri = contentResolver.insert(calendarsUri, values)
+        val calendarId = calendarUri?.lastPathSegment!!.toInt()
+        calendarId
+      } else {
+        val uri = CalendarContract.Calendars.CONTENT_URI.buildUpon().appendPath(calendarRecord.id).build()
+        val rowsUpdated = contentResolver.update(uri, values, null, null)
+        if (rowsUpdated == 0) {
+          throw Exception("Failed to update calendar")
+        }
+        calendarRecord.id!!.toInt()
+      }
     }
   }
 

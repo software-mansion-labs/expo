@@ -1,9 +1,12 @@
 package expo.modules.calendar.next
 
 import android.Manifest
+import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
+import android.text.TextUtils
 import expo.modules.calendar.ModuleDestroyedException
+import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
 import expo.modules.calendar.dialogs.CreatedEventOptions
@@ -12,6 +15,9 @@ import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.findCalendarsQueryParameters
 import expo.modules.calendar.next.records.CalendarRecord
+import expo.modules.calendar.next.records.CalendarAccessLevel
+import expo.modules.calendar.next.records.AttendeeType
+import expo.modules.calendar.next.records.AlarmMethod
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
 import expo.modules.kotlin.apifeatures.EitherType
@@ -152,17 +158,11 @@ class CalendarNextModule : Module() {
         }
       }
 
-      AsyncFunction("update") { expoCalendar: ExpoCalendar, details: CalendarRecord, promise: Promise ->
-        withPermissions(promise) {
-          launchAsyncWithModuleScope(promise) {
-            try {
-              expoCalendar.update(details)
-              promise.resolve(null)
-            } catch (e: Exception) {
-              promise.reject("E_CALENDAR_UPDATE_FAILED", "Failed to update calendar", e)
-            }
-          }
-        }
+      Function("update") { expoCalendar: ExpoCalendar, details: CalendarRecord ->
+        val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
+          ?: throw Exception("Calendar record is null")
+        ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
+        expoCalendar.calendarRecord = updatedRecord
       }
     }
 
