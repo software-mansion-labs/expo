@@ -164,6 +164,23 @@ class CalendarNextModule : Module() {
         ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
         expoCalendar.calendarRecord = updatedRecord
       }
+
+      AsyncFunction("delete") { expoCalendar: ExpoCalendar, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val successful = expoCalendar.deleteCalendar()
+              if (successful) {
+                promise.resolve(null)
+              } else {
+                promise.reject("E_CALENDAR_NOT_DELETED", "Calendar could not be deleted", null)
+              }
+            } catch (e: Exception) {
+              promise.reject("E_CALENDAR_NOT_DELETED", "An error occurred while deleting calendar", e)
+            }
+          }
+        }
+      }
     }
 
     Class(ExpoCalendarEvent::class) {
