@@ -5,6 +5,8 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
 import android.text.TextUtils
+import android.util.Log
+import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.dialogs.CreateEventContract
@@ -27,6 +29,8 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import expo.modules.interfaces.permissions.Permissions
+import kotlinx.coroutines.cancel
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -49,6 +53,14 @@ class CalendarNextModule : Module() {
       )
     }
 
+    OnDestroy {
+      try {
+        moduleCoroutineScope.cancel(ModuleDestroyedException())
+      } catch (e: IllegalStateException) {
+        Log.e(TAG, "The scope does not have a job in it")
+      }
+    }
+
     AsyncFunction("getCalendars") { type: String?, promise: Promise ->
       withPermissions(promise) {
         if (type != null && type == "reminder") {
@@ -64,6 +76,10 @@ class CalendarNextModule : Module() {
           }
         }
       }
+    }
+
+    AsyncFunction("requestCalendarPermissionsAsync") { promise: Promise ->
+      Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
     }
 
     AsyncFunction("createCalendarNext") { calendarRecord: CalendarRecord, promise: Promise ->
@@ -170,6 +186,7 @@ class CalendarNextModule : Module() {
             try {
               val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
                 ?: throw Exception("Calendar record is null")
+              println("UPDATED_RECORD: ${updatedRecord.title}")
               ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
               expoCalendar.calendarRecord = updatedRecord
               promise.resolve(null)
