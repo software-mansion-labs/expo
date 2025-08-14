@@ -5,7 +5,6 @@ import android.database.Cursor
 import android.provider.CalendarContract
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
-import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
@@ -14,6 +13,7 @@ import expo.modules.calendar.dialogs.ViewEventContract
 import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.findCalendarsQueryParameters
+import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
 import expo.modules.kotlin.apifeatures.EitherType
@@ -75,55 +75,86 @@ class CalendarNextModule : Module() {
       }
     }
 
+    AsyncFunction("createCalendarNext") { calendarRecord: CalendarRecord, promise: Promise ->
+      withPermissions(promise) {
+        launchAsyncWithModuleScope(promise) {
+          try {
+            val calendarId = ExpoCalendar.saveCalendar(calendarRecord, appContext)
+            val newCalendarRecord = calendarRecord.copy(id = calendarId.toString())
+            val newCalendar = ExpoCalendar(appContext, newCalendarRecord)
+            promise.resolve(newCalendar)
+          } catch (e: Exception) {
+            promise.reject("E_CALENDAR_CREATION_FAILED", "Failed to create calendar", e)
+          }
+        }
+      }
+    }
+
     Class(ExpoCalendar::class) {
-      Constructor { id: String ->
-        ExpoCalendar(appContext, id)
+      Constructor { calendarRecord: CalendarRecord ->
+        ExpoCalendar(appContext, calendarRecord)
       }
 
       Property("id") { expoCalendar: ExpoCalendar ->
-        expoCalendar.id
+        expoCalendar.calendarRecord?.id
       }
 
       Property("title") { expoCalendar: ExpoCalendar ->
-        expoCalendar.title
+        expoCalendar.calendarRecord?.title
+      }
+
+      Property("source") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.source
       }
 
       Property("isPrimary") { expoCalendar: ExpoCalendar ->
-        expoCalendar.isPrimary
+        expoCalendar.calendarRecord?.isPrimary
       }
 
       Property("name") { expoCalendar: ExpoCalendar ->
-        expoCalendar.name
+        expoCalendar.calendarRecord?.name
       }
 
       Property("color") { expoCalendar: ExpoCalendar ->
-        expoCalendar.color
+        expoCalendar.calendarRecord?.color
       }
 
       Property("ownerAccount") { expoCalendar: ExpoCalendar ->
-        expoCalendar.ownerAccount
+        expoCalendar.calendarRecord?.ownerAccount
       }
 
       Property("timeZone") { expoCalendar: ExpoCalendar ->
-        expoCalendar.timeZone
+        expoCalendar.calendarRecord?.timeZone
       }
 
       Property("isVisible") { expoCalendar: ExpoCalendar ->
-        expoCalendar.isVisible
+        expoCalendar.calendarRecord?.isVisible
       }
 
       Property("isSynced") { expoCalendar: ExpoCalendar ->
-        expoCalendar.isSynced
+        expoCalendar.calendarRecord?.isSynced
       }
 
       Property("allowsModifications") { expoCalendar: ExpoCalendar ->
-        expoCalendar.allowsModifications
+        expoCalendar.calendarRecord?.allowsModifications
+      }
+
+      Property("allowedReminders") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.allowedReminders
+      }
+
+      Property("allowedAttendeeTypes") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.allowedAttendeeTypes
+      }
+
+      Property("accessLevel") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.accessLevel
       }
 
       AsyncFunction("listEvents") { expoCalendar: ExpoCalendar, startDate: Any, endDate: Any, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
-            if (expoCalendar.id == null) {
+            if (expoCalendar.calendarRecord?.id == null) {
               promise.reject("E_EVENTS_NOT_FOUND", "Calendar doesn't exist", Exception())
             }
             try {
@@ -144,6 +175,18 @@ class CalendarNextModule : Module() {
               promise.resolve(expoCalendarEvent)
             } catch (e: Exception) {
               promise.reject("E_EVENT_NOT_CREATED", "Event could not be created", e)
+            }
+          }
+        }
+    }
+      AsyncFunction("update") { expoCalendar: ExpoCalendar, details: CalendarRecord, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              expoCalendar.update(details)
+              promise.resolve(null)
+            } catch (e: Exception) {
+              promise.reject("E_CALENDAR_UPDATE_FAILED", "Failed to update calendar", e)
             }
           }
         }
