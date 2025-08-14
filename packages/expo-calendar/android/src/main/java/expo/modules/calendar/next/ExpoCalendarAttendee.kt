@@ -91,9 +91,9 @@ class ExpoCalendarAttendee : SharedObject {
       values.put(CalendarContract.Attendees.EVENT_ID, eventId)
     }
     attendeeRecord.email?.let { values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, it) }
-    attendeeRecord.role?.let { values.put(CalendarContract.Attendees.ATTENDEE_RELATIONSHIP, it.androidValue) }
-    attendeeRecord.type?.let { values.put(CalendarContract.Attendees.ATTENDEE_TYPE, it.androidValue) }
-    attendeeRecord.status?.let { values.put(CalendarContract.Attendees.ATTENDEE_STATUS, it.androidValue) }
+    attendeeRecord.role?.let { values.put(CalendarContract.Attendees.ATTENDEE_RELATIONSHIP, attendeeRelationshipConstantMatchingString(it.value)) }
+    attendeeRecord.type?.let { values.put(CalendarContract.Attendees.ATTENDEE_TYPE, attendeeTypeConstantMatchingString(it.value)) }
+    attendeeRecord.status?.let { values.put(CalendarContract.Attendees.ATTENDEE_STATUS, attendeeStatusConstantMatchingString(it.value)) }
     attendeeRecord.name?.let { values.put(CalendarContract.Attendees.ATTENDEE_NAME, it) }
     return values
   }

@@ -1,10 +1,15 @@
 package expo.modules.calendar.next.records
 
 import android.provider.CalendarContract
+import expo.modules.calendar.accessConstantMatchingString
+import expo.modules.calendar.accessStringMatchingConstant
+import expo.modules.calendar.availabilityConstantMatchingString
+import expo.modules.calendar.availabilityStringMatchingConstant
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import expo.modules.kotlin.types.Enumerable
 
-data class EventRecord (
+data class EventRecord(
   @Field
   val id: String? = null,
   @Field
@@ -55,25 +60,33 @@ data class EventRecord (
       title = if ("title" in nullableSet) null else other.title ?: this.title,
       location = if ("location" in nullableSet) null else other.location ?: this.location,
       timeZone = if ("timeZone" in nullableSet) null else other.timeZone ?: this.timeZone,
-      endTimeZone = if ("endTimeZone" in nullableSet) null else other.endTimeZone ?: this.endTimeZone,
+      endTimeZone = if ("endTimeZone" in nullableSet) null else other.endTimeZone
+        ?: this.endTimeZone,
       notes = if ("notes" in nullableSet) null else other.notes ?: this.notes,
-      recurrenceRule = if ("recurrenceRule" in nullableSet) null else other.recurrenceRule ?: this.recurrenceRule,
+      recurrenceRule = if ("recurrenceRule" in nullableSet) null else other.recurrenceRule
+        ?: this.recurrenceRule,
       startDate = if ("startDate" in nullableSet) null else other.startDate ?: this.startDate,
       endDate = if ("endDate" in nullableSet) null else other.endDate ?: this.endDate,
       allDay = if ("allDay" in nullableSet) null else other.allDay ?: this.allDay,
-      availability = if ("availability" in nullableSet) null else other.availability ?: this.availability,
+      availability = if ("availability" in nullableSet) null else other.availability
+        ?: this.availability,
       status = if ("status" in nullableSet) null else other.status ?: this.status,
-      organizerEmail = if ("organizerEmail" in nullableSet) null else other.organizerEmail ?: this.organizerEmail,
-      accessLevel = if ("accessLevel" in nullableSet) null else other.accessLevel ?: this.accessLevel,
-      guestsCanModify = if ("guestsCanModify" in nullableSet) null else other.guestsCanModify ?: this.guestsCanModify,
-      guestsCanInviteOthers = if ("guestsCanInviteOthers" in nullableSet) null else other.guestsCanInviteOthers ?: this.guestsCanInviteOthers,
-      guestsCanSeeGuests = if ("guestsCanSeeGuests" in nullableSet) null else other.guestsCanSeeGuests ?: this.guestsCanSeeGuests,
+      organizerEmail = if ("organizerEmail" in nullableSet) null else other.organizerEmail
+        ?: this.organizerEmail,
+      accessLevel = if ("accessLevel" in nullableSet) null else other.accessLevel
+        ?: this.accessLevel,
+      guestsCanModify = if ("guestsCanModify" in nullableSet) null else other.guestsCanModify
+        ?: this.guestsCanModify,
+      guestsCanInviteOthers = if ("guestsCanInviteOthers" in nullableSet) null else other.guestsCanInviteOthers
+        ?: this.guestsCanInviteOthers,
+      guestsCanSeeGuests = if ("guestsCanSeeGuests" in nullableSet) null else other.guestsCanSeeGuests
+        ?: this.guestsCanSeeGuests,
       originalId = if ("originalId" in nullableSet) null else other.originalId ?: this.originalId,
     )
   }
 }
 
-data class AlarmRecord (
+data class AlarmRecord(
   @Field
   val relativeOffset: Int,
   @Field
@@ -96,33 +109,71 @@ data class RecurringEventOptions(
   val instanceStartDate: String? = null,
 ) : Record
 
-enum class EventAvailability(val value: String, val androidValue: Int) {
-  BUSY("busy", CalendarContract.Events.AVAILABILITY_BUSY),
-  FREE("free", CalendarContract.Events.AVAILABILITY_FREE),
-  TENTATIVE("tentative", CalendarContract.Events.AVAILABILITY_TENTATIVE);
+enum class EventAvailability(val value: String) : Enumerable {
+  BUSY("busy"),
+  FREE("free"),
+  TENTATIVE("tentative"),
+
+  // iOS only, not supported on Android:
+  NOT_SUPPORTED("notSupported"),
+  UNAVAILABLE("unavailable");
+
+  fun toAndroidValue(availability: EventAvailability?): Int? {
+    return availability?.value?.let { availabilityConstantMatchingString(it) }
+  }
 
   companion object {
-    fun fromAndroidValue(value: Int): EventAvailability? = entries.find { it.androidValue == value }
+    fun fromAndroidValue(value: Int): EventAvailability? = when (value) {
+      CalendarContract.Events.AVAILABILITY_BUSY -> BUSY
+      CalendarContract.Events.AVAILABILITY_FREE -> FREE
+      CalendarContract.Events.AVAILABILITY_TENTATIVE -> TENTATIVE
+      else -> BUSY
+    }
   }
 }
 
-enum class EventStatus(val value: String, val androidValue: Int) {
-  CONFIRMED("confirmed", CalendarContract.Events.AVAILABILITY_BUSY),
-  TENTATIVE("tentative", CalendarContract.Events.AVAILABILITY_FREE),
-  CANCELED("canceled", CalendarContract.Events.AVAILABILITY_TENTATIVE);
+enum class EventStatus(val value: String) : Enumerable {
+  CONFIRMED("confirmed"),
+  TENTATIVE("tentative"),
+  CANCELED("canceled"),
+
+  // iOS only, not supported on Android:
+  NONE("none");
+
+  fun toAndroidValue(status: EventStatus?): Int? = when (status) {
+    CONFIRMED -> CalendarContract.Events.STATUS_CONFIRMED
+    TENTATIVE -> CalendarContract.Events.STATUS_TENTATIVE
+    CANCELED -> CalendarContract.Events.STATUS_CANCELED
+    else -> CalendarContract.Events.STATUS_CANCELED
+  }
 
   companion object {
-    fun fromAndroidValue(value: Int): EventStatus? = entries.find { it.androidValue == value }
+    fun fromAndroidValue(value: Int): EventStatus? = when (value) {
+      CalendarContract.Events.STATUS_CONFIRMED -> CONFIRMED
+      CalendarContract.Events.STATUS_TENTATIVE -> TENTATIVE
+      CalendarContract.Events.STATUS_CANCELED -> CANCELED
+      else -> CANCELED
+    }
   }
 }
 
-enum class EventAccessLevel(val value: String, val androidValue: Int) {
-  CONFIDENTIAL("confidential", CalendarContract.Events.ACCESS_CONFIDENTIAL),
-  PRIVATE("private", CalendarContract.Events.ACCESS_PRIVATE),
-  PUBLIC("public", CalendarContract.Events.ACCESS_PUBLIC),
-  DEFAULT("default", CalendarContract.Events.ACCESS_DEFAULT);
+enum class EventAccessLevel(val value: String) : Enumerable {
+  CONFIDENTIAL("confidential"),
+  PRIVATE("private"),
+  PUBLIC("public"),
+  DEFAULT("default");
+
+  fun toAndroidValue(accessLevel: EventAccessLevel?): Int? {
+    return accessLevel?.value?.let { accessConstantMatchingString(it) }
+  }
 
   companion object {
-    fun fromAndroidValue(value: Int): EventAccessLevel? = entries.find { it.androidValue == value }
+    fun fromAndroidValue(value: Int): EventAccessLevel? = when (value) {
+      CalendarContract.Events.ACCESS_CONFIDENTIAL -> CONFIDENTIAL
+      CalendarContract.Events.ACCESS_PRIVATE -> PRIVATE
+      CalendarContract.Events.ACCESS_PUBLIC -> PUBLIC
+      CalendarContract.Events.ACCESS_DEFAULT -> DEFAULT
+      else -> DEFAULT
+    }
   }
 }

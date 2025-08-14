@@ -139,7 +139,7 @@ const EventsScreen = ({ route }: Props) => {
       const attendee = await event.createAttendee({
         email: 'test@example.com',
         name: 'Test Attendee',
-        type: Calendar.AttendeeType.PERSON,
+        type: Calendar.AttendeeType.RESOURCE,
         status: Calendar.AttendeeStatus.PENDING,
         role: Calendar.AttendeeRole.SPEAKER,
       });

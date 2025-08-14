@@ -200,7 +200,7 @@ export declare class ExpoCalendarEvent {
     /**
      * Creates a new attendee and adds it to this event.
      */
-    createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email' | 'role' | 'type' | 'status'> & Partial<ExpoCalendarAttendee>): Promise<ExpoCalendarAttendee>;
+    createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>): Promise<ExpoCalendarAttendee>;
     /**
      * Updates an existing attendee of this event.
      */

@@ -124,7 +124,7 @@ class CalendarNextModule : Module() {
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
             if (expoCalendar.id == null) {
-              throw Exception("Calendar id is null")
+              promise.reject("E_EVENTS_NOT_FOUND", "Calendar doesn't exist", Exception())
             }
             try {
               val expoCalendarEvents = expoCalendar.getEvents(startDate, endDate)
@@ -213,11 +213,11 @@ class CalendarNextModule : Module() {
       }
 
       Property("availability") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.availability.value
+        expoCalendarEvent.eventRecord?.availability?.value
       }
 
       Property("status") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.status.value
+        expoCalendarEvent.eventRecord?.status?.value
       }
 
       Property("organizerEmail") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -225,7 +225,7 @@ class CalendarNextModule : Module() {
       }
 
       Property("accessLevel") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.accessLevel.value
+        expoCalendarEvent.eventRecord?.accessLevel?.value
       }
 
       Property("guestsCanModify") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -307,15 +307,15 @@ class CalendarNextModule : Module() {
       }
 
       Property("role") { expoCalendarAttendee: ExpoCalendarAttendee ->
-        expoCalendarAttendee.attendeeRecord?.role.value
+        expoCalendarAttendee.attendeeRecord?.role?.value
       }
 
       Property("status") { expoCalendarAttendee: ExpoCalendarAttendee ->
-        expoCalendarAttendee.attendeeRecord?.status.value
+        expoCalendarAttendee.attendeeRecord?.status?.value
       }
 
       Property("type") { expoCalendarAttendee: ExpoCalendarAttendee ->
-        expoCalendarAttendee.attendeeRecord?.type.value
+        expoCalendarAttendee.attendeeRecord?.type?.value
       }
 
       Property("email") { expoCalendarAttendee: ExpoCalendarAttendee ->
