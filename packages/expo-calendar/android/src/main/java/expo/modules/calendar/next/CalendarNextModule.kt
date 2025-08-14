@@ -289,7 +289,11 @@ class CalendarNextModule : Module() {
       }
 
       Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
-        expoCalendarEvent.deleteEvent(recurringEventOptions)
+        try {
+          expoCalendarEvent.deleteEvent(recurringEventOptions)
+        } catch (e: Exception) {
+          throw Exception("Event could not be deleted", e)
+        }
       }
     }
 

@@ -1545,6 +1545,7 @@ export async function test(t) {
 
         t.it('creates a new attendee', async () => {
           const attendee = await createTestAttendee(event);
+          testAttendeeShape(attendee);
           t.expect(attendee).toBeDefined();
           t.expect(attendee.email).toBe(defaultAttendeeData.email);
           t.expect(attendee.name).toBe(defaultAttendeeData.name);
