@@ -23,7 +23,7 @@ const defaultCalendarData = {
   title: 'Expo test-suite calendar ' + new Date().toISOString(),
   color: '#4B968A',
   entityType: Calendar.EntityTypes.EVENT,
-  //   name: 'expo-test-suite-calendar', TODO: Android only
+  name: 'expo-test-suite-calendar',
   source: {
     isLocalAccount: true,
     name: 'expo',
@@ -767,12 +767,7 @@ export async function test(t) {
         let calendar: ExpoCalendar;
 
         t.beforeEach(async () => {
-          if (Platform.OS === 'ios') {
-            calendar = await createTestCalendarAsync();
-          } else {
-            // TODO: Add creating a new calendar, when it is available on Android
-            calendar = (await getCalendarsNext()).find((c) => c.id === '1');
-          }
+          calendar = await createTestCalendarAsync();
         });
 
         t.it('updates the event title', async () => {
@@ -1050,10 +1045,9 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          if (Platform.OS === 'ios') {
-            // TODO: Add deleting a calendar, when it is available on Android
-            calendar.delete();
-          }
+          // TODO: Temporarly until we have a way to delete calendars on Android
+          //   calendar.delete();
+          Calendar.deleteCalendarAsync(calendar.id);
         });
       });
 
@@ -1080,11 +1074,14 @@ export async function test(t) {
 
         t.it('deletes an event and verifies it is deleted', async () => {
           const event = await createTestEvent(calendar);
-          event.delete({});
+          event.delete();
           t.expect(event.title).toBeNull();
           t.expect(event.location).toBeNull();
           t.expect(event.notes).toBeNull();
-          t.expect(event.alarms).toBeNull();
+          // TODO: Fix when alarms are supported on Android
+          if (Platform.OS === 'ios') {
+            t.expect(event.alarms).toBeNull();
+          }
           t.expect(event.recurrenceRule).toBeNull();
           t.expect(event.startDate).toBeNull();
           t.expect(event.endDate).toBeNull();
@@ -1238,7 +1235,9 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          // TODO: Temporarly until we have a way to delete calendars on Android
+          //   calendar.delete();
+          Calendar.deleteCalendarAsync(calendar.id);
         });
       });
 

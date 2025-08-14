@@ -172,7 +172,11 @@ class ExpoCalendarEvent : SharedObject {
     if (recurringEventOptions.instanceStartDate == null) {
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       rows = contentResolver.delete(uri, null, null)
-      return rows > 0
+      if (rows > 0) {
+        this.eventRecord = null
+        return true;
+      }
+      return false;
     } else {
       // TODO: Verify if this branch is working
       val exceptionValues = ContentValues()
@@ -194,7 +198,7 @@ class ExpoCalendarEvent : SharedObject {
       val exceptionUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_EXCEPTION_URI, eventID.toLong())
       contentResolver.insert(exceptionUri, exceptionValues)
     }
-    eventRecord = null
+    this.eventRecord = null
     return true
   }
 
