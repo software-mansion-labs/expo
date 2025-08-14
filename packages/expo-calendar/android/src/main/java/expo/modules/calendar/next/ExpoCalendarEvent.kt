@@ -22,6 +22,9 @@ import expo.modules.calendar.attendeeRelationshipConstantMatchingString
 import expo.modules.calendar.attendeeTypeConstantMatchingString
 import expo.modules.calendar.attendeeStatusConstantMatchingString
 import expo.modules.calendar.next.records.AttendeeRecord
+import expo.modules.calendar.next.records.EventAccessLevel
+import expo.modules.calendar.next.records.EventAvailability
+import expo.modules.calendar.next.records.EventStatus
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -73,12 +76,12 @@ class ExpoCalendarEvent : SharedObject {
       endDate = foundEndDate,
       allDay = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.ALL_DAY) != 0,
       location = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_LOCATION),
-      availability = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.AVAILABILITY),
+      availability = EventAvailability.fromAndroidValue(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.AVAILABILITY)),
       timeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_TIMEZONE),
       endTimeZone = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_END_TIMEZONE),
-      status = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.STATUS),
+      status = EventStatus.fromAndroidValue(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.STATUS)),
       organizerEmail = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.ORGANIZER),
-      accessLevel = accessStringMatchingConstant(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.ACCESS_LEVEL)),
+      accessLevel = EventAccessLevel.fromAndroidValue(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.ACCESS_LEVEL)),
       guestsCanModify = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_MODIFY) != 0,
       guestsCanInviteOthers = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS) != 0,
       guestsCanSeeGuests = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_SEE_GUESTS) != 0,

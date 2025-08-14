@@ -213,11 +213,11 @@ class CalendarNextModule : Module() {
       }
 
       Property("availability") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.availability
+        expoCalendarEvent.eventRecord?.availability.value
       }
 
       Property("status") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.status
+        expoCalendarEvent.eventRecord?.status.value
       }
 
       Property("organizerEmail") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -225,7 +225,7 @@ class CalendarNextModule : Module() {
       }
 
       Property("accessLevel") { expoCalendarEvent: ExpoCalendarEvent ->
-        expoCalendarEvent.eventRecord?.accessLevel
+        expoCalendarEvent.eventRecord?.accessLevel.value
       }
 
       Property("guestsCanModify") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -307,15 +307,15 @@ class CalendarNextModule : Module() {
       }
 
       Property("role") { expoCalendarAttendee: ExpoCalendarAttendee ->
-        expoCalendarAttendee.attendeeRecord?.role
+        expoCalendarAttendee.attendeeRecord?.role.value
       }
 
       Property("status") { expoCalendarAttendee: ExpoCalendarAttendee ->
-        expoCalendarAttendee.attendeeRecord?.status
+        expoCalendarAttendee.attendeeRecord?.status.value
       }
 
       Property("type") { expoCalendarAttendee: ExpoCalendarAttendee ->
-        expoCalendarAttendee.attendeeRecord?.type
+        expoCalendarAttendee.attendeeRecord?.type.value
       }
 
       Property("email") { expoCalendarAttendee: ExpoCalendarAttendee ->

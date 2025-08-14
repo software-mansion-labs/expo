@@ -1,5 +1,6 @@
 package expo.modules.calendar.next.records
 
+import android.provider.CalendarContract
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 
@@ -27,13 +28,13 @@ data class EventRecord (
   @Field
   val allDay: Boolean? = null,
   @Field
-  val availability: String? = null,
+  val availability: EventAvailability? = null,
   @Field
-  val status: String? = null,
+  val status: EventStatus? = null,
   @Field
   val organizerEmail: String? = null,
   @Field
-  val accessLevel: String? = null,
+  val accessLevel: EventAccessLevel? = null,
   @Field
   val guestsCanModify: Boolean? = null,
   @Field
@@ -95,30 +96,33 @@ data class RecurringEventOptions(
   val instanceStartDate: String? = null,
 ) : Record
 
-data class AttendeeRecord(
-  @Field
-  var id: String? = null,
-  @Field
-  val name: String? = null,
-  @Field
-  val role: String? = null,
-  @Field
-  val status: String? = null,
-  @Field
-  val type: String? = null,
-  @Field
-  val email: String? = null,
-) : Record {
-  fun getUpdatedRecord(other: AttendeeRecord, nullableFields: List<String>? = null): AttendeeRecord {
-    val nullableSet = nullableFields?.toSet() ?: emptySet()
+enum class EventAvailability(val value: String, val androidValue: Int) {
+  BUSY("busy", CalendarContract.Events.AVAILABILITY_BUSY),
+  FREE("free", CalendarContract.Events.AVAILABILITY_FREE),
+  TENTATIVE("tentative", CalendarContract.Events.AVAILABILITY_TENTATIVE);
 
-    return AttendeeRecord(
-      id = this.id,
-      name = if ("name" in nullableSet) null else other.name ?: this.name,
-      role = if ("role" in nullableSet) null else other.role ?: this.role,
-      status = if ("status" in nullableSet) null else other.status ?: this.status,
-      type = if ("type" in nullableSet) null else other.type ?: this.type,
-      email = if ("email" in nullableSet) null else other.email ?: this.email,
-    )
+  companion object {
+    fun fromAndroidValue(value: Int): EventAvailability? = entries.find { it.androidValue == value }
+  }
+}
+
+enum class EventStatus(val value: String, val androidValue: Int) {
+  CONFIRMED("confirmed", CalendarContract.Events.AVAILABILITY_BUSY),
+  TENTATIVE("tentative", CalendarContract.Events.AVAILABILITY_FREE),
+  CANCELED("canceled", CalendarContract.Events.AVAILABILITY_TENTATIVE);
+
+  companion object {
+    fun fromAndroidValue(value: Int): EventStatus? = entries.find { it.androidValue == value }
+  }
+}
+
+enum class EventAccessLevel(val value: String, val androidValue: Int) {
+  CONFIDENTIAL("confidential", CalendarContract.Events.ACCESS_CONFIDENTIAL),
+  PRIVATE("private", CalendarContract.Events.ACCESS_PRIVATE),
+  PUBLIC("public", CalendarContract.Events.ACCESS_PUBLIC),
+  DEFAULT("default", CalendarContract.Events.ACCESS_DEFAULT);
+
+  companion object {
+    fun fromAndroidValue(value: Int): EventAccessLevel? = entries.find { it.androidValue == value }
   }
 }

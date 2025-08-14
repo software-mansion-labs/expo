@@ -14,6 +14,9 @@ import expo.modules.calendar.attendeeStatusStringMatchingConstant
 import expo.modules.calendar.attendeeTypeConstantMatchingString
 import expo.modules.calendar.attendeeTypeStringMatchingConstant
 import expo.modules.calendar.next.records.AttendeeRecord
+import expo.modules.calendar.next.records.AttendeeRole
+import expo.modules.calendar.next.records.AttendeeStatus
+import expo.modules.calendar.next.records.AttendeeType
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.AppContext
@@ -34,12 +37,13 @@ class ExpoCalendarAttendee : SharedObject {
 
   constructor(appContext: AppContext, cursor: Cursor) {
     this.localAppContext = appContext
+
     this.attendeeRecord = AttendeeRecord(
       id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees._ID),
       name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_NAME),
-      role = attendeeRelationshipStringMatchingConstant(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_RELATIONSHIP)),
-      status = attendeeStatusStringMatchingConstant(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_STATUS)),
-      type = attendeeTypeStringMatchingConstant(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_TYPE)),
+      role = AttendeeRole.fromAndroidValue(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_RELATIONSHIP)),
+      status = AttendeeStatus.fromAndroidValue(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_STATUS)),
+      type = AttendeeType.fromAndroidValue(CalendarUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_TYPE)),
       email = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_EMAIL),
     )
   }
@@ -87,9 +91,9 @@ class ExpoCalendarAttendee : SharedObject {
       values.put(CalendarContract.Attendees.EVENT_ID, eventId)
     }
     attendeeRecord.email?.let { values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, it) }
-    attendeeRecord.role?.let { values.put(CalendarContract.Attendees.ATTENDEE_RELATIONSHIP, attendeeRelationshipConstantMatchingString(it)) }
-    attendeeRecord.type?.let { values.put(CalendarContract.Attendees.ATTENDEE_TYPE, attendeeTypeConstantMatchingString(it)) }
-    attendeeRecord.status?.let { values.put(CalendarContract.Attendees.ATTENDEE_STATUS, attendeeStatusConstantMatchingString(it)) }
+    attendeeRecord.role?.let { values.put(CalendarContract.Attendees.ATTENDEE_RELATIONSHIP, it.androidValue) }
+    attendeeRecord.type?.let { values.put(CalendarContract.Attendees.ATTENDEE_TYPE, it.androidValue) }
+    attendeeRecord.status?.let { values.put(CalendarContract.Attendees.ATTENDEE_STATUS, it.androidValue) }
     attendeeRecord.name?.let { values.put(CalendarContract.Attendees.ATTENDEE_NAME, it) }
     return values
   }
