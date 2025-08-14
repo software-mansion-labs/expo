@@ -88,6 +88,10 @@ class CalendarNextModule : Module() {
         expoCalendar.calendarRecord?.title
       }
 
+      Property("source") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.source
+      }
+
       Property("isPrimary") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.isPrimary
       }
@@ -118,10 +122,6 @@ class CalendarNextModule : Module() {
 
       Property("allowsModifications") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.allowsModifications
-      }
-
-      Property("source") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.source
       }
 
       Property("allowedReminders") { expoCalendar: ExpoCalendar ->

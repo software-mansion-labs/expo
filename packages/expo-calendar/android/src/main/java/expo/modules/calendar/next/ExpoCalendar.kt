@@ -10,6 +10,7 @@ import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.calendar.next.records.CalendarAccessLevel
 import expo.modules.calendar.next.records.AttendeeType
 import expo.modules.calendar.next.records.AlarmMethod
+import expo.modules.calendar.next.records.Source
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
@@ -60,6 +61,12 @@ class ExpoCalendar : SharedObject {
         AttendeeType.NONE
       }
     } ?: emptyList(),
+    source = Source(
+      id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_NAME),
+      type = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_TYPE),
+      name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_NAME),
+      isLocalAccount = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_TYPE) == CalendarContract.ACCOUNT_TYPE_LOCAL
+    ),
     )
   }
 
