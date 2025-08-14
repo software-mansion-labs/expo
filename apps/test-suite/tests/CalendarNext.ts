@@ -10,6 +10,7 @@ import {
   getSources,
   listEvents,
   ExpoCalendarReminder,
+  ExpoCalendarAttendee,
 } from 'expo-calendar/next';
 import { Platform } from 'react-native';
 
@@ -69,13 +70,21 @@ function createEventData(customArgs = {}) {
   };
 }
 
-function createTestEvent(
+async function createTestEvent(
   calendar: ExpoCalendar,
   customArgs: Partial<ExpoCalendarEvent> = {}
-): ExpoCalendarEvent {
+): Promise<ExpoCalendarEvent> {
   const eventData = createEventData(customArgs);
-  return calendar.createEvent(eventData);
+  return await calendar.createEvent(eventData);
 }
+
+const defaultAttendeeData = {
+  email: 'test@test.com',
+  name: 'Test Attendee',
+  role: Calendar.AttendeeRole.ATTENDEE,
+  status: Calendar.AttendeeStatus.ACCEPTED,
+  type: Calendar.AttendeeType.RESOURCE,
+} satisfies Partial<ExpoCalendarAttendee>;
 
 function createTestReminder(
   calendar: ExpoCalendar,
@@ -83,6 +92,17 @@ function createTestReminder(
 ): ExpoCalendarReminder {
   const reminderData = createEventData(customArgs);
   return calendar.createReminder(reminderData);
+}
+
+async function createTestAttendee(
+  event: ExpoCalendarEvent,
+  customArgs: Partial<ExpoCalendarAttendee> = {}
+): Promise<ExpoCalendarAttendee> {
+  const attendeeData = {
+    ...defaultAttendeeData,
+    ...customArgs,
+  };
+  return await event.createAttendee(attendeeData);
 }
 
 async function getReminderCalendar() {
@@ -369,7 +389,7 @@ export async function test(t) {
       });
 
       t.it('can preview an event', async () => {
-        const event = createTestEvent(calendar);
+        const event = await createTestEvent(calendar);
         await alertAndWaitForResponse(
           'Please verify event details are shown and close the dialog.'
         );
@@ -382,7 +402,7 @@ export async function test(t) {
       });
 
       t.it('can edit an event', async () => {
-        const event = createTestEvent(calendar);
+        const event = await createTestEvent(calendar);
         await alertAndWaitForResponse('Please verify you can see the event and close the dialog.');
         const result = await event.editInCalendarAsync(dontStartNewTask);
         t.expect(typeof result.action).toBe('string'); // done or canceled
@@ -807,7 +827,10 @@ export async function test(t) {
             endDate: newEndDate,
           });
 
-          const fetchedEvents = await calendar.listEvents(new Date(2023, 2, 2), new Date(2023, 2, 5));
+          const fetchedEvents = await calendar.listEvents(
+            new Date(2023, 2, 2),
+            new Date(2023, 2, 5)
+          );
           t.expect(fetchedEvents.length).toBe(1);
           t.expect(fetchedEvents[0].id).toBe(event.id);
           t.expect(fetchedEvents[0].title).toBe(newTitle);
@@ -1067,7 +1090,10 @@ export async function test(t) {
             futureEvents: true,
           });
 
-          const eventsAfterDelete = await calendar.listEvents(new Date(2019, 3, 4), new Date(2019, 3, 8));
+          const eventsAfterDelete = await calendar.listEvents(
+            new Date(2019, 3, 4),
+            new Date(2019, 3, 8)
+          );
 
           t.expect(Array.isArray(eventsAfterDelete)).toBe(true);
           t.expect(eventsAfterDelete.length).toBe(0);
@@ -1091,7 +1117,10 @@ export async function test(t) {
             instanceStartDate: new Date(2019, 3, 5, 9),
           });
 
-          const eventsAfterDelete = await calendar.listEvents(new Date(2019, 3, 4), new Date(2019, 3, 8));
+          const eventsAfterDelete = await calendar.listEvents(
+            new Date(2019, 3, 4),
+            new Date(2019, 3, 8)
+          );
 
           t.expect(Array.isArray(eventsAfterDelete)).toBe(true);
           t.expect(eventsAfterDelete.length).toBe(3);
@@ -1477,8 +1506,154 @@ export async function test(t) {
       }
     });
 
-    t.describe('Attendee', () => {
-      // TODO: Add tests for attendees on Android
-    });
+    if (Platform.OS === 'android') {
+      t.describe('Attendee', () => {
+        let calendar: ExpoCalendar;
+        let event: ExpoCalendarEvent;
+
+        t.beforeEach(async () => {
+          // TODO: Add creating a new calendar, when it is available on Android
+          calendar = (await getCalendarsNext()).find((c) => c.id === '1');
+          event = await createTestEvent(calendar);
+        });
+
+        t.it('lists attendees for an event with attendees', async () => {
+          const attendees = await event.getAttendees();
+          t.expect(Array.isArray(attendees)).toBe(true);
+          t.expect(attendees.length).toBe(0);
+        });
+
+        t.it('creates a new attendee', async () => {
+          const attendee = await createTestAttendee(event);
+          t.expect(attendee).toBeDefined();
+          t.expect(attendee.email).toBe(defaultAttendeeData.email);
+          t.expect(attendee.name).toBe(defaultAttendeeData.name);
+          t.expect(attendee.role).toBe(defaultAttendeeData.role);
+          t.expect(attendee.status).toBe(defaultAttendeeData.status);
+          t.expect(attendee.type).toBe(defaultAttendeeData.type);
+        });
+
+        t.it('lists attendees for an event', async () => {
+          await createTestAttendee(event);
+          const attendees = await event.getAttendees();
+          t.expect(Array.isArray(attendees)).toBe(true);
+          t.expect(attendees.length).toBe(1);
+          t.expect(attendees[0].email).toBe(defaultAttendeeData.email);
+          t.expect(attendees[0].name).toBe(defaultAttendeeData.name);
+          t.expect(attendees[0].role).toBe(defaultAttendeeData.role);
+          t.expect(attendees[0].status).toBe(defaultAttendeeData.status);
+          t.expect(attendees[0].type).toBe(defaultAttendeeData.type);
+        });
+
+        t.it('updates an attendee name', async () => {
+          const attendee = await createTestAttendee(event);
+          const name = 'Updated Attendee';
+          await attendee.update({
+            name,
+          });
+          t.expect(attendee.name).toBe(name);
+          const attendees = await event.getAttendees();
+          t.expect(attendees.length).toBe(1);
+          t.expect(attendees[0].name).toBe(name);
+        });
+
+        t.it('updates an attendee email', async () => {
+          const attendee = await createTestAttendee(event);
+          const email = 'updated@test.com';
+          await attendee.update({
+            email,
+          });
+          t.expect(attendee.email).toBe(email);
+          const attendees = await event.getAttendees();
+          t.expect(attendees.length).toBe(1);
+          t.expect(attendees[0].email).toBe(email);
+        });
+
+        t.it('updates attendee role/status/type', async () => {
+          const attendee = await createTestAttendee(event);
+          const nextRole = Calendar.AttendeeRole.ORGANIZER;
+          const nextStatus = Calendar.AttendeeStatus.TENTATIVE;
+          const nextType = Calendar.AttendeeType.NONE;
+
+          await attendee.update({
+            role: nextRole,
+            status: nextStatus,
+            type: nextType,
+          });
+
+          const attendees = await event.getAttendees();
+          t.expect(attendees.length).toBe(1);
+          t.expect(attendees[0].role).toBe(nextRole);
+          t.expect(attendees[0].status).toBe(nextStatus);
+          t.expect(attendees[0].type).toBe(nextType);
+        });
+
+        t.it('preserves attendee id when updating', async () => {
+          const attendee = await createTestAttendee(event);
+          const originalId = attendee.id;
+
+          await attendee.update({ name: 'Changed Name', email: 'changed@test.com' });
+          const attendees = await event.getAttendees();
+
+          t.expect(attendees.length).toBe(1);
+          t.expect(attendees[0].id).toBe(originalId);
+        });
+
+        t.it('preserves attendee data when updating an event', async () => {
+          const attendee = await createTestAttendee(event);
+          const name = 'Updated Attendee';
+          const email = 'updated@test.com';
+          await attendee.update({
+            name,
+            email,
+          });
+          const attendees = await event.getAttendees();
+          t.expect(attendees.length).toBe(1);
+          t.expect(attendees[0].name).toBe(name);
+          t.expect(attendees[0].email).toBe(email);
+          t.expect(attendees[0].role).toBe(defaultAttendeeData.role);
+          t.expect(attendees[0].status).toBe(defaultAttendeeData.status);
+          t.expect(attendees[0].type).toBe(defaultAttendeeData.type);
+        });
+
+        t.it('creates many attendees', async () => {
+          const attendees = await Promise.all([
+            createTestAttendee(event),
+            createTestAttendee(event),
+            createTestAttendee(event),
+          ]);
+          t.expect(attendees.length).toBe(3);
+          t.expect(attendees.every((attendee) => attendee.name === defaultAttendeeData.name));
+        });
+
+        t.it('deletes an attendee', async () => {
+          const attendee = await createTestAttendee(event);
+          const attendees = await event.getAttendees();
+          t.expect(attendees.length).toBe(1);
+
+          await attendee.delete();
+          const attendeesAfterDelete = await event.getAttendees();
+          t.expect(attendeesAfterDelete.length).toBe(0);
+        });
+
+        t.it('throws when deleting attendee twice', async () => {
+          const attendee = await createTestAttendee(event);
+
+          await attendee.delete();
+
+          let error: any = null;
+          try {
+            await attendee.delete();
+          } catch (e) {
+            error = e;
+          }
+          t.expect(error).toBeDefined();
+        });
+
+        t.afterEach(async () => {
+          event.delete();
+        });
+      });
+    }
   });
 }

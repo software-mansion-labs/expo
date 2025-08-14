@@ -343,11 +343,15 @@ class CalendarNextModule : Module() {
       AsyncFunction("delete") { expoCalendarAttendee: ExpoCalendarAttendee, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
-            val successful = expoCalendarAttendee.deleteAttendee()
-            if (successful) {
-              promise.resolve(null)
-            } else {
-              promise.reject("E_ATTENDEE_NOT_DELETED", "Attendee could not be deleted", null)
+            try {
+              val successful = expoCalendarAttendee.deleteAttendee()
+              if (successful) {
+                promise.resolve(null)
+              } else {
+                promise.reject("E_ATTENDEE_NOT_DELETED", "Attendee could not be deleted", null)
+              }
+            } catch (e: Exception) {
+              promise.reject("E_ATTENDEE_NOT_DELETED", "An error occurred while deleting attendee", e)
             }
           }
         }
