@@ -158,11 +158,20 @@ class CalendarNextModule : Module() {
         }
       }
 
-      Function("update") { expoCalendar: ExpoCalendar, details: CalendarRecord ->
-        val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
-          ?: throw Exception("Calendar record is null")
-        ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
-        expoCalendar.calendarRecord = updatedRecord
+      AsyncFunction("update") { expoCalendar: ExpoCalendar, details: CalendarRecord, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
+                ?: throw Exception("Calendar record is null")
+              ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
+              expoCalendar.calendarRecord = updatedRecord
+              promise.resolve(null)
+            } catch (e: Exception) {
+              promise.reject("E_CALENDAR_UPDATE_FAILED", "Failed to update calendar", e)
+            }
+          }
+        }
       }
 
       AsyncFunction("delete") { expoCalendar: ExpoCalendar, promise: Promise ->
