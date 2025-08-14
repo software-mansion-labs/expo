@@ -94,28 +94,18 @@ class CalendarNextModule : Module() {
         expoCalendar.calendarRecord?.title
       }
 
-      Property("source") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.source
-      }
-
-      Property("isPrimary") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.isPrimary
-      }
-
       Property("name") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.name
       }
 
+      Property("source") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.source
+      }
+
       Property("color") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.color
-      }
-
-      Property("ownerAccount") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.ownerAccount
-      }
-
-      Property("timeZone") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.timeZone
+        expoCalendar.calendarRecord?.color?.let { colorInt ->
+          String.format("#%06X", 0xFFFFFF and colorInt)
+        }
       }
 
       Property("isVisible") { expoCalendar: ExpoCalendar ->
@@ -126,8 +116,20 @@ class CalendarNextModule : Module() {
         expoCalendar.calendarRecord?.isSynced
       }
 
+      Property("timeZone") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.timeZone
+      }
+
+      Property("isPrimary") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.isPrimary
+      }
+
       Property("allowsModifications") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.allowsModifications
+      }
+
+      Property("allowedAvailabilities") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.allowedAvailabilities
       }
 
       Property("allowedReminders") { expoCalendar: ExpoCalendar ->
@@ -136,6 +138,10 @@ class CalendarNextModule : Module() {
 
       Property("allowedAttendeeTypes") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.allowedAttendeeTypes
+      }
+
+      Property("ownerAccount") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.ownerAccount
       }
 
       Property("accessLevel") { expoCalendar: ExpoCalendar ->
