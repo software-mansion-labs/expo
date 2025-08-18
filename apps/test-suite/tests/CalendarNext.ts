@@ -755,26 +755,6 @@ export async function test(t) {
           t.expect(events.length).toBe(4);
         });
 
-        t.it('returns an instance of a recurring event', async () => {
-          const recurringEvent = await createTestEvent(calendar, {
-            recurrenceRule: {
-              frequency: Calendar.Frequency.DAILY,
-            },
-          });
-
-          const instanceStartDate = new Date(2020, 5, 6, 9);
-
-          const occurrence = recurringEvent.getOccurrence({
-            instanceStartDate,
-          });
-
-          t.expect(occurrence).toBeDefined();
-          t.expect(occurrence.id).toBe(recurringEvent.id);
-          t.expect(occurrence.title).toBe(recurringEvent.title);
-          t.expect(occurrence.startDate).toBe(new Date(2020, 5, 6, 9).toISOString());
-          t.expect(occurrence.endDate).toBe(new Date(2020, 5, 6, 10).toISOString());
-        });
-
         t.afterEach(async () => {
           calendar.delete();
         });
@@ -1072,6 +1052,40 @@ export async function test(t) {
           Calendar.deleteCalendarAsync(calendar.id);
         });
       });
+
+      if (Platform.OS === 'ios') {
+        t.describe('Event.getOccurrence()', () => {
+          let calendar: ExpoCalendar;
+
+          t.beforeEach(async () => {
+            calendar = await createTestCalendarAsync();
+          });
+
+          t.it('returns an instance of a recurring event', async () => {
+            const recurringEvent = await createTestEvent(calendar, {
+              recurrenceRule: {
+                frequency: Calendar.Frequency.DAILY,
+              },
+            });
+
+            const instanceStartDate = new Date(2020, 5, 6, 9);
+
+            const occurrence = recurringEvent.getOccurrence({
+              instanceStartDate,
+            });
+
+            t.expect(occurrence).toBeDefined();
+            t.expect(occurrence.id).toBe(recurringEvent.id);
+            t.expect(occurrence.title).toBe(recurringEvent.title);
+            t.expect(occurrence.startDate).toBe(new Date(2020, 5, 6, 9).toISOString());
+            t.expect(occurrence.endDate).toBe(new Date(2020, 5, 6, 10).toISOString());
+          });
+
+          t.afterEach(async () => {
+            calendar.delete();
+          });
+        });
+      }
 
       t.describe('Event.delete()', () => {
         let calendar: ExpoCalendar;
