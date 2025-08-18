@@ -365,13 +365,20 @@ class CalendarNextModule : Module() {
         }
       }
 
-      Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String> ->
-        val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
-        if (updatedRecord == null) {
-          throw Exception("Event record is null")
+      AsyncFunction("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String>, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
+                ?: throw Exception("Event record is null")
+              expoCalendarEvent.saveEvent(updatedRecord)
+              expoCalendarEvent.eventRecord = updatedRecord
+              promise.resolve(null)
+            } catch (e: Exception) {
+              promise.reject("E_EVENT_UPDATE_FAILED", "Failed to update event", e)
+            }
+          }
         }
-        expoCalendarEvent.saveEvent(updatedRecord)
-        expoCalendarEvent.eventRecord = updatedRecord
       }
 
       Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
