@@ -1,11 +1,14 @@
 package expo.modules.calendar.next
 
 import android.Manifest
+import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
+import android.text.TextUtils
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.ModuleDestroyedException
+import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
 import expo.modules.calendar.dialogs.CreatedEventOptions
@@ -14,6 +17,9 @@ import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.findCalendarsQueryParameters
 import expo.modules.calendar.next.records.CalendarRecord
+import expo.modules.calendar.next.records.CalendarAccessLevel
+import expo.modules.calendar.next.records.AttendeeType
+import expo.modules.calendar.next.records.AlarmMethod
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
 import expo.modules.kotlin.apifeatures.EitherType
@@ -28,6 +34,8 @@ import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.kotlin.functions.Coroutine
 import kotlinx.coroutines.cancel
 import expo.modules.calendar.next.records.AttendeeRecord
+import expo.modules.interfaces.permissions.Permissions
+import kotlinx.coroutines.cancel
 
 class CalendarNextModule : Module() {
   private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
@@ -75,6 +83,10 @@ class CalendarNextModule : Module() {
       }
     }
 
+    AsyncFunction("requestCalendarPermissionsAsync") { promise: Promise ->
+      Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
+    }
+
     AsyncFunction("createCalendarNext") { calendarRecord: CalendarRecord, promise: Promise ->
       withPermissions(promise) {
         launchAsyncWithModuleScope(promise) {
@@ -103,28 +115,18 @@ class CalendarNextModule : Module() {
         expoCalendar.calendarRecord?.title
       }
 
-      Property("source") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.source
-      }
-
-      Property("isPrimary") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.isPrimary
-      }
-
       Property("name") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.name
       }
 
+      Property("source") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.source
+      }
+
       Property("color") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.color
-      }
-
-      Property("ownerAccount") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.ownerAccount
-      }
-
-      Property("timeZone") { expoCalendar: ExpoCalendar ->
-        expoCalendar.calendarRecord?.timeZone
+        expoCalendar.calendarRecord?.color?.let { colorInt ->
+          String.format("#%06X", 0xFFFFFF and colorInt)
+        }
       }
 
       Property("isVisible") { expoCalendar: ExpoCalendar ->
@@ -135,8 +137,20 @@ class CalendarNextModule : Module() {
         expoCalendar.calendarRecord?.isSynced
       }
 
+      Property("timeZone") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.timeZone
+      }
+
+      Property("isPrimary") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.isPrimary
+      }
+
       Property("allowsModifications") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.allowsModifications
+      }
+
+      Property("allowedAvailabilities") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.allowedAvailabilities
       }
 
       Property("allowedReminders") { expoCalendar: ExpoCalendar ->
@@ -145,6 +159,10 @@ class CalendarNextModule : Module() {
 
       Property("allowedAttendeeTypes") { expoCalendar: ExpoCalendar ->
         expoCalendar.calendarRecord?.allowedAttendeeTypes
+      }
+
+      Property("ownerAccount") { expoCalendar: ExpoCalendar ->
+        expoCalendar.calendarRecord?.ownerAccount
       }
 
       Property("accessLevel") { expoCalendar: ExpoCalendar ->
@@ -183,10 +201,31 @@ class CalendarNextModule : Module() {
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
             try {
-              expoCalendar.update(details)
+              val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
+                ?: throw Exception("Calendar record is null")
+              println("UPDATED_RECORD: ${updatedRecord.title}")
+              ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
+              expoCalendar.calendarRecord = updatedRecord
               promise.resolve(null)
             } catch (e: Exception) {
               promise.reject("E_CALENDAR_UPDATE_FAILED", "Failed to update calendar", e)
+            }
+          }
+        }
+      }
+
+      AsyncFunction("delete") { expoCalendar: ExpoCalendar, promise: Promise ->
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val successful = expoCalendar.deleteCalendar()
+              if (successful) {
+                promise.resolve(null)
+              } else {
+                promise.reject("E_CALENDAR_NOT_DELETED", "Calendar could not be deleted", null)
+              }
+            } catch (e: Exception) {
+              promise.reject("E_CALENDAR_NOT_DELETED", "An error occurred while deleting calendar", e)
             }
           }
         }

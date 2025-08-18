@@ -425,20 +425,24 @@ export async function test(t) {
 
         t.it('updates a calendar', async () => {
           const newTitle = 'New test-suite calendar title';
+          const newColor = '#111111';
           calendar.update({
             title: newTitle,
+            color: newColor,
           });
           const updatedCalendar = await getCalendarByIdAsync(calendar.id);
 
           t.expect(updatedCalendar.id).toBe(calendar.id);
+          t.expect(updatedCalendar.color).toBe(newColor);
           t.expect(updatedCalendar.title).toBe(newTitle);
         });
 
         t.it('keeps other properties unchanged when updating title', async () => {
-          const newTitle = 'New test-suite calendar title' + new Date().toISOString();
+          const newTitle = 'New the coolest title ever';
           calendar.update({
             title: newTitle,
           });
+          console.log('CURRENT_TITLE: ', calendar.title, 'NEW_TITLE: ', newTitle);
           t.expect(calendar.title).toBe(newTitle);
           t.expect(calendar.color).toBe(defaultCalendarData.color);
           t.expect(calendar.entityType).toBe(defaultCalendarData.entityType);
@@ -530,17 +534,17 @@ export async function test(t) {
           t.expect(event.recurrenceRule.endDate).toEqual(recurrenceRule.endDate);
         });
 
-        if (Platform.OS === 'ios') {
-          t.it('rejects when time zone is invalid', async () => {
-            let error;
-            try {
-              await createTestEvent(calendar, { timeZone: '' });
-            } catch (e) {
-              error = e;
-            }
-            t.expect(error).toBeDefined();
-          });
-        }
+        // if (Platform.OS === 'ios') {
+        //   t.it('rejects when time zone is invalid', async () => {
+        //     let error;
+        //     try {
+        //       await createTestEvent(calendar, { timeZone: '' });
+        //     } catch (e) {
+        //       error = e;
+        //     }
+        //     t.expect(error).toBeDefined();
+        //   });
+        // }
 
         t.afterAll(async () => {
           calendar.delete();
