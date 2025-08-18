@@ -63,12 +63,14 @@ class ExpoCalendarEvent : SharedObject {
       foundEndDate = CalendarUtils.sdf.format(Date(endDate.toLong()));
     }
 
+    val eventId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID)
+
     this.eventRecord = EventRecord(
-      id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID),
+      id = eventId,
       calendarId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
       title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.TITLE),
       notes = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.DESCRIPTION),
-      alarms = serializeAlarms(),
+      alarms = if (eventId != null) serializeAlarms(eventId).toList() else emptyList(),
       recurrenceRule = extractRecurrenceRuleFromString(CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.RRULE)),
       startDate = foundStartDate,
       endDate = foundEndDate,
@@ -266,15 +268,11 @@ class ExpoCalendarEvent : SharedObject {
     }
   }
 
-  private fun serializeAlarms(): ArrayList<AlarmRecord> {
-    val eventID = eventRecord?.id?.toLong()
-    if (eventID == null) {
-      throw InvalidArgumentException("Event ID is required")
-    }
+  private fun serializeAlarms(eventId: String): ArrayList<AlarmRecord> {
     val alarms = ArrayList<AlarmRecord>()
     val cursor = CalendarContract.Reminders.query(
       contentResolver,
-      eventID,
+      eventId.toLong(),
       arrayOf(
         CalendarContract.Reminders.MINUTES,
         CalendarContract.Reminders.METHOD
