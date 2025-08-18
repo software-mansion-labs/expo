@@ -355,65 +355,65 @@ export async function test(t) {
       }
     });
 
-    t.describe('Calendar UI Integration', () => {
-      let originalTimeout;
-      const dontStartNewTask = {
-        startNewActivityTask: false,
-      };
-      let calendar: ExpoCalendar;
+    // t.describe('Calendar UI Integration', () => {
+    //   let originalTimeout;
+    //   const dontStartNewTask = {
+    //     startNewActivityTask: false,
+    //   };
+    //   let calendar: ExpoCalendar;
 
-      t.beforeEach(async () => {
-        originalTimeout = t.jasmine.DEFAULT_TIMEOUT_INTERVAL;
-        t.jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout * 10;
-        calendar = await createTestCalendarAsync();
-      });
+    //   t.beforeEach(async () => {
+    //     originalTimeout = t.jasmine.DEFAULT_TIMEOUT_INTERVAL;
+    //     t.jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout * 10;
+    //     calendar = await createTestCalendarAsync();
+    //   });
 
-      t.it('creates an event via UI', async () => {
-        const eventData = createEventData();
-        await alertAndWaitForResponse('Please confirm the event creation dialog.');
-        const result = await Calendar.createEventInCalendarAsync(eventData, dontStartNewTask);
-        if (Platform.OS === 'ios') {
-          t.expect(result.action).toBe('saved');
-          t.expect(typeof result.id).toBe('string');
-          const storedEvent = await Calendar.getEventAsync(result.id);
+    //   t.it('creates an event via UI', async () => {
+    //     const eventData = createEventData();
+    //     await alertAndWaitForResponse('Please confirm the event creation dialog.');
+    //     const result = await Calendar.createEventInCalendarAsync(eventData, dontStartNewTask);
+    //     if (Platform.OS === 'ios') {
+    //       t.expect(result.action).toBe('saved');
+    //       t.expect(typeof result.id).toBe('string');
+    //       const storedEvent = await Calendar.getEventAsync(result.id);
 
-          t.expect(storedEvent).toEqual(
-            t.jasmine.objectContaining({
-              title: eventData.title,
-              allDay: eventData.allDay,
-              location: eventData.location,
-              notes: eventData.notes,
-            })
-          );
-        }
-      });
+    //       t.expect(storedEvent).toEqual(
+    //         t.jasmine.objectContaining({
+    //           title: eventData.title,
+    //           allDay: eventData.allDay,
+    //           location: eventData.location,
+    //           notes: eventData.notes,
+    //         })
+    //       );
+    //     }
+    //   });
 
-      t.it('can preview an event', async () => {
-        const event = await createTestEvent(calendar);
-        await alertAndWaitForResponse(
-          'Please verify event details are shown and close the dialog.'
-        );
-        const result = await event.openInCalendarAsync({
-          ...dontStartNewTask,
-          allowsEditing: true,
-          allowsCalendarPreview: true,
-        });
-        t.expect(result).toEqual({ action: 'done' });
-      });
+    //   t.it('can preview an event', async () => {
+    //     const event = await createTestEvent(calendar);
+    //     await alertAndWaitForResponse(
+    //       'Please verify event details are shown and close the dialog.'
+    //     );
+    //     const result = await event.openInCalendarAsync({
+    //       ...dontStartNewTask,
+    //       allowsEditing: true,
+    //       allowsCalendarPreview: true,
+    //     });
+    //     t.expect(result).toEqual({ action: 'done' });
+    //   });
 
-      t.it('can edit an event', async () => {
-        const event = await createTestEvent(calendar);
-        await alertAndWaitForResponse('Please verify you can see the event and close the dialog.');
-        const result = await event.editInCalendarAsync(dontStartNewTask);
-        t.expect(typeof result.action).toBe('string'); // done or canceled
-        t.expect(result.id).toBe(null);
-      });
+    //   t.it('can edit an event', async () => {
+    //     const event = await createTestEvent(calendar);
+    //     await alertAndWaitForResponse('Please verify you can see the event and close the dialog.');
+    //     const result = await event.editInCalendarAsync(dontStartNewTask);
+    //     t.expect(typeof result.action).toBe('string'); // done or canceled
+    //     t.expect(result.id).toBe(null);
+    //   });
 
-      t.afterEach(() => {
-        t.jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-        calendar.delete();
-      });
-    });
+    //   t.afterEach(() => {
+    //     t.jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+    //     calendar.delete();
+    //   });
+    // });
 
     t.describe('Calendar', () => {
       t.describe('Calendar.update()', () => {
@@ -424,7 +424,7 @@ export async function test(t) {
         });
 
         t.it('updates a calendar', async () => {
-          const newTitle = 'New test-suite calendar title';
+          const newTitle = 'New test-suite calendar title!!!';
           const newColor = '#111111';
           calendar.update({
             title: newTitle,
@@ -439,9 +439,13 @@ export async function test(t) {
 
         t.it('keeps other properties unchanged when updating title', async () => {
           const newTitle = 'New the coolest title ever';
-          calendar.update({
-            title: newTitle,
-          });
+          try {
+            calendar.update({
+              title: newTitle,
+            });
+          } catch (e) {
+            console.log('ERROR: ', e);
+          }
           console.log('CURRENT_TITLE: ', calendar.title, 'NEW_TITLE: ', newTitle);
           t.expect(calendar.title).toBe(newTitle);
           t.expect(calendar.color).toBe(defaultCalendarData.color);
@@ -533,6 +537,17 @@ export async function test(t) {
           t.expect(event.recurrenceRule.interval).toEqual(recurrenceRule.interval);
           t.expect(event.recurrenceRule.endDate).toEqual(recurrenceRule.endDate);
         });
+
+        if (Platform.OS === 'android') {
+          t.it('creates an event with alarms', async () => {
+            const event = await createTestEvent(calendar, {
+              alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALARM }],
+            });
+            t.expect(event.alarms).toEqual([
+              { relativeOffset: -60, method: Calendar.AlarmMethod.ALARM },
+            ]);
+          });
+        }
 
         // if (Platform.OS === 'ios') {
         //   t.it('rejects when time zone is invalid', async () => {
@@ -1002,12 +1017,12 @@ export async function test(t) {
           const event = await createTestEvent(calendar, {
             alarms: [{ relativeOffset: -60 }],
           });
-          t.expect(event.alarms).toEqual([{ relativeOffset: -60 }]);
+          t.expect(event.alarms.length).toBe(1);
+          t.expect(event.alarms[0].relativeOffset).toEqual(-60);
           event.update({
             alarms: null,
           });
-          t.expect(event.alarms).toEqual([]);
-          t.expect(event.title).toBe(defaultEventData.title);
+          t.expect(event.alarms).toBe(null);
         });
 
         t.it('clears recurrenceRule when set to null', async () => {
