@@ -1,6 +1,7 @@
 package expo.modules.calendar.next.records
 
 import android.provider.CalendarContract
+import expo.modules.calendar.CalendarUtils.sdf
 import expo.modules.calendar.accessConstantMatchingString
 import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.kotlin.records.Field
@@ -103,7 +104,29 @@ data class RecurrenceRuleRecord(
   val interval: Int? = null,
   @Field
   val occurrence: Int? = null,
-) : Record
+) : Record {
+
+  /**
+   * Returns the endDate in RRULE format, or null if endDate is null or invalid.
+   */
+  fun toRrFormat(): RecurrenceRuleRecord? {
+    if (endDate == null) return null
+    return try {
+      val rrFormat = java.text.SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+      val date = sdf.parse(endDate)
+      if (date != null) {
+        return RecurrenceRuleRecord(
+          endDate = rrFormat.format(date),
+          frequency = frequency,
+          interval = interval,
+          occurrence = occurrence,
+        )
+      } else null
+    } catch (e: Exception) {
+      null
+    }
+  }
+}
 
 data class RecurringEventOptions(
   @Field

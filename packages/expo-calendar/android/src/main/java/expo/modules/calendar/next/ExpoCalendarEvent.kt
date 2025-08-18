@@ -10,6 +10,7 @@ import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.CalendarUtils.removeRemindersForEvent
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
+import expo.modules.calendar.EventRecurrenceUtils.rrFormat
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurrenceRuleRecord
@@ -26,6 +27,7 @@ import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import java.text.ParseException
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -112,8 +114,8 @@ class ExpoCalendarEvent : SharedObject {
     }
 
     if (eventRecord.recurrenceRule != null) {
-      val recurrenceRule = eventRecord.recurrenceRule
-      if (recurrenceRule.frequency != null) {
+      val recurrenceRule = eventRecord.recurrenceRule.toRrFormat()
+      if (recurrenceRule?.frequency != null) {
         if (recurrenceRule.endDate == null && recurrenceRule.occurrence == null) {
           val eventStartDate = eventBuilder.getAsLong(CalendarContract.Events.DTSTART)
           val eventEndDate = eventBuilder.getAsLong(CalendarContract.Events.DTEND)

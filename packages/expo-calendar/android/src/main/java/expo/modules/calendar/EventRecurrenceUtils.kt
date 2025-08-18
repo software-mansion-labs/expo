@@ -14,6 +14,8 @@ object EventRecurrenceUtils {
     timeZone = TimeZone.getTimeZone("GMT")
   }
 
+  val rrFormat = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
+
   fun extractRecurrence(recurrenceRule: ReadableArguments): RecurrenceRuleRecord {
     val frequency = recurrenceRule.getString("frequency")
     val interval: Int? = if (recurrenceRule.containsKey("interval")) {
@@ -29,19 +31,18 @@ object EventRecurrenceUtils {
     var endDate: String? = null
 
     if (recurrenceRule.containsKey("endDate")) {
-      val format = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'")
       val endDateObj = recurrenceRule["endDate"]
       if (endDateObj is String) {
         val parsedDate = dateFormat.parse(endDateObj)
         if (parsedDate != null) {
-          endDate = format.format(parsedDate)
+          endDate = rrFormat.format(parsedDate)
         } else {
           Log.e(TAG, "endDate is null")
         }
       } else if (endDateObj is Number) {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = endDateObj.toLong()
-        endDate = format.format(calendar.time)
+        endDate = rrFormat.format(calendar.time)
       }
     }
     return RecurrenceRuleRecord(endDate, frequency, interval, occurrence)
