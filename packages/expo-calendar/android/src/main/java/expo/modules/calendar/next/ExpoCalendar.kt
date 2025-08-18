@@ -8,8 +8,6 @@ import android.text.TextUtils
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.next.records.EventRecord
-import android.content.ContentValues
-import android.text.TextUtils
 import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.calendar.next.records.CalendarAccessLevel

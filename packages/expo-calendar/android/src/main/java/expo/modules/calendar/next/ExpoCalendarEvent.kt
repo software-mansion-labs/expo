@@ -1,6 +1,5 @@
 package expo.modules.calendar.next
 
-import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
@@ -8,19 +7,17 @@ import android.provider.CalendarContract
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.CalendarUtils
+import expo.modules.calendar.CalendarUtils.removeRemindersForEvent
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
-import expo.modules.calendar.EventRecurrenceUtils.extractRecurrence
-import expo.modules.calendar.accessStringMatchingConstant
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurrenceRuleRecord
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.core.errors.InvalidArgumentException
-import expo.modules.calendar.attendeeRelationshipConstantMatchingString
-import expo.modules.calendar.attendeeTypeConstantMatchingString
-import expo.modules.calendar.attendeeStatusConstantMatchingString
+import expo.modules.calendar.next.records.AlarmMethod
+import expo.modules.calendar.next.records.AlarmRecord
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.EventAccessLevel
 import expo.modules.calendar.next.records.EventAvailability
@@ -71,6 +68,7 @@ class ExpoCalendarEvent : SharedObject {
       calendarId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
       title = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.TITLE),
       notes = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.DESCRIPTION),
+      alarms = serializeAlarms(),
       recurrenceRule = extractRecurrenceRuleFromString(CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.RRULE)),
       startDate = foundStartDate,
       endDate = foundEndDate,
@@ -149,8 +147,13 @@ class ExpoCalendarEvent : SharedObject {
       }
       val updateUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       contentResolver.update(updateUri, eventBuilder.build(), null, null)
+      removeRemindersForEvent(contentResolver, eventID)
+      if (this.eventRecord?.alarms != null) {
+        createRemindersForEvent( eventID, this.eventRecord!!.alarms!!)
+      }
       return eventID
     } else {
+      // Create a new event
       if (calendarId == null) {
         throw InvalidArgumentException("CalendarId is required.")
       }
@@ -159,6 +162,9 @@ class ExpoCalendarEvent : SharedObject {
       val eventUri = contentResolver.insert(eventsUri, eventBuilder.build())
         ?: throw EventNotSavedException()
       val eventID = eventUri.lastPathSegment!!.toInt()
+      if (this.eventRecord?.alarms != null) {
+        createRemindersForEvent(eventID, this.eventRecord!!.alarms!!)
+      }
       return eventID
     }
   }
@@ -243,6 +249,46 @@ class ExpoCalendarEvent : SharedObject {
       interval = interval,
       occurrence = occurrence,
     )
+  }
+
+  @Throws(SecurityException::class)
+  private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
+    for (reminder in reminders) {
+      if (reminder.relativeOffset != null) {
+        val minutes = -reminder.relativeOffset
+        val reminderValues = ContentValues()
+        val method = reminder.method?.toAndroidValue() ?: CalendarContract.Reminders.METHOD_DEFAULT
+        reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID)
+        reminderValues.put(CalendarContract.Reminders.MINUTES, minutes)
+        reminderValues.put(CalendarContract.Reminders.METHOD, method)
+        contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues)
+      }
+    }
+  }
+
+  private fun serializeAlarms(): ArrayList<AlarmRecord> {
+    val eventID = eventRecord?.id?.toLong()
+    if (eventID == null) {
+      throw InvalidArgumentException("Event ID is required")
+    }
+    val alarms = ArrayList<AlarmRecord>()
+    val cursor = CalendarContract.Reminders.query(
+      contentResolver,
+      eventID,
+      arrayOf(
+        CalendarContract.Reminders.MINUTES,
+        CalendarContract.Reminders.METHOD
+      )
+    )
+    while (cursor.moveToNext()) {
+      val method = cursor.getInt(1)
+      val thisAlarm = AlarmRecord(
+        relativeOffset = -cursor.getInt(0),
+        method = AlarmMethod.fromAndroidValue(method)
+      )
+      alarms.add(thisAlarm)
+    }
+    return alarms
   }
 
   fun getAttendees(): List<ExpoCalendarAttendee> {

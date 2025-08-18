@@ -266,6 +266,10 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.notes
       }
 
+      Property("alarms") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.alarms
+      }
+
       Property("recurrenceRule") { expoCalendarEvent: ExpoCalendarEvent ->
         expoCalendarEvent.eventRecord?.recurrenceRule
       }

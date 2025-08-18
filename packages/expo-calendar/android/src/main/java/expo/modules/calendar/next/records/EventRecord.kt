@@ -2,9 +2,7 @@ package expo.modules.calendar.next.records
 
 import android.provider.CalendarContract
 import expo.modules.calendar.accessConstantMatchingString
-import expo.modules.calendar.accessStringMatchingConstant
 import expo.modules.calendar.availabilityConstantMatchingString
-import expo.modules.calendar.availabilityStringMatchingConstant
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.types.Enumerable
@@ -24,6 +22,8 @@ data class EventRecord(
   val endTimeZone: String? = null,
   @Field
   val notes: String? = null,
+  @Field
+  val alarms: List<AlarmRecord>? = null,
   @Field
   val recurrenceRule: RecurrenceRuleRecord? = null,
   @Field
@@ -60,6 +60,7 @@ data class EventRecord(
       title = if ("title" in nullableSet) null else other.title ?: this.title,
       location = if ("location" in nullableSet) null else other.location ?: this.location,
       timeZone = if ("timeZone" in nullableSet) null else other.timeZone ?: this.timeZone,
+      alarms = if ("alarms" in nullableSet) null else other.alarms ?: this.alarms,
       endTimeZone = if ("endTimeZone" in nullableSet) null else other.endTimeZone
         ?: this.endTimeZone,
       notes = if ("notes" in nullableSet) null else other.notes ?: this.notes,
@@ -88,9 +89,9 @@ data class EventRecord(
 
 data class AlarmRecord(
   @Field
-  val relativeOffset: Int,
+  val relativeOffset: Int?,
   @Field
-  val method: Int,
+  val method: AlarmMethod?,
 ) : Record
 
 data class RecurrenceRuleRecord(
@@ -173,6 +174,33 @@ enum class EventAccessLevel(val value: String) : Enumerable {
       CalendarContract.Events.ACCESS_PRIVATE -> PRIVATE
       CalendarContract.Events.ACCESS_PUBLIC -> PUBLIC
       CalendarContract.Events.ACCESS_DEFAULT -> DEFAULT
+      else -> DEFAULT
+    }
+  }
+}
+
+enum class AlarmMethod(val value: String) : Enumerable {
+  ALARM("alarm"),
+  ALERT("alert"),
+  EMAIL("email"),
+  SMS("sms"),
+  DEFAULT("default");
+
+  fun toAndroidValue(): Int? =  when (this) {
+    ALERT -> CalendarContract.Reminders.METHOD_ALERT
+    ALARM -> CalendarContract.Reminders.METHOD_ALARM
+    EMAIL -> CalendarContract.Reminders.METHOD_EMAIL
+    SMS -> CalendarContract.Reminders.METHOD_SMS
+    else -> CalendarContract.Reminders.METHOD_DEFAULT
+  }
+
+  companion object {
+    fun fromAndroidValue(value: Int): AlarmMethod? = when (value) {
+      CalendarContract.Reminders.METHOD_ALARM -> ALARM
+      CalendarContract.Reminders.METHOD_ALERT -> ALERT
+      CalendarContract.Reminders.METHOD_EMAIL -> EMAIL
+      CalendarContract.Reminders.METHOD_SMS -> SMS
+      CalendarContract.Reminders.METHOD_DEFAULT -> DEFAULT
       else -> DEFAULT
     }
   }
