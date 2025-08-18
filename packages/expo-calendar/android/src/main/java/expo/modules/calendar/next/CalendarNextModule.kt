@@ -330,6 +330,10 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.originalId
       }
 
+      Property("instanceId") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.instanceId
+      }
+
       AsyncFunction("openInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions ->
         val eventId = expoCalendarEvent.eventRecord?.id;
         if (eventId == null) {

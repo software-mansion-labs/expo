@@ -67,6 +67,10 @@ class ExpoCalendarEvent : SharedObject {
 
     val eventId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID)
 
+    // unfortunately the string values of CalendarContract.Events._ID and CalendarContract.Instances._ID are equal
+    // so we'll use the somewhat brittle column number from the query
+    val instanceId = if (cursor.columnCount > 18) CalendarUtils.optStringFromCursor(cursor, CalendarContract.Instances._ID) else "";
+
     this.eventRecord = EventRecord(
       id = eventId,
       calendarId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
@@ -88,6 +92,7 @@ class ExpoCalendarEvent : SharedObject {
       guestsCanInviteOthers = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS) != 0,
       guestsCanSeeGuests = CalendarUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_SEE_GUESTS) != 0,
       originalId = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Events.ORIGINAL_ID),
+      instanceId = instanceId
     )
   }
 
@@ -208,7 +213,6 @@ class ExpoCalendarEvent : SharedObject {
       val exceptionUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_EXCEPTION_URI, eventID.toLong())
       contentResolver.insert(exceptionUri, exceptionValues)
     }
-    this.eventRecord = null
     return true
   }
 

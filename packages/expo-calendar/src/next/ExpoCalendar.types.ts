@@ -345,6 +345,7 @@ export declare class ExpoCalendarEvent {
    * Returns an event instance for a given event (or instance of a recurring event).
    * @param recurringEventOptions A map of options for recurring events.
    * @return An event instance.
+   * @platform ios
    */
   getOccurrence(recurringEventOptions?: RecurringEventOptions): ExpoCalendarEvent;
 
