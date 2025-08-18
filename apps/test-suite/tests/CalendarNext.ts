@@ -422,7 +422,6 @@ export async function test(t) {
           calendar.update({
             title: newTitle,
           });
-          console.log('CURRENT_TITLE: ', calendar.title, 'NEW_TITLE: ', newTitle);
           t.expect(calendar.title).toBe(newTitle);
           t.expect(calendar.color).toBe(defaultCalendarData.color);
           t.expect(calendar.entityType).toBe(defaultCalendarData.entityType);
@@ -514,17 +513,17 @@ export async function test(t) {
           t.expect(event.recurrenceRule.endDate).toEqual(recurrenceRule.endDate);
         });
 
-        // if (Platform.OS === 'ios') {
-        //   t.it('rejects when time zone is invalid', async () => {
-        //     let error;
-        //     try {
-        //       await createTestEvent(calendar, { timeZone: '' });
-        //     } catch (e) {
-        //       error = e;
-        //     }
-        //     t.expect(error).toBeDefined();
-        //   });
-        // }
+        if (Platform.OS === 'ios') {
+          t.it('rejects when time zone is invalid', async () => {
+            let error;
+            try {
+              await createTestEvent(calendar, { timeZone: '' });
+            } catch (e) {
+              error = e;
+            }
+            t.expect(error).toBeDefined();
+          });
+        }
 
         t.afterAll(async () => {
           calendar.delete();
