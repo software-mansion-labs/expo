@@ -10,8 +10,8 @@ import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.CalendarUtils.removeRemindersForEvent
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
-import expo.modules.calendar.EventRecurrenceUtils.rrFormat
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
+import expo.modules.calendar.findEventByIdQueryParameters
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurrenceRuleRecord
 import expo.modules.kotlin.exception.Exceptions
@@ -27,7 +27,6 @@ import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -133,6 +132,9 @@ class ExpoCalendarEvent : SharedObject {
         val rule = createRecurrenceRule(recurrenceRule)
         eventBuilder.put(CalendarContract.Events.RRULE, rule)
       }
+    } else {
+      eventBuilder.putNull(CalendarContract.Events.RRULE)
+      eventBuilder.putNull(CalendarContract.Events.DURATION)
     }
 
     if (eventRecord.title != null) {
@@ -193,7 +195,7 @@ class ExpoCalendarEvent : SharedObject {
       }
       return false;
     } else {
-      // TODO: Verify if this branch is working
+      // Get the exact occurrence and create an exception for it
       val exceptionValues = ContentValues()
       val startCal = Calendar.getInstance()
       val instanceStartDate = recurringEventOptions.instanceStartDate
@@ -204,6 +206,7 @@ class ExpoCalendarEvent : SharedObject {
           exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)
         } else {
           Log.e(TAG, "Parsed date is null")
+          return false
         }
       } catch (e: ParseException) {
         Log.e(TAG, "error", e)
@@ -212,8 +215,8 @@ class ExpoCalendarEvent : SharedObject {
       exceptionValues.put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CANCELED)
       val exceptionUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_EXCEPTION_URI, eventID.toLong())
       contentResolver.insert(exceptionUri, exceptionValues)
+      return true
     }
-    return true
   }
 
   private fun extractRecurrenceRuleFromString(rrule: String?): RecurrenceRuleRecord? {

@@ -362,7 +362,6 @@ class CalendarNextModule : Module() {
       }
 
       AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
-        // TODO: Support recurringEventOptions. Legacy Calendar API doesn't support it, check if we can support it.
         launchAsyncWithModuleScope(promise) {
           val attendees = expoCalendarEvent.getAttendees()
           promise.resolve(attendees)
