@@ -1178,12 +1178,12 @@ export async function test(t) {
 
           t.expect(Array.isArray(eventsAfterDelete)).toBe(true);
           t.expect(eventsAfterDelete.length).toBe(3);
-          //   t.expect(eventsAfterDelete.map((e) => e.startDate)).toEqual([
-          //     new Date(2019, 3, 4, 9).toISOString(),
-          //     // 5th April is deleted
-          //     new Date(2019, 3, 6, 9).toISOString(),
-          //     new Date(2019, 3, 7, 9).toISOString(),
-          //   ]);
+          t.expect(eventsAfterDelete.map((e) => e.startDate)).toEqual([
+            new Date(2019, 3, 4, 9).toISOString(),
+            // 5th April is deleted
+            new Date(2019, 3, 6, 9).toISOString(),
+            new Date(2019, 3, 7, 9).toISOString(),
+          ]);
         });
 
         if (Platform.OS === 'ios') {
