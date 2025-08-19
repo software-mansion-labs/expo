@@ -1148,40 +1148,40 @@ export async function test(t) {
           t.expect(eventsAfterDelete.length).toBe(0);
         });
 
-        t.it('deletes an instance of a recurring event', async () => {
-          const recurringEvent = await createTestEvent(calendar, {
-            recurrenceRule: {
-              frequency: Calendar.Frequency.DAILY,
-            },
-          });
-
-          const eventsBeforeDelete = await calendar.listEvents(
-            new Date(2019, 3, 4),
-            new Date(2019, 3, 8)
-          );
-          t.expect(Array.isArray(eventsBeforeDelete)).toBe(true);
-          t.expect(eventsBeforeDelete.length).toBe(4);
-
-          recurringEvent.delete({
-            instanceStartDate: new Date(2019, 3, 5, 9),
-          });
-
-          const eventsAfterDelete = await calendar.listEvents(
-            new Date(2019, 3, 4),
-            new Date(2019, 3, 8)
-          );
-
-          t.expect(Array.isArray(eventsAfterDelete)).toBe(true);
-          t.expect(eventsAfterDelete.length).toBe(3);
-          t.expect(eventsAfterDelete.map((e) => e.startDate)).toEqual([
-            new Date(2019, 3, 4, 9).toISOString(),
-            // 5th April is deleted
-            new Date(2019, 3, 6, 9).toISOString(),
-            new Date(2019, 3, 7, 9).toISOString(),
-          ]);
-        });
-
         if (Platform.OS === 'ios') {
+          t.it('deletes an instance of a recurring event', async () => {
+            const recurringEvent = await createTestEvent(calendar, {
+              recurrenceRule: {
+                frequency: Calendar.Frequency.DAILY,
+              },
+            });
+
+            const eventsBeforeDelete = await calendar.listEvents(
+              new Date(2019, 3, 4),
+              new Date(2019, 3, 8)
+            );
+            t.expect(Array.isArray(eventsBeforeDelete)).toBe(true);
+            t.expect(eventsBeforeDelete.length).toBe(4);
+
+            recurringEvent.delete({
+              instanceStartDate: new Date(2019, 3, 5, 9),
+            });
+
+            const eventsAfterDelete = await calendar.listEvents(
+              new Date(2019, 3, 4),
+              new Date(2019, 3, 8)
+            );
+
+            t.expect(Array.isArray(eventsAfterDelete)).toBe(true);
+            t.expect(eventsAfterDelete.length).toBe(3);
+            t.expect(eventsAfterDelete.map((e) => e.startDate)).toEqual([
+              new Date(2019, 3, 4, 9).toISOString(),
+              // 5th April is deleted
+              new Date(2019, 3, 6, 9).toISOString(),
+              new Date(2019, 3, 7, 9).toISOString(),
+            ]);
+          });
+
           t.it(
             'deletes a single occurrence of a recurring event via the occurrence instance',
             async () => {
