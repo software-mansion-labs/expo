@@ -1163,16 +1163,13 @@ export async function test(t) {
           t.expect(eventsBeforeDelete.length).toBe(4);
 
           recurringEvent.delete({
-            instanceStartDate: new Date(2019, 3, 6, 9),
+            instanceStartDate: new Date(2019, 3, 5, 9),
           });
 
           const eventsAfterDelete = await calendar.listEvents(
             new Date(2019, 3, 4),
             new Date(2019, 3, 8)
           );
-
-          console.log('eventsBeforeDelete', JSON.stringify(eventsBeforeDelete, null, 2));
-          console.log('eventsAfterDelete', JSON.stringify(eventsAfterDelete, null, 2));
 
           t.expect(Array.isArray(eventsAfterDelete)).toBe(true);
           t.expect(eventsAfterDelete.length).toBe(3);

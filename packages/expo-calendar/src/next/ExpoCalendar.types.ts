@@ -351,7 +351,7 @@ export declare class ExpoCalendarEvent {
 
   /**
    * Gets all attendees for a given event (or instance of a recurring event).
-   * @param recurringEventOptions A map of options for recurring events.
+   * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    * @return An array of [`Attendee`](#attendee) associated with the specified event.
    */
   getAttendees(recurringEventOptions?: RecurringEventOptions): Promise<ExpoCalendarAttendee[]>;
@@ -360,7 +360,7 @@ export declare class ExpoCalendarEvent {
    * Updates the provided details of an existing calendar stored on the device. To remove a property,
    * explicitly set it to `null` in `details`.
    * @param details A map of properties to be updated.
-   * @param recurringEventOptions A map of options for recurring events.
+   * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    */
   update(
     details: Partial<ModifiableEventProperties>,
@@ -370,9 +370,9 @@ export declare class ExpoCalendarEvent {
 
   /**
    * Deletes the event.
-   * @param recurringEventOptions A map of options for recurring events.
+   * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    */
-  delete(recurringEventOptions: RecurringEventOptions): void;
+  delete(recurringEventOptions?: RecurringEventOptions): void;
 
   /**
    * Creates a new attendee and adds it to this event.
