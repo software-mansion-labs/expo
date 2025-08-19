@@ -1047,9 +1047,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          // TODO: Temporarly until we have a way to delete calendars on Android
-          //   calendar.delete();
-          Calendar.deleteCalendarAsync(calendar.id);
+          calendar.delete();
         });
       });
 
@@ -1276,9 +1274,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          // TODO: Temporarly until we have a way to delete calendars on Android
-          //   calendar.delete();
-          Calendar.deleteCalendarAsync(calendar.id);
+          calendar.delete();
         });
       });
 
@@ -1311,7 +1307,7 @@ export async function test(t) {
         });
 
         t.afterAll(async () => {
-          //   calendar.delete();
+          calendar.delete();
         });
       });
     });
@@ -1572,8 +1568,7 @@ export async function test(t) {
         let event: ExpoCalendarEvent;
 
         t.beforeEach(async () => {
-          // TODO: Add creating a new calendar, when it is available on Android
-          calendar = (await getCalendarsNext()).find((c) => c.id === '1');
+          calendar = await createTestCalendarAsync();
           event = await createTestEvent(calendar);
         });
 
@@ -1713,6 +1708,7 @@ export async function test(t) {
 
         t.afterEach(async () => {
           event.delete();
+          calendar.delete();
         });
       });
     }

@@ -299,7 +299,6 @@ class ExpoCalendarEvent : SharedObject {
   }
 
   fun getAttendees(): List<ExpoCalendarAttendee> {
-    val attendees = mutableListOf<ExpoCalendarAttendee>()
     val eventID = eventRecord?.id?.toLong()
     if (eventID == null) {
       throw InvalidArgumentException("Event ID is required")
