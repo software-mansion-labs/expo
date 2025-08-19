@@ -196,7 +196,8 @@ class CalendarNextModule : Module() {
             }
           }
         }
-    }
+      }
+
       AsyncFunction("update") { expoCalendar: ExpoCalendar, details: CalendarRecord, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
@@ -362,26 +363,40 @@ class CalendarNextModule : Module() {
       }
 
       AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
-        launchAsyncWithModuleScope(promise) {
-          val attendees = expoCalendarEvent.getAttendees()
-          promise.resolve(attendees)
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val attendees = expoCalendarEvent.getAttendees()
+              promise.resolve(attendees)
+            } catch (e: Exception) {
+              promise.reject("E_ATTENDEES_NOT_FOUND", "Attendees could not be found", e)
+            }
+          }
         }
       }
 
       Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String> ->
-        val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
-        if (updatedRecord == null) {
-          throw Exception("Event record is null")
+        withPermissions {
+          try {
+            val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
+            if (updatedRecord == null) {
+              throw Exception("Event record is null")
+            }
+            expoCalendarEvent.saveEvent(updatedRecord)
+            expoCalendarEvent.eventRecord = updatedRecord
+          } catch (e: Exception) {
+            throw Exception("Event could not be updated", e)
+          }
         }
-        expoCalendarEvent.saveEvent(updatedRecord)
-        expoCalendarEvent.eventRecord = updatedRecord
       }
 
       Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
-        try {
-          expoCalendarEvent.deleteEvent(recurringEventOptions)
-        } catch (e: Exception) {
-          throw Exception("Event could not be deleted", e)
+        withPermissions {
+          try {
+            expoCalendarEvent.deleteEvent(recurringEventOptions)
+          } catch (e: Exception) {
+            throw Exception("Event could not be deleted", e)
+          }
         }
       }
     }
@@ -492,8 +507,19 @@ class CalendarNextModule : Module() {
     return true
   }
 
+  private fun checkPermissions(): Boolean {
+    return appContext.permissions?.hasGrantedPermissions(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR) == true
+  }
+
   private inline fun withPermissions(promise: Promise, block: () -> Unit) {
     if (!checkPermissions(promise)) {
+      return
+    }
+    block()
+  }
+
+  private inline fun withPermissions(block: () -> Unit) {
+    if (!checkPermissions()) {
       return
     }
     block()
