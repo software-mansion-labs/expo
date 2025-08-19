@@ -27,7 +27,9 @@ export class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAtten
  */
 export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
   override getOccurrence(recurringEventOptions: RecurringEventOptions = {}): ExpoCalendarEvent {
-    return super.getOccurrence(stringifyDateValues(recurringEventOptions));
+    const result = super.getOccurrence(stringifyDateValues(recurringEventOptions));
+    Object.setPrototypeOf(result, ExpoCalendarEvent.prototype);
+    return result;
   }
 
   override async getAttendees(
@@ -48,8 +50,8 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     );
   }
 
-  override delete(options: RecurringEventOptions = {}): void {
-    super.delete(stringifyDateValues(options));
+  override delete(options: RecurringEventOptions = {}): Promise<void> {
+    return super.delete(stringifyDateValues(options));
   }
 }
 
@@ -124,10 +126,10 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     });
   }
 
-  override update(details: Partial<ModifiableCalendarProperties>): void {
+  override update(details: Partial<ModifiableCalendarProperties>): Promise<void> {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, color: color || undefined };
-    super.update(newDetails);
+    return super.update(newDetails);
   }
 }
 

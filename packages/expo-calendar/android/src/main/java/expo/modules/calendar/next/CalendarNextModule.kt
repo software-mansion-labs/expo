@@ -196,7 +196,8 @@ class CalendarNextModule : Module() {
             }
           }
         }
-    }
+      }
+
       AsyncFunction("update") { expoCalendar: ExpoCalendar, details: CalendarRecord, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
@@ -330,6 +331,10 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.originalId
       }
 
+      Property("instanceId") { expoCalendarEvent: ExpoCalendarEvent ->
+        expoCalendarEvent.eventRecord?.instanceId
+      }
+
       AsyncFunction("openInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions ->
         val eventId = expoCalendarEvent.eventRecord?.id;
         if (eventId == null) {
@@ -358,10 +363,15 @@ class CalendarNextModule : Module() {
       }
 
       AsyncFunction("getAttendees") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
-        // TODO: Support recurringEventOptions. Legacy Calendar API doesn't support it, check if we can support it.
-        launchAsyncWithModuleScope(promise) {
-          val attendees = expoCalendarEvent.getAttendees()
-          promise.resolve(attendees)
+        withPermissions(promise) {
+          launchAsyncWithModuleScope(promise) {
+            try {
+              val attendees = expoCalendarEvent.getAttendees()
+              promise.resolve(attendees)
+            } catch (e: Exception) {
+              promise.reject("E_ATTENDEES_NOT_FOUND", "Attendees could not be found", e)
+            }
+          }
         }
       }
 
@@ -382,10 +392,12 @@ class CalendarNextModule : Module() {
       }
 
       Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
-        try {
-          expoCalendarEvent.deleteEvent(recurringEventOptions)
-        } catch (e: Exception) {
-          throw Exception("Event could not be deleted", e)
+        withPermissions {
+          try {
+            expoCalendarEvent.deleteEvent(recurringEventOptions)
+          } catch (e: Exception) {
+            throw Exception("Event could not be deleted", e)
+          }
         }
       }
     }
@@ -496,8 +508,19 @@ class CalendarNextModule : Module() {
     return true
   }
 
+  private fun checkPermissions(): Boolean {
+    return appContext.permissions?.hasGrantedPermissions(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR) == true
+  }
+
   private inline fun withPermissions(promise: Promise, block: () -> Unit) {
     if (!checkPermissions(promise)) {
+      return
+    }
+    block()
+  }
+
+  private inline fun withPermissions(block: () -> Unit) {
+    if (!checkPermissions()) {
       return
     }
     block()
