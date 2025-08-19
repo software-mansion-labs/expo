@@ -808,6 +808,22 @@ export async function test(t) {
 
           t.expect(event).toBeDefined();
           t.expect(event.startDate).toBe(startDate.toISOString());
+          t.expect(event.endDate).toBe(endDate.toISOString());
+        });
+
+        t.it('updates an event with Date objects', async () => {
+          const event = await createTestEvent(calendar);
+          const startDate = new Date(2022, 2, 3);
+          const endDate = new Date(2022, 5, 6);
+
+          event.update({
+            startDate,
+            endDate,
+          });
+
+          t.expect(event).toBeDefined();
+          t.expect(event.startDate).toBe(startDate.toISOString());
+          t.expect(event.endDate).toBe(endDate.toISOString());
         });
 
         t.it('updates an event and verifies it appears in the correct date range', async () => {
