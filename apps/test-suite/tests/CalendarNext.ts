@@ -303,14 +303,6 @@ export async function test(t) {
         });
 
         t.it('returns an array of events', async () => {
-          const events = await listEvents(
-            [calendar1.id, calendar2.id],
-            new Date(2019, 3, 1),
-            new Date(2019, 3, 29)
-          );
-          t.expect(Array.isArray(events)).toBe(true);
-          t.expect(events.length).toBe(0);
-
           const event1 = await createTestEvent(calendar1);
           const event2 = await createTestEvent(calendar2);
           const updatedEvents = await listEvents(
@@ -318,6 +310,7 @@ export async function test(t) {
             new Date(2019, 3, 1),
             new Date(2019, 3, 29)
           );
+
           t.expect(updatedEvents.length).toBe(2);
           t.expect(updatedEvents.map((e) => e.id)).toEqual([event1.id, event2.id]);
 
@@ -432,11 +425,9 @@ export async function test(t) {
           });
           const updatedCalendar = await getCalendarByIdAsync(calendar.id);
 
-          setTimeout(() => {
-            t.expect(updatedCalendar.id).toBe(calendar.id);
-            t.expect(updatedCalendar.color).toBe(newColor);
-            t.expect(updatedCalendar.title).toBe(newTitle);
-          }, 1000);
+          t.expect(updatedCalendar.id).toBe(calendar.id);
+          t.expect(updatedCalendar.color).toBe(newColor);
+          t.expect(updatedCalendar.title).toBe(newTitle);
         });
 
         t.it('keeps other properties unchanged when updating title', async () => {
@@ -444,13 +435,11 @@ export async function test(t) {
           await calendar.update({
             title: newTitle,
           });
-          setTimeout(() => {
-            t.expect(calendar.title).toBe(newTitle);
-            t.expect(calendar.color).toBe(defaultCalendarData.color);
-            if (Platform.OS === 'ios') {
-              t.expect(calendar.entityType).toBe(defaultCalendarData.entityType);
-            }
-          }, 1000);
+          t.expect(calendar.title).toBe(newTitle);
+          t.expect(calendar.color).toBe(defaultCalendarData.color);
+          if (Platform.OS === 'ios') {
+            t.expect(calendar.entityType).toBe(defaultCalendarData.entityType);
+          }
         });
 
         t.it('keeps other properties unchanged when updating color', async () => {
@@ -458,13 +447,11 @@ export async function test(t) {
           await calendar.update({
             color,
           });
-          setTimeout(() => {
-            t.expect(calendar.color).toBe(color);
-            t.expect(calendar.title).toBe(defaultCalendarData.title);
-            if (Platform.OS === 'ios') {
-              t.expect(calendar.entityType).toBe(defaultCalendarData.entityType);
-            }
-          }, 1000);
+          t.expect(calendar.color).toBe(color);
+          t.expect(calendar.title).toBe(defaultCalendarData.title);
+          if (Platform.OS === 'ios') {
+            t.expect(calendar.entityType).toBe(defaultCalendarData.entityType);
+          }
         });
 
         t.afterEach(async () => {
@@ -738,7 +725,7 @@ export async function test(t) {
           const newTitle = 'New title + ' + new Date().toISOString();
           const startDate = new Date(2019, 3, 2);
           const endDate = new Date(2019, 3, 3);
-          events[0].update({
+          await events[0].update({
             title: newTitle,
             startDate,
             endDate,

@@ -130,8 +130,6 @@ export async function createCalendarNext(details = {}) {
  * @returns An array of [`ExpoCalendarEvent`](#expocalendarevent) objects representing the events found.
  */
 export async function listEvents(calendarIds, startDate, endDate) {
-    if (Platform.OS === 'android')
-        return [];
     if (!InternalExpoCalendar.listEvents) {
         throw new UnavailabilityError('Calendar', 'listEvents');
     }

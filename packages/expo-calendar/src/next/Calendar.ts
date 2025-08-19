@@ -191,7 +191,6 @@ export async function listEvents(
   startDate: Date,
   endDate: Date
 ): Promise<ExpoCalendarEvent[]> {
-  if (Platform.OS === 'android') return [];
   if (!InternalExpoCalendar.listEvents) {
     throw new UnavailabilityError('Calendar', 'listEvents');
   }
