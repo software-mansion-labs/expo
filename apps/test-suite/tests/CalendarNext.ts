@@ -14,7 +14,6 @@ import {
 } from 'expo-calendar/next';
 import { Platform } from 'react-native';
 
-import { alertAndWaitForResponse } from './helpers';
 import * as TestUtils from '../TestUtils';
 
 export const name = 'Calendar@next';
@@ -76,6 +75,20 @@ async function createTestEvent(
 ): Promise<ExpoCalendarEvent> {
   const eventData = createEventData(customArgs);
   return await calendar.createEvent(eventData);
+}
+
+async function fetchCreatedEvent(
+  calendar: ExpoCalendar,
+  startDate: Date,
+  endDate: Date,
+  eventId: string
+) {
+  const events = await calendar.listEvents(
+    new Date(startDate.getTime() - 1000),
+    new Date(endDate.getTime() + 1000)
+  );
+  const result = events.find((e) => e.id === eventId);
+  return result;
 }
 
 const defaultAttendeeData = {
@@ -859,6 +872,7 @@ export async function test(t) {
           t.expect(fetchedEvents[0].id).toBe(event.id);
           t.expect(fetchedEvents[0].title).toBe(newTitle);
           t.expect(fetchedEvents[0].startDate).toBe(newStartDate.toISOString());
+          t.expect(fetchedEvents[0].endDate).toBe(newEndDate.toISOString());
         });
 
         t.it('keeps other properties unchanged when updating title', async () => {
@@ -925,6 +939,58 @@ export async function test(t) {
             location: newLocation,
           });
           t.expect(event.location).toBe(newLocation);
+        });
+
+        t.it('updates an event and verifies it is stored correctly', async () => {
+          const event = await createTestEvent(calendar);
+
+          const updatedData = {
+            title: 'Updated title',
+            location: 'Updated location',
+            notes: 'Updated notes',
+            url: 'https://swmansion.com',
+            alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALARM }],
+            startDate: new Date(2023, 2, 3),
+            endDate: new Date(2023, 2, 4),
+            timeZone: 'GMT+1',
+            endTimeZone: 'GMT+1',
+            accessLevel: Calendar.EventAccessLevel.PUBLIC,
+            guestsCanModify: true,
+            guestsCanInviteOthers: true,
+          } satisfies Partial<ExpoCalendarEvent>;
+
+          await event.update(updatedData);
+
+          // Force fetch the event from the Android database
+          const fetchedEvents = await calendar.listEvents(
+            new Date(2023, 2, 1),
+            new Date(2023, 2, 5)
+          );
+
+          const fetchedEvent = fetchedEvents.find((e) => e.id === event.id);
+
+          t.expect(fetchedEvent).toBeDefined();
+          t.expect(fetchedEvent.id).toBe(event.id);
+          t.expect(fetchedEvent.title).toBe(updatedData.title);
+          t.expect(fetchedEvent.startDate).toBe(updatedData.startDate.toISOString());
+          t.expect(fetchedEvent.endDate).toBe(updatedData.endDate.toISOString());
+          t.expect(fetchedEvent.accessLevel).toBe(updatedData.accessLevel);
+          t.expect(fetchedEvent.guestsCanModify).toBe(updatedData.guestsCanModify);
+          t.expect(fetchedEvent.guestsCanInviteOthers).toBe(updatedData.guestsCanInviteOthers);
+          t.expect(fetchedEvent.location).toBe(updatedData.location);
+          t.expect(fetchedEvent.notes).toBe(updatedData.notes);
+          t.expect(fetchedEvent.timeZone).toBe(updatedData.timeZone);
+
+          if (Platform.OS === 'ios') {
+            t.expect(fetchedEvent.url).toBe(updatedData.url);
+          }
+
+          if (Platform.OS === 'android') {
+            t.expect(fetchedEvent.endTimeZone).toBe(updatedData.endTimeZone);
+            t.expect(fetchedEvent.accessLevel).toBe(updatedData.accessLevel);
+            t.expect(fetchedEvent.guestsCanModify).toBe(updatedData.guestsCanModify);
+            t.expect(fetchedEvent.guestsCanInviteOthers).toBe(updatedData.guestsCanInviteOthers);
+          }
         });
 
         // Updating with `instanceStartDate` is not supported on Android
@@ -1027,10 +1093,18 @@ export async function test(t) {
           });
           t.expect(event.alarms.length).toBe(1);
           t.expect(event.alarms[0].relativeOffset).toEqual(-60);
+
           await event.update({
             alarms: null,
           });
-          t.expect(event.alarms).toBe(null);
+
+          const fetchedEvent = await fetchCreatedEvent(
+            calendar,
+            defaultEventData.startDate,
+            defaultEventData.endDate,
+            event.id
+          );
+          t.expect(fetchedEvent.alarms).toBeNull();
         });
 
         t.it('clears recurrenceRule when set to null', async () => {
@@ -1045,8 +1119,14 @@ export async function test(t) {
           await event.update({
             recurrenceRule: null,
           });
-          t.expect(event.recurrenceRule).toBeNull();
-          t.expect(event.title).toBe(defaultEventData.title);
+          const fetchedEvent = await fetchCreatedEvent(
+            calendar,
+            defaultEventData.startDate,
+            defaultEventData.endDate,
+            event.id
+          );
+          t.expect(fetchedEvent.recurrenceRule).toBeNull();
+          t.expect(fetchedEvent.title).toBe(defaultEventData.title);
         });
 
         t.it('distinguishes between null and undefined values', async () => {

@@ -131,11 +131,61 @@ class ExpoCalendarEvent : SharedObject {
     if (eventRecord.notes != null) {
       eventBuilder.put(CalendarContract.Events.DESCRIPTION, eventRecord.notes)
     }
+    if (eventRecord.location != null) {
+      eventBuilder.put(CalendarContract.Events.EVENT_LOCATION, eventRecord.location)
+    }
 
     if (eventRecord.timeZone != null) {
       eventBuilder.put(CalendarContract.Events.EVENT_TIMEZONE, eventRecord.timeZone)
     } else {
       eventBuilder.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+    }
+
+    if (eventRecord.endTimeZone != null) {
+      eventBuilder.put(CalendarContract.Events.EVENT_END_TIMEZONE, eventRecord.endTimeZone)
+    } else {
+      eventBuilder.put(CalendarContract.Events.EVENT_END_TIMEZONE, TimeZone.getDefault().id)
+    }
+
+    if (eventRecord.allDay != null) {
+      eventBuilder.put(CalendarContract.Events.ALL_DAY, if (eventRecord.allDay) 1 else 0)
+    }
+
+    if (eventRecord.availability != null) {
+      val availabilityValue = eventRecord.availability.toAndroidValue(eventRecord.availability)
+      if (availabilityValue != null) {
+        eventBuilder.put(CalendarContract.Events.AVAILABILITY, availabilityValue)
+      }
+    }
+
+    if (eventRecord.status != null) {
+      val statusValue = eventRecord.status.toAndroidValue(eventRecord.status)
+      if (statusValue != null) {
+        eventBuilder.put(CalendarContract.Events.STATUS, statusValue)
+      }
+    }
+
+    if (eventRecord.organizerEmail != null) {
+      eventBuilder.put(CalendarContract.Events.ORGANIZER, eventRecord.organizerEmail)
+    }
+
+    if (eventRecord.accessLevel != null) {
+      val accessLevelValue = eventRecord.accessLevel.toAndroidValue(eventRecord.accessLevel)
+      if (accessLevelValue != null) {
+        eventBuilder.put(CalendarContract.Events.ACCESS_LEVEL, accessLevelValue)
+      }
+    }
+
+    if (eventRecord.guestsCanModify != null) {
+      eventBuilder.put(CalendarContract.Events.GUESTS_CAN_MODIFY, if (eventRecord.guestsCanModify) 1 else 0)
+    }
+
+    if (eventRecord.guestsCanInviteOthers != null) {
+      eventBuilder.put(CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS, if (eventRecord.guestsCanInviteOthers) 1 else 0)
+    }
+
+    if (eventRecord.guestsCanSeeGuests != null) {
+      eventBuilder.put(CalendarContract.Events.GUESTS_CAN_SEE_GUESTS, if (eventRecord.guestsCanSeeGuests) 1 else 0)
     }
 
     if (this.eventRecord?.id != null) {
