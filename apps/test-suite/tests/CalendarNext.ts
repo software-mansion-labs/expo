@@ -738,7 +738,7 @@ export async function test(t) {
           const newTitle = 'New title + ' + new Date().toISOString();
           const startDate = new Date(2019, 3, 2);
           const endDate = new Date(2019, 3, 3);
-          events[0].update({
+          await events[0].update({
             title: newTitle,
             startDate,
             endDate,
@@ -811,6 +811,7 @@ export async function test(t) {
             startDate,
             endDate,
           });
+
           t.expect(event).toBeDefined();
           t.expect(event.startDate).toBe(startDate.toISOString());
           t.expect(event.endDate).toBe(endDate.toISOString());
@@ -821,7 +822,7 @@ export async function test(t) {
           const startDate = new Date(2022, 2, 3);
           const endDate = new Date(2022, 5, 6);
 
-          event.update({
+          await event.update({
             startDate,
             endDate,
           });
