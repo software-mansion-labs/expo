@@ -53,7 +53,6 @@ class ExpoCalendarEvent : SharedObject {
     this.localAppContext = appContext;
 
 
-
     // may be CalendarContract.Instances.BEGIN or CalendarContract.Events.DTSTART (which have different string values)
     val startDate = cursor.getString(3)
     val endDate = cursor.getString(4)
@@ -208,7 +207,7 @@ class ExpoCalendarEvent : SharedObject {
       contentResolver.update(updateUri, eventBuilder.build(), null, null)
       removeRemindersForEvent(contentResolver, eventID)
       if (eventRecord.alarms != null) {
-        createRemindersForEvent( eventID, eventRecord.alarms)
+        createRemindersForEvent(eventID, eventRecord.alarms)
       }
       return eventID
     } else {

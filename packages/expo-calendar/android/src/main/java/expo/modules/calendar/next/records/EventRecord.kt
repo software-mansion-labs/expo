@@ -209,7 +209,7 @@ enum class AlarmMethod(val value: String) : Enumerable {
   SMS("sms"),
   DEFAULT("default");
 
-  fun toAndroidValue(): Int? =  when (this) {
+  fun toAndroidValue(): Int? = when (this) {
     ALERT -> CalendarContract.Reminders.METHOD_ALERT
     ALARM -> CalendarContract.Reminders.METHOD_ALARM
     EMAIL -> CalendarContract.Reminders.METHOD_EMAIL

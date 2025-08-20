@@ -415,13 +415,13 @@ class CalendarNextModule : Module() {
 
       Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
         withPermissions {
-            launchAsyncWithModuleScope(promise) {
-                try {
-                    expoCalendarEvent.deleteEvent(recurringEventOptions)
-                } catch (e: Exception) {
-                    throw Exception("Event could not be deleted", e)
-                }
+          launchAsyncWithModuleScope(promise) {
+            try {
+              expoCalendarEvent.deleteEvent(recurringEventOptions)
+            } catch (e: Exception) {
+              throw Exception("Event could not be deleted", e)
             }
+          }
         }
       }
     }

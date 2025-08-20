@@ -29,5 +29,6 @@ class CalendarEventBuilderNext() {
   fun putNull(key: String) = apply {
     eventValues.putNull(key)
   }
+
   fun build() = eventValues
 }
