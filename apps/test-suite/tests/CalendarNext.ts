@@ -1060,7 +1060,7 @@ export async function test(t) {
             url: null,
           });
           t.expect(event.title).toBe(defaultEventData.title);
-          //   t.expect(event.notes).toBeNull();
+          t.expect(event.notes).toBeNull();
           if (Platform.OS === 'ios') {
             t.expect(event.url).toBeNull();
           }
