@@ -316,6 +316,14 @@ export async function test(t) {
         });
 
         t.it('returns an array of events', async () => {
+          const events = await listEvents(
+            [calendar1.id, calendar2.id],
+            new Date(2019, 3, 1),
+            new Date(2019, 3, 29)
+          );
+          t.expect(Array.isArray(events)).toBe(true);
+          t.expect(events.length).toBe(0);
+
           const event1 = await createTestEvent(calendar1);
           const event2 = await createTestEvent(calendar2);
           const updatedEvents = await listEvents(
