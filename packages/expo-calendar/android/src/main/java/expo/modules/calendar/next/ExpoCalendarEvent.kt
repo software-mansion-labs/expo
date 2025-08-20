@@ -52,6 +52,8 @@ class ExpoCalendarEvent : SharedObject {
   constructor(appContext: AppContext, cursor: Cursor) {
     this.localAppContext = appContext;
 
+
+
     // may be CalendarContract.Instances.BEGIN or CalendarContract.Events.DTSTART (which have different string values)
     val startDate = cursor.getString(3)
     val endDate = cursor.getString(4)
@@ -103,6 +105,14 @@ class ExpoCalendarEvent : SharedObject {
       if (timeInMillis != null) {
         eventBuilder.put(CalendarContract.Events.DTEND, timeInMillis)
       }
+    }
+
+    if (eventRecord.title != null) {
+      eventBuilder.put(CalendarContract.Events.TITLE, eventRecord.title)
+    }
+
+    if (eventRecord.allDay != null) {
+      eventBuilder.put(CalendarContract.Events.ALL_DAY, if (eventRecord.allDay) 1 else 0)
     }
 
     if (eventRecord.recurrenceRule != null) {
