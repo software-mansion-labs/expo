@@ -1208,10 +1208,7 @@ export async function test(t) {
           t.expect(event.title).toBeNull();
           t.expect(event.location).toBeNull();
           t.expect(event.notes).toBeNull();
-          // TODO: Fix when alarms are supported on Android
-          if (Platform.OS === 'ios') {
-            t.expect(event.alarms).toBeNull();
-          }
+          t.expect(event.alarms).toBeNull();
           t.expect(event.recurrenceRule).toBeNull();
           t.expect(event.startDate).toBeNull();
           t.expect(event.endDate).toBeNull();
