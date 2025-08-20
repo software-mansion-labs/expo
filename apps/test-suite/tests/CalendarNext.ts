@@ -438,11 +438,9 @@ export async function test(t) {
           });
           const updatedCalendar = await getCalendarByIdAsync(calendar.id);
 
-          setTimeout(() => {
-            t.expect(updatedCalendar.id).toBe(calendar.id);
-            t.expect(updatedCalendar.color).toBe(newColor);
-            t.expect(updatedCalendar.title).toBe(newTitle);
-          }, 1000);
+          t.expect(updatedCalendar.id).toBe(calendar.id);
+          t.expect(updatedCalendar.color).toBe(newColor);
+          t.expect(updatedCalendar.title).toBe(newTitle);
         });
 
         t.it('keeps other properties unchanged when updating title', async () => {
