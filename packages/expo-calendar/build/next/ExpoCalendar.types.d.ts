@@ -120,12 +120,6 @@ export declare class ExpoCalendar {
      */
     createReminder(reminderData: Omit<Partial<Reminder>, 'id' | 'calendarId'>): ExpoCalendarReminder;
     /**
-     * Gets a calendar by its ID. Throws an error if the calendar with the given ID does not exist.
-     * @param calendarId The ID of the calendar to get.
-     * @returns An [`ExpoCalendar`](#expocalendar) object representing the calendar.
-     */
-    static get(calendarId: string): ExpoCalendar;
-    /**
      * Updates the provided details of an existing calendar stored on the device. To remove a property,
      * explicitly set it to `null` in `details`.
      * @param details A map of properties to be updated.
@@ -135,6 +129,12 @@ export declare class ExpoCalendar {
      * Deletes the calendar.
      */
     delete(): Promise<void>;
+    /**
+     * Gets a calendar by its ID. Throws an error if the calendar with the given ID does not exist.
+     * @param calendarId The ID of the calendar to get.
+     * @returns An [`ExpoCalendar`](#expocalendar) object representing the calendar.
+     */
+    static get(calendarId: string): ExpoCalendar;
 }
 export declare class ExpoCalendarEvent {
     constructor(id: string);
