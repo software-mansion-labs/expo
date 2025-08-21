@@ -16,8 +16,8 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
         Object.setPrototypeOf(result, ExpoCalendarEvent.prototype);
         return result;
     }
-    async getAttendeesAsync(recurringEventOptions = {}) {
-        return super.getAttendeesAsync(stringifyDateValues(recurringEventOptions));
+    async getAttendeesAsync() {
+        return super.getAttendeesAsync();
     }
     update(details, options = {}) {
         const nullableDetailsFields = getNullableDetailsFields(details);

@@ -356,10 +356,9 @@ export declare class ExpoCalendarEvent {
 
   /**
    * Gets all attendees for a given event (or instance of a recurring event).
-   * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    * @return An array of [`Attendee`](#attendee) associated with the specified event.
    */
-  getAttendeesAsync(recurringEventOptions?: RecurringEventOptions): Promise<ExpoCalendarAttendee[]>;
+  getAttendeesAsync(): Promise<ExpoCalendarAttendee[]>;
 
   /**
    * Updates the provided details of an existing calendar stored on the device. To remove a property,

@@ -1391,9 +1391,7 @@ export async function test(t) {
               frequency: Calendar.Frequency.DAILY,
             },
           });
-          const attendees = await recurringEvent.getAttendeesAsync({
-            instanceStartDate: new Date(2024, 0, 1, 9),
-          });
+          const attendees = await recurringEvent.getAttendeesAsync();
           t.expect(Array.isArray(attendees)).toBe(true);
           t.expect(attendees.length).toBe(0);
         });

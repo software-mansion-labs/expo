@@ -32,10 +32,8 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     return result;
   }
 
-  override async getAttendeesAsync(
-    recurringEventOptions: RecurringEventOptions = {}
-  ): Promise<ExpoCalendarAttendee[]> {
-    return super.getAttendeesAsync(stringifyDateValues(recurringEventOptions));
+  override async getAttendeesAsync(): Promise<ExpoCalendarAttendee[]> {
+    return super.getAttendeesAsync();
   }
 
   override update(

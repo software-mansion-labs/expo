@@ -451,9 +451,9 @@ public final class CalendarNextModule: Module {
         return ExpoCalendarEvent(event: ekEvent)
       }
 
-      AsyncFunction("getAttendeesAsync") { (expoEvent: ExpoCalendarEvent, options: RecurringEventOptions?) throws in
+      AsyncFunction("getAttendeesAsync") { (expoEvent: ExpoCalendarEvent) throws in
         try checkCalendarPermissions()
-        return try expoEvent.getAttendees(options: options)
+        return try expoEvent.getAttendees()
       }
 
       Function("update") { (expoEvent: ExpoCalendarEvent, eventRecord: EventNext, options: RecurringEventOptions?, nullableFields: [String]?) throws in

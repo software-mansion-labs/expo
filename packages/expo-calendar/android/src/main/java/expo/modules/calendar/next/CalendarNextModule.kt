@@ -362,7 +362,7 @@ class CalendarNextModule : Module() {
         return@Coroutine editResult
       }
 
-      AsyncFunction("getAttendeesAsync") { expoCalendarEvent: ExpoCalendarEvent, _: RecurringEventOptions, promise: Promise ->
+      AsyncFunction("getAttendeesAsync") { expoCalendarEvent: ExpoCalendarEvent, promise: Promise ->
         withPermissions(promise) {
           launchAsyncWithModuleScope(promise) {
             try {

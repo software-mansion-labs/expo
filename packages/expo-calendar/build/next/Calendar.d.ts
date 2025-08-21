@@ -11,7 +11,7 @@ export declare class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalen
  */
 export declare class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     getOccurrence(recurringEventOptions?: RecurringEventOptions): ExpoCalendarEvent;
-    getAttendeesAsync(recurringEventOptions?: RecurringEventOptions): Promise<ExpoCalendarAttendee[]>;
+    getAttendeesAsync(): Promise<ExpoCalendarAttendee[]>;
     update(details: Partial<ModifiableEventProperties>, options?: RecurringEventOptions): void;
     delete(options?: RecurringEventOptions): void;
 }
