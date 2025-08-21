@@ -121,6 +121,14 @@ public final class CalendarNextModule: Module {
       promise.resolve(ExpoCalendarEvent(event: event))
     }
 
+    AsyncFunction("getReminderById") {
+      (reminderId: String, promise: Promise) in
+      guard let reminder = eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
+        throw ReminderNotFoundException(reminderId)
+      }
+      promise.resolve(ExpoCalendarReminder(reminder: reminder))
+    }
+
     AsyncFunction("getCalendarPermissionsAsync") { (promise: Promise) in
       appContext?.permissions?.getPermissionUsingRequesterClass(
         CalendarPermissionsRequester.self,

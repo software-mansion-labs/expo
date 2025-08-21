@@ -12,6 +12,7 @@ import {
   ExpoCalendarReminder,
   ExpoCalendarAttendee,
   getEventById,
+  getReminderById,
 } from 'expo-calendar/next';
 import { Platform } from 'react-native';
 
@@ -368,14 +369,12 @@ export async function test(t) {
 
         t.it('returns a modified event', async () => {
           const event = await createTestEvent(calendar);
-
           await event.update({
             title: 'New title',
             location: 'New location',
           });
 
           const event2 = await getEventById(event.id);
-
           t.expect(event2).toBeDefined();
           t.expect(event2.title).toBe('New title');
           t.expect(event2.location).toBe('New location');
@@ -387,6 +386,36 @@ export async function test(t) {
       });
 
       if (Platform.OS === 'ios') {
+        t.describe('getReminderById()', () => {
+          let calendar: ExpoCalendar;
+          let reminder: ExpoCalendarReminder;
+
+          t.beforeEach(async () => {
+            calendar = await getReminderCalendar();
+            reminder = await createTestReminder(calendar);
+          });
+
+          t.it('returns a reminder by its ID', async () => {
+            const fetchedReminder = await getReminderById(reminder.id);
+            t.expect(fetchedReminder).toBeDefined();
+            t.expect(fetchedReminder).toEqual(reminder);
+          });
+
+          t.it('returns a modified reminder', async () => {
+            await reminder.update({
+              title: 'New title',
+            });
+
+            const fetchedReminder = await getReminderById(reminder.id);
+            t.expect(fetchedReminder).toBeDefined();
+            t.expect(fetchedReminder.title).toBe('New title');
+          });
+
+          t.afterEach(async () => {
+            reminder.delete();
+          });
+        });
+
         t.describe('getDefaultCalendarNext()', () => {
           t.it('get default calendar', async () => {
             const calendar = getDefaultCalendarNext();

@@ -205,7 +205,6 @@ export async function listEvents(
  * Gets an event by its ID.
  * @param eventId The ID of the event to get.
  * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
- * @platform android
  */
 export async function getEventById(eventId: string): Promise<ExpoCalendarEvent> {
   if (!InternalExpoCalendar.getEventById) {
@@ -214,6 +213,21 @@ export async function getEventById(eventId: string): Promise<ExpoCalendarEvent> 
   const event = await InternalExpoCalendar.getEventById(eventId);
   Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
   return event;
+}
+
+/**
+ * Gets a reminder by its ID.
+ * @param reminderId The ID of the reminder to get.
+ * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
+ * @platform ios
+ */
+export async function getReminderById(reminderId: string): Promise<ExpoCalendarReminder> {
+  if (!InternalExpoCalendar.getReminderById) {
+    throw new UnavailabilityError('Calendar', 'getReminderById');
+  }
+  const reminder = await InternalExpoCalendar.getReminderById(reminderId);
+  Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
+  return reminder;
 }
 
 /**
