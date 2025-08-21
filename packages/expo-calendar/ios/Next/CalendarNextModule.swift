@@ -113,6 +113,14 @@ public final class CalendarNextModule: Module {
       promise.resolve(calendarEvents.map { ExpoCalendarEvent(event: $0) })
     }
 
+    AsyncFunction("getEventById") {
+      (eventId: String, promise: Promise) in
+      guard let event = eventStore.event(withIdentifier: eventId) else {
+        throw EventNotFoundException(eventId)
+      }
+      promise.resolve(ExpoCalendarEvent(event: event))
+    }
+
     AsyncFunction("getCalendarPermissionsAsync") { (promise: Promise) in
       appContext?.permissions?.getPermissionUsingRequesterClass(
         CalendarPermissionsRequester.self,

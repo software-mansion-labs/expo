@@ -352,26 +352,39 @@ export async function test(t) {
         });
       });
 
-      if (Platform.OS === 'android') {
+      t.describe('getEventById()', () => {
         let calendar: ExpoCalendar;
 
         t.beforeEach(async () => {
           calendar = await createTestCalendarAsync();
         });
 
-        t.describe('getEventById()', () => {
-          t.it('returns an event by its ID', async () => {
-            const event = await createTestEvent(calendar);
-            const event2 = await getEventById(event.id);
-            t.expect(event2).toBeDefined();
-            t.expect(event2).toEqual(event);
+        t.it('returns an event by its ID', async () => {
+          const event = await createTestEvent(calendar);
+          const event2 = await getEventById(event.id);
+          t.expect(event2).toBeDefined();
+          t.expect(event2).toEqual(event);
+        });
+
+        t.it('returns a modified event', async () => {
+          const event = await createTestEvent(calendar);
+
+          await event.update({
+            title: 'New title',
+            location: 'New location',
           });
+
+          const event2 = await getEventById(event.id);
+
+          t.expect(event2).toBeDefined();
+          t.expect(event2.title).toBe('New title');
+          t.expect(event2.location).toBe('New location');
         });
 
         t.afterEach(async () => {
           calendar.delete();
         });
-      }
+      });
 
       if (Platform.OS === 'ios') {
         t.describe('getDefaultCalendarNext()', () => {
@@ -978,7 +991,7 @@ export async function test(t) {
 
           await event.update(updatedData);
 
-          // Force fetch the event from the Android database
+          // Force fetch the event from the device database
           const fetchedEvents = await calendar.listEvents(
             new Date(2023, 2, 1),
             new Date(2023, 2, 5)
