@@ -1,6 +1,6 @@
-import { Calendar, EntityTypes, Event, RecurringEventOptions, Reminder, ReminderStatus } from '../Calendar';
+import { Calendar, DialogEventResult, EntityTypes, Event, OpenEventDialogResult, RecurringEventOptions, Reminder, ReminderStatus } from '../Calendar';
 import InternalExpoCalendar from './ExpoCalendar';
-import { ModifiableEventProperties, ModifiableReminderProperties, ModifiableCalendarProperties } from './ExpoCalendar.types';
+import { ModifiableEventProperties, ModifiableReminderProperties, ModifiableCalendarProperties, CalendarDialogOpenParamsNext, CalendarDialogParamsNext } from './ExpoCalendar.types';
 /**
  * Represents a calendar attendee object.
  */
@@ -10,6 +10,8 @@ export declare class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalen
  * Represents a calendar event object that can be accessed and modified using the Expo Calendar Next API.
  */
 export declare class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
+    openInCalendarAsync(params?: CalendarDialogOpenParamsNext): Promise<OpenEventDialogResult>;
+    editInCalendarAsync(params?: CalendarDialogParamsNext): Promise<DialogEventResult>;
     getOccurrence(recurringEventOptions?: RecurringEventOptions): ExpoCalendarEvent;
     getAttendees(recurringEventOptions?: RecurringEventOptions): Promise<ExpoCalendarAttendee[]>;
     update(details: Partial<ModifiableEventProperties>, options?: RecurringEventOptions): Promise<void>;

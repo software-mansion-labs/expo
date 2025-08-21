@@ -25,9 +25,9 @@ import {
   OpenEventDialogResult,
 } from '../Calendar';
 
-type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
+export type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
 
-type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
+export type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
 
 export type ModifiableCalendarProperties = Pick<Calendar, 'color' | 'title'>;
 
@@ -342,7 +342,7 @@ export declare class ExpoCalendarEvent {
    * @header systemProvidedUI
    */
   openInCalendarAsync(
-    params: CalendarDialogOpenParamsNext | null // TODO: Support skipping this param instead of passing null, change needed in the core
+    params?: CalendarDialogOpenParamsNext | null // TODO: Support skipping this param instead of passing null, change needed in the core
   ): Promise<OpenEventDialogResult>;
 
   /**
@@ -351,7 +351,7 @@ export declare class ExpoCalendarEvent {
    * @header systemProvidedUI
    */
   editInCalendarAsync(
-    params: CalendarDialogParamsNext | null // TODO: Support skipping this param instead of passing null, change needed in the core
+    params?: CalendarDialogParamsNext | null // TODO: Support skipping this param instead of passing null, change needed in the core
   ): Promise<DialogEventResult>;
 
   /**

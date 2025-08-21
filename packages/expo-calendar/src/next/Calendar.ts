@@ -3,8 +3,10 @@ import { Platform, processColor } from 'react-native';
 
 import {
   Calendar,
+  DialogEventResult,
   EntityTypes,
   Event,
+  OpenEventDialogResult,
   RecurringEventOptions,
   Reminder,
   ReminderStatus,
@@ -15,6 +17,8 @@ import {
   ModifiableEventProperties,
   ModifiableReminderProperties,
   ModifiableCalendarProperties,
+  CalendarDialogOpenParamsNext,
+  CalendarDialogParamsNext,
 } from './ExpoCalendar.types';
 
 /**
@@ -26,6 +30,20 @@ export class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAtten
  * Represents a calendar event object that can be accessed and modified using the Expo Calendar Next API.
  */
 export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
+  override async openInCalendarAsync(
+    params?: CalendarDialogOpenParamsNext
+  ): Promise<OpenEventDialogResult> {
+    // We have to pass null here because the core doesn't support skipping the first param
+    return super.openInCalendarAsync(params ?? null);
+  }
+
+  override async editInCalendarAsync(
+    params?: CalendarDialogParamsNext
+  ): Promise<DialogEventResult> {
+    // We have to pass null here because the core doesn't support skipping the first param
+    return super.editInCalendarAsync(params ?? null);
+  }
+
   override getOccurrence(recurringEventOptions: RecurringEventOptions = {}): ExpoCalendarEvent {
     const result = super.getOccurrence(stringifyDateValues(recurringEventOptions));
     Object.setPrototypeOf(result, ExpoCalendarEvent.prototype);

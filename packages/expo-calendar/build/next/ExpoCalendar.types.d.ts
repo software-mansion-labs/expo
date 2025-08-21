@@ -1,6 +1,6 @@
 import { AttendeeRole, AttendeeStatus, AttendeeType, Source, Event, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, Calendar, Reminder, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod, OpenEventDialogResult } from '../Calendar';
-type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
-type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
+export type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
+export type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
 export type ModifiableCalendarProperties = Pick<Calendar, 'color' | 'title'>;
 export type ModifiableEventProperties = Pick<Event, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'availability' | 'startDate' | 'endDate' | 'allDay'>;
 export type ModifiableReminderProperties = Pick<Reminder, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'startDate' | 'dueDate' | 'completed' | 'completionDate'>;
@@ -269,13 +269,13 @@ export declare class ExpoCalendarEvent {
      * @return A promise which resolves with information about the dialog result.
      * @header systemProvidedUI
      */
-    openInCalendarAsync(params: CalendarDialogOpenParamsNext | null): Promise<OpenEventDialogResult>;
+    openInCalendarAsync(params?: CalendarDialogOpenParamsNext | null): Promise<OpenEventDialogResult>;
     /**
      * Launches the calendar UI provided by the OS to edit or delete an event.
      * @return A promise which resolves with information about the dialog result.
      * @header systemProvidedUI
      */
-    editInCalendarAsync(params: CalendarDialogParamsNext | null): Promise<DialogEventResult>;
+    editInCalendarAsync(params?: CalendarDialogParamsNext | null): Promise<DialogEventResult>;
     /**
      * Returns an event instance for a given event (or instance of a recurring event).
      * @param recurringEventOptions A map of options for recurring events.
@@ -445,5 +445,4 @@ export declare class ExpoCalendarAttendee {
      */
     delete(): void;
 }
-export {};
 //# sourceMappingURL=ExpoCalendar.types.d.ts.map

@@ -11,6 +11,14 @@ export class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAtten
  * Represents a calendar event object that can be accessed and modified using the Expo Calendar Next API.
  */
 export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
+    async openInCalendarAsync(params) {
+        // We have to pass null here because the core doesn't support skipping the first param
+        return super.openInCalendarAsync(params ?? null);
+    }
+    async editInCalendarAsync(params) {
+        // We have to pass null here because the core doesn't support skipping the first param
+        return super.editInCalendarAsync(params ?? null);
+    }
     getOccurrence(recurringEventOptions = {}) {
         const result = super.getOccurrence(stringifyDateValues(recurringEventOptions));
         Object.setPrototypeOf(result, ExpoCalendarEvent.prototype);
