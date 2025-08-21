@@ -43,14 +43,14 @@ internal final class ExpoCalendarEvent: ExpoCalendarItem {
     self.init(event: calendarEvent)
   }
 
-  func update(eventRecord: EventNext, options: RecurringEventOptions?, nullableFields: [String]? = nil) throws {
+  func update(eventRecord: EventNext, nullableFields: [String]? = nil) throws {
     guard let calendarEvent = self.event else {
       throw ItemNoLongerExistsException()
     }
 
     try self.initialize(event: calendarEvent, eventRecord: eventRecord, nullableFields: nullableFields)
 
-    let span: EKSpan = options?.futureEvents == true ? .futureEvents : .thisEvent
+    let span: EKSpan = .thisEvent
 
     try eventStore.save(calendarEvent, span: span, commit: true)
   }

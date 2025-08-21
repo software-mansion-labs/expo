@@ -456,9 +456,9 @@ public final class CalendarNextModule: Module {
         return try expoEvent.getAttendees()
       }
 
-      Function("update") { (expoEvent: ExpoCalendarEvent, eventRecord: EventNext, options: RecurringEventOptions?, nullableFields: [String]?) throws in
+      Function("update") { (expoEvent: ExpoCalendarEvent, eventRecord: EventNext, nullableFields: [String]?) throws in
         try checkCalendarPermissions()
-        try expoEvent.update(eventRecord: eventRecord, options: options, nullableFields: nullableFields)
+        try expoEvent.update(eventRecord: eventRecord, nullableFields: nullableFields)
       }
 
       Function("delete") { (expoEvent: ExpoCalendarEvent, options: RecurringEventOptions) in

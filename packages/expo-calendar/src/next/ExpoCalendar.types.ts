@@ -364,11 +364,10 @@ export declare class ExpoCalendarEvent {
    * Updates the provided details of an existing calendar stored on the device. To remove a property,
    * explicitly set it to `null` in `details`.
    * @param details A map of properties to be updated.
-   * @param recurringEventOptions A map of options for recurring events, available only on iOS.
+   * @param nullableFields A list of fields that can be set to `null`.
    */
   update(
     details: Partial<ModifiableEventProperties>,
-    recurringEventOptions?: RecurringEventOptions,
     nullableFields?: (keyof ModifiableEventProperties)[]
   ): void;
 

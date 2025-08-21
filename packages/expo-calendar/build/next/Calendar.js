@@ -19,9 +19,9 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     async getAttendeesAsync() {
         return super.getAttendeesAsync();
     }
-    update(details, options = {}) {
+    update(details) {
         const nullableDetailsFields = getNullableDetailsFields(details);
-        super.update(stringifyDateValues(details), stringifyDateValues(options), nullableDetailsFields);
+        super.update(stringifyDateValues(details), nullableDetailsFields);
     }
     delete(options = {}) {
         super.delete(stringifyDateValues(options));

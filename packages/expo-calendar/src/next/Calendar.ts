@@ -36,12 +36,9 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     return super.getAttendeesAsync();
   }
 
-  override update(
-    details: Partial<ModifiableEventProperties>,
-    options: RecurringEventOptions = {}
-  ): void {
+  override update(details: Partial<ModifiableEventProperties>): void {
     const nullableDetailsFields = getNullableDetailsFields(details);
-    super.update(stringifyDateValues(details), stringifyDateValues(options), nullableDetailsFields);
+    super.update(stringifyDateValues(details), nullableDetailsFields);
   }
 
   override delete(options: RecurringEventOptions = {}): void {
