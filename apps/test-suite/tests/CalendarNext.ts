@@ -1522,20 +1522,20 @@ export async function test(t) {
       t.describe('Reminder', () => {
         t.describe('Reminder.get()', () => {
           let calendar: ExpoCalendar;
+          let reminder: ExpoCalendarReminder;
 
           t.beforeEach(async () => {
             calendar = await getReminderCalendar();
+            reminder = await createTestReminder(calendar);
           });
 
           t.it('returns a reminder by its ID', async () => {
-            const reminder = await createTestReminder(calendar);
             const fetchedReminder = ExpoCalendarReminder.get(reminder.id);
             t.expect(fetchedReminder).toBeDefined();
             t.expect(fetchedReminder).toEqual(reminder);
           });
 
           t.it('throws an error when getting a non-existent reminder', async () => {
-
             try {
               ExpoCalendarReminder.get('non-existent-reminder-id');
             } catch (e) {
@@ -1544,7 +1544,7 @@ export async function test(t) {
           });
 
           t.afterEach(async () => {
-            await calendar.delete();
+            await reminder?.delete();
           });
         });
 
