@@ -41,8 +41,8 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     super.update(stringifyDateValues(details), nullableDetailsFields);
   }
 
-  override delete(options: RecurringEventOptions = {}): void {
-    super.delete(stringifyDateValues(options));
+  override delete(): void {
+    super.delete();
   }
 }
 

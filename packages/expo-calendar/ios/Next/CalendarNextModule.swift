@@ -448,7 +448,8 @@ public final class CalendarNextModule: Module {
         guard let ekEvent = try expoEvent.getOccurrence(options: options) else {
           throw EventNotFoundException(options?.instanceStartDate ?? "")
         }
-        return ExpoCalendarEvent(event: ekEvent)
+        let span: EKSpan = options?.futureEvents == true ? .futureEvents : .thisEvent
+        return ExpoCalendarEvent(event: ekEvent, span: span)
       }
 
       AsyncFunction("getAttendeesAsync") { (expoEvent: ExpoCalendarEvent) throws in
@@ -461,9 +462,9 @@ public final class CalendarNextModule: Module {
         try expoEvent.update(eventRecord: eventRecord, nullableFields: nullableFields)
       }
 
-      Function("delete") { (expoEvent: ExpoCalendarEvent, options: RecurringEventOptions) in
+      Function("delete") { (expoEvent: ExpoCalendarEvent) in
         try checkCalendarPermissions()
-        try expoEvent.delete(options: options)
+        try expoEvent.delete()
       }
     }
 

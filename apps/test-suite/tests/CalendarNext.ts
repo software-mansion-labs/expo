@@ -1189,7 +1189,7 @@ export async function test(t) {
 
         t.it('deletes an event', async () => {
           const event = createTestEvent(calendar);
-          event.delete({});
+          event.delete();
           let error;
 
           try {
@@ -1230,9 +1230,8 @@ export async function test(t) {
           t.expect(Array.isArray(eventsBeforeDelete)).toBe(true);
           t.expect(eventsBeforeDelete.length).toBe(4);
 
-          recurringEvent.delete({
-            futureEvents: true,
-          });
+          const occurrence = recurringEvent.getOccurrence({ futureEvents: true });
+          occurrence.delete();
 
           const eventsAfterDelete = await calendar.listEvents(
             new Date(2019, 3, 4),
@@ -1258,9 +1257,10 @@ export async function test(t) {
             t.expect(Array.isArray(eventsBeforeDelete)).toBe(true);
             t.expect(eventsBeforeDelete.length).toBe(4);
 
-            recurringEvent.delete({
+            const occurrence = recurringEvent.getOccurrence({
               instanceStartDate: new Date(2019, 3, 5, 9),
             });
+            occurrence.delete();
 
             const eventsAfterDelete = await calendar.listEvents(
               new Date(2019, 3, 4),
@@ -1296,9 +1296,7 @@ export async function test(t) {
               const occurrence = recurringEvent.getOccurrence({
                 instanceStartDate: new Date(2019, 3, 5, 9),
               });
-              occurrence.delete({
-                futureEvents: false,
-              });
+              occurrence.delete();
 
               const eventsAfterDelete = await calendar.listEvents(
                 new Date(2019, 3, 4),
@@ -1334,10 +1332,9 @@ export async function test(t) {
 
               const occurrence = recurringEvent.getOccurrence({
                 instanceStartDate: new Date(2019, 3, 5, 9),
-              });
-              occurrence.delete({
                 futureEvents: true,
               });
+              occurrence.delete();
 
               const eventsAfterDelete = await calendar.listEvents(
                 new Date(2019, 3, 4),
@@ -1356,10 +1353,10 @@ export async function test(t) {
 
         t.it('throws an error when deleting a non-existent event', async () => {
           const event = createTestEvent(calendar);
-          event.delete({});
+          event.delete();
           t.expect(event.title).toBeNull();
           try {
-            event.delete({});
+            event.delete();
           } catch (e) {
             t.expect(e).toBeDefined();
           }

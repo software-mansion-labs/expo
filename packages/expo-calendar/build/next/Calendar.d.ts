@@ -13,7 +13,7 @@ export declare class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendar
     getOccurrence(recurringEventOptions?: RecurringEventOptions): ExpoCalendarEvent;
     getAttendeesAsync(): Promise<ExpoCalendarAttendee[]>;
     update(details: Partial<ModifiableEventProperties>): void;
-    delete(options?: RecurringEventOptions): void;
+    delete(): void;
 }
 /**
  * Represents a calendar reminder object that can be accessed and modified using the Expo Calendar Next API.

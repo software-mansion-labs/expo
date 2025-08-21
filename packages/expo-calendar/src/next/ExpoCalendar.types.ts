@@ -373,9 +373,8 @@ export declare class ExpoCalendarEvent {
 
   /**
    * Deletes the event.
-   * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    */
-  delete(recurringEventOptions?: RecurringEventOptions): void;
+  delete(): void;
 
   /**
    * Creates a new attendee and adds it to this event.

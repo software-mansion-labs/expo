@@ -23,8 +23,8 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
         const nullableDetailsFields = getNullableDetailsFields(details);
         super.update(stringifyDateValues(details), nullableDetailsFields);
     }
-    delete(options = {}) {
-        super.delete(stringifyDateValues(options));
+    delete() {
+        super.delete();
     }
 }
 /**
