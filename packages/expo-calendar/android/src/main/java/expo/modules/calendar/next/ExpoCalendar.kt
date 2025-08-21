@@ -7,12 +7,12 @@ import android.provider.CalendarContract
 import android.text.TextUtils
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.EventNotSavedException
-import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.availabilityConstantMatchingString
-import expo.modules.calendar.next.records.CalendarRecord
-import expo.modules.calendar.next.records.CalendarAccessLevel
-import expo.modules.calendar.next.records.AttendeeType
 import expo.modules.calendar.next.records.AlarmMethod
+import expo.modules.calendar.next.records.AttendeeType
+import expo.modules.calendar.next.records.CalendarAccessLevel
+import expo.modules.calendar.next.records.CalendarRecord
+import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.Source
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.apifeatures.EitherType
@@ -229,5 +229,4 @@ class ExpoCalendar : SharedObject {
       }
     }
   }
-
 }
