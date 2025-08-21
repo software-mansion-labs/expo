@@ -73,6 +73,12 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
             return reminder;
         });
     }
+    static get(calendarId) {
+        const calendar = InternalExpoCalendar.getCalendarById(calendarId);
+        console.log('!!!!!!555', calendar);
+        Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
+        return calendar;
+    }
     update(details) {
         const color = details.color ? processColor(details.color) : undefined;
         const newDetails = { ...details, color: color || undefined };

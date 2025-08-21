@@ -495,6 +495,32 @@ export async function test(t) {
     });
 
     t.describe('Calendar', () => {
+      t.describe('Calendar.get()', () => {
+        let calendar: ExpoCalendar;
+
+        t.beforeEach(async () => {
+          calendar = await createTestCalendarAsync();
+        });
+
+        t.it('returns a calendar by its ID', async () => {
+          const fetchedCalendar = ExpoCalendar.get(calendar.id);
+          t.expect(fetchedCalendar).toBeDefined();
+          t.expect(fetchedCalendar).toEqual(calendar);
+        });
+
+        t.it('throws an error when getting a non-existent calendar', async () => {
+          try {
+            ExpoCalendar.get('non-existent-calendar-id');
+          } catch (e) {
+            t.expect(e).toBeDefined();
+          }
+        });
+
+        t.afterEach(async () => {
+          calendar.delete();
+        });
+      });
+
       t.describe('Calendar.update()', () => {
         let calendar: ExpoCalendar;
 

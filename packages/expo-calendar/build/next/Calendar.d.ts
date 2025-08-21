@@ -32,6 +32,7 @@ export declare class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     createReminder(details: Partial<Reminder>): ExpoCalendarReminder;
     listEvents(startDate: Date, endDate: Date): Promise<ExpoCalendarEvent[]>;
     listReminders(startDate?: Date | null, endDate?: Date | null, status?: ReminderStatus | null): Promise<ExpoCalendarReminder[]>;
+    static get(calendarId: string): ExpoCalendar;
     update(details: Partial<ModifiableCalendarProperties>): Promise<void>;
 }
 /**

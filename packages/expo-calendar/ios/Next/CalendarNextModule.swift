@@ -50,6 +50,14 @@ public final class CalendarNextModule: Module {
       return calendars.map { ExpoCalendar(calendar: $0) }
     }
 
+    Function("getCalendarById") { (calendarId: String) -> ExpoCalendar in
+      try checkCalendarPermissions()
+      guard let calendar = eventStore.calendar(withIdentifier: calendarId) else {
+        throw CalendarIdNotFoundException(calendarId)
+      }
+      return ExpoCalendar(calendar: calendar)
+    }
+
     Function("createCalendarNext") { (calendarRecord: CalendarRecordNext) throws -> ExpoCalendar in
       let calendar: EKCalendar
       switch calendarRecord.entityType {

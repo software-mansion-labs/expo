@@ -126,6 +126,12 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     });
   }
 
+  static override get(calendarId: string): ExpoCalendar {
+    const calendar = InternalExpoCalendar.getCalendarById(calendarId);
+    Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
+    return calendar;
+  }
+
   override update(details: Partial<ModifiableCalendarProperties>): Promise<void> {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, color: color || undefined };

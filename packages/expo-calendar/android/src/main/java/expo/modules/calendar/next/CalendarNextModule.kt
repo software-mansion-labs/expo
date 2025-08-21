@@ -1,7 +1,9 @@
 package expo.modules.calendar.next
 
 import android.Manifest
+import android.content.ContentUris
 import android.database.Cursor
+import android.os.Bundle
 import android.provider.CalendarContract
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
@@ -13,6 +15,7 @@ import expo.modules.calendar.dialogs.CreatedEventOptions
 import expo.modules.calendar.dialogs.ViewEventContract
 import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
+import expo.modules.calendar.findCalendarByIdQueryFields
 import expo.modules.calendar.findCalendarsQueryParameters
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.CalendarRecord
@@ -74,6 +77,16 @@ class CalendarNextModule : Module() {
             promise.reject("E_CALENDARS_NOT_FOUND", "Calendars could not be found", e)
           }
         }
+      }
+    }
+
+    Function("getCalendarById") { calendarId: String ->
+      withPermissions {
+        val calendar = findExpoCalendarById(calendarId)
+        if (calendar == null) {
+          throw Exception("Calendar with id $calendarId not found")
+        }
+        return@Function calendar
       }
     }
 
@@ -511,6 +524,26 @@ class CalendarNextModule : Module() {
       results.add(ExpoCalendar(appContext, cursor))
     }
     return results
+  }
+
+  private fun findExpoCalendarById(calendarID: String): ExpoCalendar? {
+    val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toInt().toLong())
+    val cursor = contentResolver.query(
+      uri,
+      findCalendarByIdQueryFields,
+      null,
+      null,
+      null
+    )
+    requireNotNull(cursor) { "Cursor shouldn't be null" }
+    return cursor.use {
+      if (it.count > 0) {
+        it.moveToFirst()
+        ExpoCalendar(appContext, cursor)
+      } else {
+        null
+      }
+    }
   }
 
   private inline fun launchAsyncWithModuleScope(promise: Promise, crossinline block: () -> Unit) {
