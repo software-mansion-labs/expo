@@ -11,6 +11,7 @@ import {
   listEvents,
   ExpoCalendarReminder,
   ExpoCalendarAttendee,
+  getEventById,
 } from 'expo-calendar/next';
 import { Platform } from 'react-native';
 
@@ -350,6 +351,27 @@ export async function test(t) {
           calendar2.delete();
         });
       });
+
+      if (Platform.OS === 'android') {
+        let calendar: ExpoCalendar;
+
+        t.beforeEach(async () => {
+          calendar = await createTestCalendarAsync();
+        });
+
+        t.describe('getEventById()', () => {
+          t.it('returns an event by its ID', async () => {
+            const event = await createTestEvent(calendar);
+            const event2 = await getEventById(event.id);
+            t.expect(event2).toBeDefined();
+            t.expect(event2).toEqual(event);
+          });
+        });
+
+        t.afterEach(async () => {
+          calendar.delete();
+        });
+      }
 
       if (Platform.OS === 'ios') {
         t.describe('getDefaultCalendarNext()', () => {

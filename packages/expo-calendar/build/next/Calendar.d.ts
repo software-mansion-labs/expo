@@ -64,6 +64,13 @@ export declare function createCalendarNext(details?: Partial<Calendar>): Promise
  */
 export declare function listEvents(calendarIds: string[], startDate: Date, endDate: Date): Promise<ExpoCalendarEvent[]>;
 /**
+ * Gets an event by its ID.
+ * @param eventId The ID of the event to get.
+ * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
+ * @platform android
+ */
+export declare function getEventById(eventId: string): Promise<ExpoCalendarEvent>;
+/**
  * Asks the user to grant permissions for accessing user's calendars.
  * @return A promise that resolves to an object of type [`PermissionResponse`](#permissionresponse).
  */

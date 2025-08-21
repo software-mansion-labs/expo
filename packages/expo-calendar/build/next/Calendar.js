@@ -136,6 +136,20 @@ export async function listEvents(calendarIds, startDate, endDate) {
     return InternalExpoCalendar.listEvents(calendarIds, stringifyIfDate(startDate), stringifyIfDate(endDate));
 }
 /**
+ * Gets an event by its ID.
+ * @param eventId The ID of the event to get.
+ * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
+ * @platform android
+ */
+export async function getEventById(eventId) {
+    if (!InternalExpoCalendar.getEventById) {
+        throw new UnavailabilityError('Calendar', 'getEventById');
+    }
+    const event = await InternalExpoCalendar.getEventById(eventId);
+    Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
+    return event;
+}
+/**
  * Asks the user to grant permissions for accessing user's calendars.
  * @return A promise that resolves to an object of type [`PermissionResponse`](#permissionresponse).
  */
