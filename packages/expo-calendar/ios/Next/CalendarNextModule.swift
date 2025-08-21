@@ -121,20 +121,20 @@ public final class CalendarNextModule: Module {
       promise.resolve(calendarEvents.map { ExpoCalendarEvent(event: $0) })
     }
 
-    AsyncFunction("getEventById") {
-      (eventId: String, promise: Promise) in
+    Function("getEventById") {
+      (eventId: String) -> ExpoCalendarEvent in
       guard let event = eventStore.event(withIdentifier: eventId) else {
         throw EventNotFoundException(eventId)
       }
-      promise.resolve(ExpoCalendarEvent(event: event))
+      return ExpoCalendarEvent(event: event)
     }
 
     AsyncFunction("getReminderById") {
-      (reminderId: String, promise: Promise) in
+      (reminderId: String) in
       guard let reminder = eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
         throw ReminderNotFoundException(reminderId)
       }
-      promise.resolve(ExpoCalendarReminder(reminder: reminder))
+      return ExpoCalendarReminder(reminder: reminder)
     }
 
     AsyncFunction("getCalendarPermissionsAsync") { (promise: Promise) in

@@ -114,12 +114,13 @@ class CalendarNextModule : Module() {
       }
     }
 
-    AsyncFunction("getEventById") { eventId: String, promise: Promise ->
-      withPermissions(promise) {
-        launchAsyncWithModuleScope(promise) {
-          val event = ExpoCalendarEvent.findEventById(eventId, appContext)
-          promise.resolve(event)
+    Function("getEventById") { eventId: String ->
+      withPermissions {
+        val event = ExpoCalendarEvent.findEventById(eventId, appContext)
+        if (event == null) {
+          throw Exception("Event with id $eventId not found")
         }
+        return@Function event
       }
     }
 

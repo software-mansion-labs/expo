@@ -311,6 +311,12 @@ export declare class ExpoCalendarEvent {
     updateAttendee(attendee: Partial<ExpoCalendarAttendee> & {
         id: string;
     }): Promise<ExpoCalendarAttendee>;
+    /**
+     * Gets an event by its ID. Throws an error if the event with the given ID does not exist.
+     * @param eventId The ID of the event to get.
+     * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
+     */
+    static get(eventId: string): ExpoCalendarEvent;
 }
 export declare class ExpoCalendarReminder {
     /**
@@ -379,6 +385,12 @@ export declare class ExpoCalendarReminder {
      * Deletes the reminder.
      */
     delete(): void;
+    /**
+     * Gets a reminder by its ID. Throws an error if the reminder with the given ID does not exist.
+     * @param reminderId The ID of the reminder to get.
+     * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
+     */
+    static get(reminderId: string): ExpoCalendarReminder;
 }
 /**
  * Represents a calendar attendee object.

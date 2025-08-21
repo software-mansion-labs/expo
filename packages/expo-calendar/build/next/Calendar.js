@@ -26,6 +26,11 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     delete(options = {}) {
         return super.delete(stringifyDateValues(options));
     }
+    static get(eventId) {
+        const event = InternalExpoCalendar.getEventById(eventId);
+        Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
+        return event;
+    }
 }
 /**
  * Represents a calendar reminder object that can be accessed and modified using the Expo Calendar Next API.
@@ -34,6 +39,11 @@ export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarRemin
     update(details) {
         const nullableDetailsFields = getNullableDetailsFields(details);
         super.update(stringifyDateValues(details), nullableDetailsFields);
+    }
+    static get(reminderId) {
+        const reminder = InternalExpoCalendar.getReminderById(reminderId);
+        Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
+        return reminder;
     }
 }
 /**
@@ -73,15 +83,15 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
             return reminder;
         });
     }
-    static get(calendarId) {
-        const calendar = InternalExpoCalendar.getCalendarById(calendarId);
-        Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
-        return calendar;
-    }
     update(details) {
         const color = details.color ? processColor(details.color) : undefined;
         const newDetails = { ...details, color: color || undefined };
         return super.update(newDetails);
+    }
+    static get(calendarId) {
+        const calendar = InternalExpoCalendar.getCalendarById(calendarId);
+        Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
+        return calendar;
     }
 }
 /**

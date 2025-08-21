@@ -53,6 +53,12 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
   override delete(options: RecurringEventOptions = {}): Promise<void> {
     return super.delete(stringifyDateValues(options));
   }
+
+  static override get(eventId: string): ExpoCalendarEvent {
+    const event = InternalExpoCalendar.getEventById(eventId);
+    Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
+    return event;
+  }
 }
 
 /**
@@ -62,6 +68,12 @@ export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarRemin
   override update(details: Partial<ModifiableReminderProperties>): void {
     const nullableDetailsFields = getNullableDetailsFields(details);
     super.update(stringifyDateValues(details), nullableDetailsFields);
+  }
+
+  static override get(reminderId: string): ExpoCalendarReminder {
+    const reminder = InternalExpoCalendar.getReminderById(reminderId);
+    Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
+    return reminder;
   }
 }
 
@@ -126,16 +138,16 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     });
   }
 
-  static override get(calendarId: string): ExpoCalendar {
-    const calendar = InternalExpoCalendar.getCalendarById(calendarId);
-    Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
-    return calendar;
-  }
-
   override update(details: Partial<ModifiableCalendarProperties>): Promise<void> {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, color: color || undefined };
     return super.update(newDetails);
+  }
+
+  static override get(calendarId: string): ExpoCalendar {
+    const calendar = InternalExpoCalendar.getCalendarById(calendarId);
+    Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
+    return calendar;
   }
 }
 
