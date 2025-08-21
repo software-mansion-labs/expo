@@ -1,4 +1,4 @@
-import { AttendeeRole, AttendeeStatus, AttendeeType, Source, Event, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, Calendar, Reminder, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod } from '../Calendar';
+import { AttendeeRole, AttendeeStatus, AttendeeType, Source, Event, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, Calendar, Reminder, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod, OpenEventDialogResult } from '../Calendar';
 type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
 type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
 export type ModifiableCalendarProperties = Pick<Calendar, 'color' | 'title'>;
@@ -269,7 +269,7 @@ export declare class ExpoCalendarEvent {
      * @return A promise which resolves with information about the dialog result.
      * @header systemProvidedUI
      */
-    openInCalendarAsync(params: CalendarDialogOpenParamsNext | null): Promise<void>;
+    openInCalendarAsync(params: CalendarDialogOpenParamsNext | null): Promise<OpenEventDialogResult>;
     /**
      * Launches the calendar UI provided by the OS to edit or delete an event.
      * @return A promise which resolves with information about the dialog result.

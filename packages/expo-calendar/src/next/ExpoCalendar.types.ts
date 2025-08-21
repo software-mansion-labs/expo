@@ -22,6 +22,7 @@ import {
   EventAccessLevel,
   CalendarAccessLevel,
   AlarmMethod,
+  OpenEventDialogResult,
 } from '../Calendar';
 
 type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
@@ -342,7 +343,7 @@ export declare class ExpoCalendarEvent {
    */
   openInCalendarAsync(
     params: CalendarDialogOpenParamsNext | null // TODO: Support skipping this param instead of passing null, change needed in the core
-  ): Promise<void>;
+  ): Promise<OpenEventDialogResult>;
 
   /**
    * Launches the calendar UI provided by the OS to edit or delete an event.
