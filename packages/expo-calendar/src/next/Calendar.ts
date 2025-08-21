@@ -32,26 +32,22 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     return result;
   }
 
-  override async getAttendees(
+  override async getAttendeesAsync(
     recurringEventOptions: RecurringEventOptions = {}
   ): Promise<ExpoCalendarAttendee[]> {
-    return super.getAttendees(stringifyDateValues(recurringEventOptions));
+    return super.getAttendeesAsync(stringifyDateValues(recurringEventOptions));
   }
 
-  override async update(
+  override update(
     details: Partial<ModifiableEventProperties>,
     options: RecurringEventOptions = {}
-  ): Promise<void> {
+  ): void {
     const nullableDetailsFields = getNullableDetailsFields(details);
-    await super.update(
-      stringifyDateValues(details),
-      stringifyDateValues(options),
-      nullableDetailsFields
-    );
+    super.update(stringifyDateValues(details), stringifyDateValues(options), nullableDetailsFields);
   }
 
-  override delete(options: RecurringEventOptions = {}): Promise<void> {
-    return super.delete(stringifyDateValues(options));
+  override delete(options: RecurringEventOptions = {}): void {
+    super.delete(stringifyDateValues(options));
   }
 }
 
@@ -72,7 +68,7 @@ export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarRemin
  * such as retrieving its events, updating its details, and accessing its metadata.
  */
 export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
-  override async createEvent(
+  override createEvent(
     details: Partial<
       Omit<
         Event,
@@ -84,8 +80,8 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
         | 'organizer'
       >
     >
-  ): Promise<ExpoCalendarEvent> {
-    const newEvent = await super.createEvent(stringifyDateValues(details));
+  ): ExpoCalendarEvent {
+    const newEvent = super.createEvent(stringifyDateValues(details));
     Object.setPrototypeOf(newEvent, ExpoCalendarEvent.prototype);
     return newEvent;
   }
@@ -126,7 +122,7 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     });
   }
 
-  override update(details: Partial<ModifiableCalendarProperties>): Promise<void> {
+  override update(details: Partial<ModifiableCalendarProperties>): void {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, color: color || undefined };
     return super.update(newDetails);
@@ -170,10 +166,10 @@ export async function getCalendarsNext(type?: EntityTypes): Promise<ExpoCalendar
  * @param details A map of details for the calendar to be created.
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
-export async function createCalendarNext(details: Partial<Calendar> = {}): Promise<ExpoCalendar> {
+export function createCalendarNext(details: Partial<Calendar> = {}): ExpoCalendar {
   const color = details.color ? processColor(details.color) : undefined;
   const newDetails = { ...details, id: undefined, color: color || undefined };
-  const createdCalendar = await InternalExpoCalendar.createCalendarNext(newDetails);
+  const createdCalendar = InternalExpoCalendar.createCalendarNext(newDetails);
   Object.setPrototypeOf(createdCalendar, ExpoCalendar.prototype);
   return createdCalendar;
 }

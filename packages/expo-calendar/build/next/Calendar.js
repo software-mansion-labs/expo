@@ -16,15 +16,15 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
         Object.setPrototypeOf(result, ExpoCalendarEvent.prototype);
         return result;
     }
-    async getAttendees(recurringEventOptions = {}) {
-        return super.getAttendees(stringifyDateValues(recurringEventOptions));
+    async getAttendeesAsync(recurringEventOptions = {}) {
+        return super.getAttendeesAsync(stringifyDateValues(recurringEventOptions));
     }
-    async update(details, options = {}) {
+    update(details, options = {}) {
         const nullableDetailsFields = getNullableDetailsFields(details);
-        await super.update(stringifyDateValues(details), stringifyDateValues(options), nullableDetailsFields);
+        super.update(stringifyDateValues(details), stringifyDateValues(options), nullableDetailsFields);
     }
     delete(options = {}) {
-        return super.delete(stringifyDateValues(options));
+        super.delete(stringifyDateValues(options));
     }
 }
 /**
@@ -43,8 +43,8 @@ export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarRemin
  * such as retrieving its events, updating its details, and accessing its metadata.
  */
 export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
-    async createEvent(details) {
-        const newEvent = await super.createEvent(stringifyDateValues(details));
+    createEvent(details) {
+        const newEvent = super.createEvent(stringifyDateValues(details));
         Object.setPrototypeOf(newEvent, ExpoCalendarEvent.prototype);
         return newEvent;
     }
@@ -114,10 +114,10 @@ export async function getCalendarsNext(type) {
  * @param details A map of details for the calendar to be created.
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
-export async function createCalendarNext(details = {}) {
+export function createCalendarNext(details = {}) {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, id: undefined, color: color || undefined };
-    const createdCalendar = await InternalExpoCalendar.createCalendarNext(newDetails);
+    const createdCalendar = InternalExpoCalendar.createCalendarNext(newDetails);
     Object.setPrototypeOf(createdCalendar, ExpoCalendar.prototype);
     return createdCalendar;
 }

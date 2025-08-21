@@ -31,7 +31,7 @@ public final class CalendarNextModule: Module {
       return ExpoCalendar(calendar: defaultCalendar)
     }
 
-    Function("getCalendars") { (type: CalendarEntity?) -> [ExpoCalendar] in
+    AsyncFunction("getCalendars") { (type: CalendarEntity?) -> [ExpoCalendar] in
       let calendars: [EKCalendar]
       switch type {
       case nil:
@@ -44,8 +44,6 @@ public final class CalendarNextModule: Module {
       case .reminder:
         try checkRemindersPermissions()
         calendars = eventStore.calendars(for: .reminder)
-      default:
-        throw InvalidCalendarEntityException(type?.rawValue)
       }
       return calendars.map { ExpoCalendar(calendar: $0) }
     }
@@ -453,9 +451,9 @@ public final class CalendarNextModule: Module {
         return ExpoCalendarEvent(event: ekEvent)
       }
 
-      AsyncFunction("getAttendees") { (expoEvent: ExpoCalendarEvent, options: RecurringEventOptions?, promise: Promise) throws in
+      AsyncFunction("getAttendeesAsync") { (expoEvent: ExpoCalendarEvent, options: RecurringEventOptions?) throws in
         try checkCalendarPermissions()
-        promise.resolve(try expoEvent.getAttendees(options: options))
+        return try expoEvent.getAttendees(options: options)
       }
 
       Function("update") { (expoEvent: ExpoCalendarEvent, eventRecord: EventNext, options: RecurringEventOptions?, nullableFields: [String]?) throws in

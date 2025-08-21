@@ -177,7 +177,7 @@ export declare class ExpoCalendar {
    * @param eventData A map of details for the event to be created.
    * @return An instance of the created event.
    */
-  createEvent(eventData: Omit<Partial<Event>, 'id' | 'organizer'>): Promise<ExpoCalendarEvent>;
+  createEvent(eventData: Omit<Partial<Event>, 'id' | 'organizer'>): ExpoCalendarEvent;
 
   /**
    * Creates a new reminder in the calendar.
@@ -191,12 +191,12 @@ export declare class ExpoCalendar {
    * explicitly set it to `null` in `details`.
    * @param details A map of properties to be updated.
    */
-  update(details: Partial<ModifiableCalendarProperties>): Promise<void>;
+  update(details: Partial<ModifiableCalendarProperties>): void;
 
   /**
    * Deletes the calendar.
    */
-  delete(): Promise<void>;
+  delete(): void;
 }
 
 export declare class ExpoCalendarEvent {
@@ -359,7 +359,7 @@ export declare class ExpoCalendarEvent {
    * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    * @return An array of [`Attendee`](#attendee) associated with the specified event.
    */
-  getAttendees(recurringEventOptions?: RecurringEventOptions): Promise<ExpoCalendarAttendee[]>;
+  getAttendeesAsync(recurringEventOptions?: RecurringEventOptions): Promise<ExpoCalendarAttendee[]>;
 
   /**
    * Updates the provided details of an existing calendar stored on the device. To remove a property,
@@ -371,27 +371,25 @@ export declare class ExpoCalendarEvent {
     details: Partial<ModifiableEventProperties>,
     recurringEventOptions?: RecurringEventOptions,
     nullableFields?: (keyof ModifiableEventProperties)[]
-  ): Promise<void>;
+  ): void;
 
   /**
    * Deletes the event.
    * @param recurringEventOptions A map of options for recurring events, available only on iOS.
    */
-  delete(recurringEventOptions?: RecurringEventOptions): Promise<void>;
+  delete(recurringEventOptions?: RecurringEventOptions): void;
 
   /**
    * Creates a new attendee and adds it to this event.
    */
   createAttendee(
     attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>
-  ): Promise<ExpoCalendarAttendee>;
+  ): ExpoCalendarAttendee;
 
   /**
    * Updates an existing attendee of this event.
    */
-  updateAttendee(
-    attendee: Partial<ExpoCalendarAttendee> & { id: string }
-  ): Promise<ExpoCalendarAttendee>;
+  updateAttendee(attendee: Partial<ExpoCalendarAttendee> & { id: string }): ExpoCalendarAttendee;
 }
 
 export declare class ExpoCalendarReminder {
