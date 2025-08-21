@@ -75,7 +75,6 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     }
     static get(calendarId) {
         const calendar = InternalExpoCalendar.getCalendarById(calendarId);
-        console.log('!!!!!!555', calendar);
         Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
         return calendar;
     }
