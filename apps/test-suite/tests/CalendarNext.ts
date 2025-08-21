@@ -563,17 +563,17 @@ export async function test(t) {
           });
         }
 
-        // if (Platform.OS === 'ios') {
-        //   t.it('rejects when time zone is invalid', async () => {
-        //     let error;
-        //     try {
-        //       await createTestEvent(calendar, { timeZone: '' });
-        //     } catch (e) {
-        //       error = e;
-        //     }
-        //     t.expect(error).toBeDefined();
-        //   });
-        // }
+        if (Platform.OS === 'ios') {
+          t.it('rejects when time zone is invalid', async () => {
+            let error;
+            try {
+              await createTestEvent(calendar, { timeZone: '' });
+            } catch (e) {
+              error = e;
+            }
+            t.expect(error).toBeDefined();
+          });
+        }
 
         t.afterAll(async () => {
           await calendar.delete();
@@ -613,7 +613,6 @@ export async function test(t) {
             t.expect(reminder.calendarId).toBe(reminderCalendar.id);
             t.expect(reminder.title).toBe(defaultEventData.title);
             t.expect(reminder.startDate).toBe(defaultEventData.startDate.toISOString());
-            // t.expect(reminder.location).toBe(defaultEventData.location);
             t.expect(reminder.notes).toBe(defaultEventData.notes);
           });
 
@@ -1060,7 +1059,7 @@ export async function test(t) {
             url: null,
           });
           t.expect(event.title).toBe(defaultEventData.title);
-          //   t.expect(event.notes).toBeNull();
+          t.expect(event.notes).toBeNull();
           if (Platform.OS === 'ios') {
             t.expect(event.url).toBeNull();
           }
@@ -1431,8 +1430,6 @@ export async function test(t) {
               reminder.update(updatedData);
 
               t.expect(reminder.title).toBe(updatedData.title);
-              // TODO: Fix - for some reason, the location is not being updated.
-              // t.expect(reminder.location).toBe(updatedData.location);
               t.expect(reminder.url).toBe(updatedData.url);
               t.expect(reminder.notes).toBe(updatedData.notes);
               t.expect(reminder.dueDate).toBe(updatedData.dueDate);
