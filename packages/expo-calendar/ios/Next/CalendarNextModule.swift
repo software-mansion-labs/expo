@@ -129,8 +129,8 @@ public final class CalendarNextModule: Module {
       return ExpoCalendarEvent(event: event)
     }
 
-    AsyncFunction("getReminderById") {
-      (reminderId: String) in
+    Function("getReminderById") {
+      (reminderId: String) -> ExpoCalendarReminder in
       guard let reminder = eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
         throw ReminderNotFoundException(reminderId)
       }
