@@ -11,6 +11,14 @@ export class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAtten
  * Represents a calendar event object that can be accessed and modified using the Expo Calendar Next API.
  */
 export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
+    async openInCalendarAsync(params) {
+        // We have to pass null here because the core doesn't support skipping the first param
+        return super.openInCalendarAsync(params ?? null);
+    }
+    async editInCalendarAsync(params) {
+        // We have to pass null here because the core doesn't support skipping the first param
+        return super.editInCalendarAsync(params ?? null);
+    }
     getOccurrence(recurringEventOptions = {}) {
         const result = super.getOccurrence(stringifyDateValues(recurringEventOptions));
         Object.setPrototypeOf(result, ExpoCalendarEvent.prototype);
@@ -26,6 +34,11 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     delete() {
         super.delete();
     }
+    static get(eventId) {
+        const event = InternalExpoCalendar.getEventById(eventId);
+        Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
+        return event;
+    }
 }
 /**
  * Represents a calendar reminder object that can be accessed and modified using the Expo Calendar Next API.
@@ -34,6 +47,11 @@ export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarRemin
     update(details) {
         const nullableDetailsFields = getNullableDetailsFields(details);
         super.update(stringifyDateValues(details), nullableDetailsFields);
+    }
+    static get(reminderId) {
+        const reminder = InternalExpoCalendar.getReminderById(reminderId);
+        Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
+        return reminder;
     }
 }
 /**
@@ -77,6 +95,11 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
         const color = details.color ? processColor(details.color) : undefined;
         const newDetails = { ...details, color: color || undefined };
         return super.update(newDetails);
+    }
+    static get(calendarId) {
+        const calendar = InternalExpoCalendar.getCalendarById(calendarId);
+        Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
+        return calendar;
     }
 }
 /**
@@ -134,6 +157,33 @@ export async function listEvents(calendars, startDate, endDate) {
         throw new UnavailabilityError('Calendar', 'listEvents');
     }
     return InternalExpoCalendar.listEvents(calendars, stringifyIfDate(startDate), stringifyIfDate(endDate));
+}
+/**
+ * Gets an event by its ID.
+ * @param eventId The ID of the event to get.
+ * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
+ */
+export async function getEventById(eventId) {
+    if (!InternalExpoCalendar.getEventById) {
+        throw new UnavailabilityError('Calendar', 'getEventById');
+    }
+    const event = await InternalExpoCalendar.getEventById(eventId);
+    Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
+    return event;
+}
+/**
+ * Gets a reminder by its ID.
+ * @param reminderId The ID of the reminder to get.
+ * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
+ * @platform ios
+ */
+export async function getReminderById(reminderId) {
+    if (!InternalExpoCalendar.getReminderById) {
+        throw new UnavailabilityError('Calendar', 'getReminderById');
+    }
+    const reminder = await InternalExpoCalendar.getReminderById(reminderId);
+    Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
+    return reminder;
 }
 /**
  * Asks the user to grant permissions for accessing user's calendars.

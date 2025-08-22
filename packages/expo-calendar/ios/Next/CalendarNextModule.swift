@@ -48,12 +48,22 @@ public final class CalendarNextModule: Module {
       return calendars.map { ExpoCalendar(calendar: $0) }
     }
 
+    Function("getCalendarById") { (calendarId: String) -> ExpoCalendar in
+      try checkCalendarPermissions()
+      guard let calendar = eventStore.calendar(withIdentifier: calendarId) else {
+        throw CalendarIdNotFoundException(calendarId)
+      }
+      return ExpoCalendar(calendar: calendar)
+    }
+
     Function("createCalendar") { (calendarRecord: CalendarRecordNext) throws -> ExpoCalendar in
       let calendar: EKCalendar
       switch calendarRecord.entityType {
       case .event:
+        try checkCalendarPermissions()
         calendar = EKCalendar(for: .event, eventStore: eventStore)
       case .reminder:
+        try checkRemindersPermissions()
         calendar = EKCalendar(for: .reminder, eventStore: eventStore)
       case .none:
         throw EntityNotSupportedException(calendarRecord.entityType?.rawValue)
@@ -107,6 +117,22 @@ public final class CalendarNextModule: Module {
       }
 
       promise.resolve(calendarEvents.map { ExpoCalendarEvent(event: $0) })
+    }
+
+    Function("getEventById") {
+      (eventId: String) -> ExpoCalendarEvent in
+      guard let event = eventStore.event(withIdentifier: eventId) else {
+        throw EventNotFoundException(eventId)
+      }
+      return ExpoCalendarEvent(event: event)
+    }
+
+    Function("getReminderById") {
+      (reminderId: String) -> ExpoCalendarReminder in
+      guard let reminder = eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
+        throw ReminderNotFoundException(reminderId)
+      }
+      return ExpoCalendarReminder(reminder: reminder)
     }
 
     AsyncFunction("getCalendarPermissionsAsync") { (promise: Promise) in

@@ -1,7 +1,7 @@
 import { ProcessedColorValue } from 'react-native';
-import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod } from '../Calendar';
-type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
-type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
+import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod, OpenEventDialogResult } from '../Calendar';
+export type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
+export type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
 export type ModifiableCalendarProperties = Pick<ExpoCalendar, 'color' | 'title'>;
 export type ModifiableEventProperties = Pick<ExpoCalendarEvent, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'availability' | 'startDate' | 'endDate' | 'allDay'>;
 export type ModifiableReminderProperties = Pick<ExpoCalendarReminder, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'startDate' | 'dueDate' | 'completed' | 'completionDate'>;
@@ -130,6 +130,12 @@ export declare class ExpoCalendar {
      * Deletes the calendar.
      */
     delete(): void;
+    /**
+     * Gets a calendar by its ID. Throws an error if the calendar with the given ID does not exist.
+     * @param calendarId The ID of the calendar to get.
+     * @returns An [`ExpoCalendar`](#expocalendar) object representing the calendar.
+     */
+    static get(calendarId: string): ExpoCalendar;
 }
 export declare class ExpoCalendarEvent {
     constructor(id: string);
@@ -264,13 +270,13 @@ export declare class ExpoCalendarEvent {
      * @return A promise which resolves with information about the dialog result.
      * @header systemProvidedUI
      */
-    openInCalendarAsync(params: CalendarDialogOpenParamsNext | null): Promise<void>;
+    openInCalendarAsync(params?: CalendarDialogOpenParamsNext | null): Promise<OpenEventDialogResult>;
     /**
      * Launches the calendar UI provided by the OS to edit or delete an event.
      * @return A promise which resolves with information about the dialog result.
      * @header systemProvidedUI
      */
-    editInCalendarAsync(params: CalendarDialogParamsNext | null): Promise<DialogEventResult>;
+    editInCalendarAsync(params?: CalendarDialogParamsNext | null): Promise<DialogEventResult>;
     /**
      * Returns an event instance for a given event (or instance of a recurring event).
      * @param recurringEventOptions A map of options for recurring events.
@@ -297,7 +303,13 @@ export declare class ExpoCalendarEvent {
     /**
      * Creates a new attendee and adds it to this event.
      */
-    createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>): ExpoCalendarAttendee;
+    createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>): Promise<ExpoCalendarAttendee>;
+    /**
+     * Gets an event by its ID. Throws an error if the event with the given ID does not exist.
+     * @param eventId The ID of the event to get.
+     * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
+     */
+    static get(eventId: string): ExpoCalendarEvent;
 }
 export declare class ExpoCalendarReminder {
     /**
@@ -366,6 +378,12 @@ export declare class ExpoCalendarReminder {
      * Deletes the reminder.
      */
     delete(): void;
+    /**
+     * Gets a reminder by its ID. Throws an error if the reminder with the given ID does not exist.
+     * @param reminderId The ID of the reminder to get.
+     * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
+     */
+    static get(reminderId: string): ExpoCalendarReminder;
 }
 /**
  * Represents a calendar attendee object.
@@ -419,5 +437,4 @@ export declare class ExpoCalendarAttendee {
      */
     delete(): void;
 }
-export {};
 //# sourceMappingURL=ExpoCalendar.types.d.ts.map

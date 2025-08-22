@@ -1,46 +1,40 @@
 package expo.modules.calendar.next
 
 import android.Manifest
-import android.content.ContentValues
+import android.content.ContentUris
 import android.database.Cursor
+import android.os.Bundle
 import android.provider.CalendarContract
-import android.text.TextUtils
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
-import expo.modules.calendar.ModuleDestroyedException
-import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.CalendarUtils
+import expo.modules.calendar.ModuleDestroyedException
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
 import expo.modules.calendar.dialogs.CreatedEventOptions
 import expo.modules.calendar.dialogs.ViewEventContract
 import expo.modules.calendar.dialogs.ViewEventIntentResult
 import expo.modules.calendar.dialogs.ViewedEventOptions
+import expo.modules.calendar.findCalendarByIdQueryFields
 import expo.modules.calendar.findCalendarsQueryParameters
+import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.CalendarRecord
-import expo.modules.calendar.next.records.CalendarAccessLevel
-import expo.modules.calendar.next.ExpoCalendarEvent
-import expo.modules.calendar.next.records.AttendeeType
-import expo.modules.calendar.next.records.AlarmMethod
+import expo.modules.calendar.next.records.EventRecord
+import expo.modules.calendar.next.records.RecurringEventOptions
+import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
 import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import expo.modules.calendar.next.records.EventRecord
-import expo.modules.calendar.next.records.RecurringEventOptions
-import expo.modules.kotlin.functions.Coroutine
-import kotlinx.coroutines.cancel
-import expo.modules.calendar.next.records.AttendeeRecord
-import expo.modules.interfaces.permissions.Permissions
-import kotlinx.coroutines.cancel
 
 class CalendarNextModule : Module() {
-  private val moduleCoroutineScope = CoroutineScope(Dispatchers.Default)
   public val contentResolver
     get() = (appContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
 
@@ -60,28 +54,28 @@ class CalendarNextModule : Module() {
       )
     }
 
-    OnDestroy {
-      try {
-        moduleCoroutineScope.cancel(ModuleDestroyedException())
-      } catch (e: IllegalStateException) {
-        Log.e(TAG, "The scope does not have a job in it")
-      }
-    }
-
     AsyncFunction("getCalendars") { type: String?, promise: Promise ->
       withPermissions(promise) {
         if (type != null && type == "reminder") {
           promise.reject("E_CALENDARS_NOT_FOUND", "Calendars of type `reminder` are not supported on Android", null)
           return@withPermissions
         }
-        launchAsyncWithModuleScope(promise) {
-          try {
-            val expoCalendars = findExpoCalendars()
-            promise.resolve(expoCalendars)
-          } catch (e: Exception) {
-            promise.reject("E_CALENDARS_NOT_FOUND", "Calendars could not be found", e)
-          }
+        try {
+          val expoCalendars = findExpoCalendars()
+          promise.resolve(expoCalendars)
+        } catch (e: Exception) {
+          promise.reject("E_CALENDARS_NOT_FOUND", "Calendars could not be found", e)
         }
+      }
+    }
+
+    Function("getCalendarById") { calendarId: String ->
+      withPermissions {
+        val calendar = findExpoCalendarById(calendarId)
+        if (calendar == null) {
+          throw Exception("Calendar with id $calendarId not found")
+        }
+        return@Function calendar
       }
     }
 
@@ -91,21 +85,19 @@ class CalendarNextModule : Module() {
 
     AsyncFunction("listEvents") { calendars: List<ExpoCalendar>, startDate: String, endDate: String, promise: Promise ->
       withPermissions(promise) {
-        launchAsyncWithModuleScope(promise) {
-          try {
-            val allEvents = mutableListOf<ExpoCalendarEvent>()
-            val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate,
-              calendars.map { calendar -> calendar.calendarRecord?.id ?: "" })
-            cursor.use {
-              while (it.moveToNext()) {
-                val event = ExpoCalendarEvent(appContext, it)
-                allEvents.add(event)
-              }
+        try {
+          val allEvents = mutableListOf<ExpoCalendarEvent>()
+          val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate,
+            calendars.map { calendar -> calendar.calendarRecord?.id ?: "" })
+          cursor.use {
+            while (it.moveToNext()) {
+              val event = ExpoCalendarEvent(appContext, it)
+              allEvents.add(event)
             }
-            promise.resolve(allEvents)
-          } catch (e: Exception) {
-            promise.reject("E_EVENTS_NOT_FOUND", "Events could not be found", e)
           }
+          promise.resolve(allEvents)
+        } catch (e: Exception) {
+          promise.reject("E_EVENTS_NOT_FOUND", "Events could not be found", e)
         }
       }
     }
@@ -119,6 +111,16 @@ class CalendarNextModule : Module() {
         } catch (e: Exception) {
           throw Exception("Failed to create calendar", e)
         }
+      }
+    }
+
+    Function("getEventById") { eventId: String ->
+      withPermissions {
+        val event = ExpoCalendarEvent.findEventById(eventId, appContext)
+        if (event == null) {
+          throw Exception("Event with id $eventId not found")
+        }
+        return@Function event
       }
     }
 
@@ -191,16 +193,14 @@ class CalendarNextModule : Module() {
 
       AsyncFunction("listEvents") { expoCalendar: ExpoCalendar, startDate: String, endDate: String, promise: Promise ->
         withPermissions(promise) {
-          launchAsyncWithModuleScope(promise) {
-            if (expoCalendar.calendarRecord?.id == null) {
-              promise.reject("E_EVENTS_NOT_FOUND", "Calendar doesn't exist", Exception())
-            }
-            try {
-              val expoCalendarEvents = expoCalendar.getEvents(startDate, endDate)
-              promise.resolve(expoCalendarEvents)
-            } catch (e: Exception) {
-              promise.reject("E_EVENTS_NOT_FOUND", "Events could not be found", e)
-            }
+          if (expoCalendar.calendarRecord?.id == null) {
+            promise.reject("E_EVENTS_NOT_FOUND", "Calendar doesn't exist", Exception())
+          }
+          try {
+            val expoCalendarEvents = expoCalendar.getEvents(startDate, endDate)
+            promise.resolve(expoCalendarEvents)
+          } catch (e: Exception) {
+            promise.reject("E_EVENTS_NOT_FOUND", "Events could not be found", e)
           }
         }
       }
@@ -365,13 +365,11 @@ class CalendarNextModule : Module() {
 
       AsyncFunction("getAttendeesAsync") { expoCalendarEvent: ExpoCalendarEvent, promise: Promise ->
         withPermissions(promise) {
-          launchAsyncWithModuleScope(promise) {
-            try {
-              val attendees = expoCalendarEvent.getAttendees()
-              promise.resolve(attendees)
-            } catch (e: Exception) {
-              promise.reject("E_ATTENDEES_NOT_FOUND", "Attendees could not be found", e)
-            }
+          try {
+            val attendees = expoCalendarEvent.getAttendees()
+            promise.resolve(attendees)
+          } catch (e: Exception) {
+            promise.reject("E_ATTENDEES_NOT_FOUND", "Attendees could not be found", e)
           }
         }
       }
@@ -491,12 +489,22 @@ class CalendarNextModule : Module() {
     return results
   }
 
-  private inline fun launchAsyncWithModuleScope(promise: Promise, crossinline block: () -> Unit) {
-    moduleCoroutineScope.launch {
-      try {
-        block()
-      } catch (e: ModuleDestroyedException) {
-        promise.reject("E_CALENDAR_MODULE_DESTROYED", "Module destroyed, promise canceled", null)
+  private fun findExpoCalendarById(calendarID: String): ExpoCalendar? {
+    val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toInt().toLong())
+    val cursor = contentResolver.query(
+      uri,
+      findCalendarByIdQueryFields,
+      null,
+      null,
+      null
+    )
+    requireNotNull(cursor) { "Cursor shouldn't be null" }
+    return cursor.use {
+      if (it.count > 0) {
+        it.moveToFirst()
+        ExpoCalendar(appContext, cursor)
+      } else {
+        null
       }
     }
   }
