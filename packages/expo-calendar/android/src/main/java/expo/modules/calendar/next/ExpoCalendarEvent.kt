@@ -33,6 +33,7 @@ import java.util.*
 @OptIn(EitherType::class)
 class ExpoCalendarEvent : SharedObject {
   var eventRecord: EventRecord?
+  var recurringEventOptions: RecurringEventOptions? = null
 
   val sdf = CalendarUtils.sdf
   private val localAppContext: AppContext
@@ -47,6 +48,12 @@ class ExpoCalendarEvent : SharedObject {
   constructor(appContext: AppContext, eventRecord: EventRecord) {
     this.localAppContext = appContext;
     this.eventRecord = eventRecord
+  }
+
+  constructor(appContext: AppContext, eventRecord: EventRecord, options: RecurringEventOptions) {
+    this.localAppContext = appContext
+    this.eventRecord = eventRecord
+    this.recurringEventOptions = options
   }
 
   constructor(appContext: AppContext, cursor: Cursor) {
@@ -228,13 +235,23 @@ class ExpoCalendarEvent : SharedObject {
     }
   }
 
-  fun deleteEvent(recurringEventOptions: RecurringEventOptions): Boolean {
+  fun getOccurrence(options: RecurringEventOptions?): ExpoCalendarEvent {
+    if (options?.instanceStartDate == null) {
+      return this
+    }
+
+    val occurrenceEvent = ExpoCalendarEvent(localAppContext, eventRecord ?: EventRecord(), options)
+    occurrenceEvent.recurringEventOptions = options
+    return occurrenceEvent
+  }
+
+  fun deleteEvent(): Boolean {
     val rows: Int
     val eventID = eventRecord?.id?.toInt()
     if (eventID == null) {
       throw InvalidArgumentException("Event ID is required")
     }
-    if (recurringEventOptions.instanceStartDate == null) {
+    if (recurringEventOptions?.futureEvents == null || recurringEventOptions?.futureEvents == false) {
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       rows = contentResolver.delete(uri, null, null)
       if (rows > 0) {
@@ -246,9 +263,9 @@ class ExpoCalendarEvent : SharedObject {
       // Get the exact occurrence and create an exception for it
       val exceptionValues = ContentValues()
       val startCal = Calendar.getInstance()
-      val instanceStartDate = recurringEventOptions.instanceStartDate
+      val instanceStartDate = recurringEventOptions?.instanceStartDate
       try {
-        val parsedDate = sdf.parse(instanceStartDate)
+        val parsedDate = sdf.parse(instanceStartDate ?: eventRecord?.startDate!!)
         if (parsedDate != null) {
           startCal.time = parsedDate
           exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)

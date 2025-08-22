@@ -375,7 +375,17 @@ class CalendarNextModule : Module() {
         }
       }
 
-      Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, _: Any, nullableFields: List<String> ->
+      Function("getOccurrence") { expoCalendarEvent: ExpoCalendarEvent, options: RecurringEventOptions? ->
+        withPermissions {
+          try {
+            expoCalendarEvent.getOccurrence(options)
+          } catch (e: Exception) {
+            throw Exception( "Failed to get occurrence", e)
+          }
+        }
+      }
+
+      Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, nullableFields: List<String> ->
         withPermissions {
           try {
             val updatedRecord = expoCalendarEvent.eventRecord?.getUpdatedRecord(eventRecord, nullableFields)
@@ -388,10 +398,10 @@ class CalendarNextModule : Module() {
         }
       }
 
-      Function("delete") { expoCalendarEvent: ExpoCalendarEvent, recurringEventOptions: RecurringEventOptions ->
+      Function("delete") { expoCalendarEvent: ExpoCalendarEvent ->
         withPermissions {
           try {
-            expoCalendarEvent.deleteEvent(recurringEventOptions)
+            expoCalendarEvent.deleteEvent()
           } catch (e: Exception) {
             throw Exception("Event could not be deleted", e)
           }
