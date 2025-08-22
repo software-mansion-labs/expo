@@ -461,6 +461,7 @@ export declare class ExpoCalendarReminder {
 
 /**
  * Represents a calendar attendee object.
+ * @platform android
  */
 export declare class ExpoCalendarAttendee {
   /**
@@ -479,7 +480,6 @@ export declare class ExpoCalendarAttendee {
   name: string;
   /**
    * Role of the attendee at the event.
-   * @required
    */
   role: AttendeeRole;
   /**
@@ -497,7 +497,6 @@ export declare class ExpoCalendarAttendee {
   url?: string;
   /**
    * Email of the attendee.
-   * @required
    * @platform android
    */
   email: string;
