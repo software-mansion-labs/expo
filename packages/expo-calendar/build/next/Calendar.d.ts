@@ -73,14 +73,14 @@ export declare function listEvents(calendars: ExpoCalendar[], startDate: Date, e
  * @param eventId The ID of the event to get.
  * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
  */
-export declare function getEventById(eventId: string): Promise<ExpoCalendarEvent>;
+export declare function getEventById(eventId: string): ExpoCalendarEvent;
 /**
  * Gets a reminder by its ID.
  * @param reminderId The ID of the reminder to get.
  * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
  * @platform ios
  */
-export declare function getReminderById(reminderId: string): Promise<ExpoCalendarReminder>;
+export declare function getReminderById(reminderId: string): ExpoCalendarReminder;
 /**
  * Asks the user to grant permissions for accessing user's calendars.
  * @return A promise that resolves to an object of type [`PermissionResponse`](#permissionresponse).

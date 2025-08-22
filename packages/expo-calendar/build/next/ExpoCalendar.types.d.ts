@@ -1,5 +1,6 @@
 import { ProcessedColorValue } from 'react-native';
-import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod, OpenEventDialogResult } from '../Calendar';
+import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod, OpenEventDialogResult } from '../Calendar';
+import { RecurrenceRule } from './types/RecurrenceRule';
 export type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
 export type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
 export type ModifiableCalendarProperties = Pick<ExpoCalendar, 'color' | 'title'>;
@@ -167,6 +168,7 @@ export declare class ExpoCalendarEvent {
     lastModifiedDate?: string | Date;
     /**
      * Time zone the event is scheduled in.
+     * When set to `null`, the event is scheduled to the device's time zone.
      */
     timeZone: string;
     /**
@@ -189,6 +191,7 @@ export declare class ExpoCalendarEvent {
     alarms: Alarm[];
     /**
      * Object representing rules for recurring or repeating events. Set to `null` for one-time events.
+     * It is either `endDate` or `occurrence` based.
      */
     recurrenceRule: RecurrenceRule | null;
     /**
@@ -303,7 +306,7 @@ export declare class ExpoCalendarEvent {
     /**
      * Creates a new attendee and adds it to this event.
      */
-    createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>): Promise<ExpoCalendarAttendee>;
+    createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>): ExpoCalendarAttendee;
     /**
      * Gets an event by its ID. Throws an error if the event with the given ID does not exist.
      * @param eventId The ID of the event to get.

@@ -382,7 +382,7 @@ public final class CalendarNextModule: Module {
         expoEvent.serializeAlarms()
       }
 
-      Property("recurrenceRule") { (expoEvent: ExpoCalendarEvent) -> [String: Any?]? in
+      Property("recurrenceRule") { (expoEvent: ExpoCalendarEvent) -> RecurrenceRuleNext? in
         expoEvent.serializeRecurrenceRule()
       }
 
@@ -542,7 +542,7 @@ public final class CalendarNextModule: Module {
         expoReminder.serializeAlarms()
       }
 
-      Property("recurrenceRule") { (expoReminder: ExpoCalendarReminder) -> [String: Any?]? in
+      Property("recurrenceRule") { (expoReminder: ExpoCalendarReminder) -> RecurrenceRuleNext? in
         expoReminder.serializeRecurrenceRule()
       }
 

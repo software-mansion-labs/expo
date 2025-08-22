@@ -56,7 +56,7 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
 
   override update(details: Partial<ModifiableEventProperties>): void {
     const nullableDetailsFields = getNullableDetailsFields(details);
-    super.update(stringifyDateValues(details), nullableDetailsFields);
+    return super.update(stringifyDateValues(details), nullableDetailsFields);
   }
 
   override delete(): void {
@@ -233,11 +233,11 @@ export async function listEvents(
  * @param eventId The ID of the event to get.
  * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
  */
-export async function getEventById(eventId: string): Promise<ExpoCalendarEvent> {
+export function getEventById(eventId: string): ExpoCalendarEvent {
   if (!InternalExpoCalendar.getEventById) {
     throw new UnavailabilityError('Calendar', 'getEventById');
   }
-  const event = await InternalExpoCalendar.getEventById(eventId);
+  const event = InternalExpoCalendar.getEventById(eventId);
   Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
   return event;
 }
@@ -248,11 +248,11 @@ export async function getEventById(eventId: string): Promise<ExpoCalendarEvent> 
  * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
  * @platform ios
  */
-export async function getReminderById(reminderId: string): Promise<ExpoCalendarReminder> {
+export function getReminderById(reminderId: string): ExpoCalendarReminder {
   if (!InternalExpoCalendar.getReminderById) {
     throw new UnavailabilityError('Calendar', 'getReminderById');
   }
-  const reminder = await InternalExpoCalendar.getReminderById(reminderId);
+  const reminder = InternalExpoCalendar.getReminderById(reminderId);
   Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
   return reminder;
 }

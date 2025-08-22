@@ -361,15 +361,15 @@ export async function test(t) {
         });
 
         t.it('returns an event by its ID', async () => {
-          const event = await createTestEvent(calendar);
-          const event2 = await getEventById(event.id);
+          const event = createTestEvent(calendar);
+          const event2 = getEventById(event.id);
           t.expect(event2).toBeDefined();
           t.expect(event2).toEqual(event);
         });
 
         t.it('returns a modified event', async () => {
-          const event = await createTestEvent(calendar);
-          await event.update({
+          const event = createTestEvent(calendar);
+          event.update({
             title: 'New title',
             location: 'New location',
           });
@@ -392,7 +392,7 @@ export async function test(t) {
 
           t.beforeEach(async () => {
             calendar = await getReminderCalendar();
-            reminder = await createTestReminder(calendar);
+            reminder = createTestReminder(calendar);
           });
 
           t.it('returns a reminder by its ID', async () => {
@@ -402,7 +402,7 @@ export async function test(t) {
           });
 
           t.it('returns a modified reminder', async () => {
-            await reminder.update({
+            reminder.update({
               title: 'New title',
             });
 
@@ -624,7 +624,7 @@ export async function test(t) {
           t.expect(event.notes).toBe(defaultEventData.notes);
         });
 
-        t.it('creates an event with the recurrence rule', async () => {
+        t.it('creates an event with a recurrence rule', async () => {
           const recurrenceRule = {
             endDate: new Date(2021, 3, 5).toISOString(),
             frequency: Calendar.Frequency.DAILY,
@@ -873,7 +873,7 @@ export async function test(t) {
         });
 
         t.it('gets an event by id', async () => {
-          const event = await createTestEvent(calendar);
+          const event = createTestEvent(calendar);
           const fetchedEvent = ExpoCalendarEvent.get(event.id);
           t.expect(fetchedEvent).toEqual(event);
         });
@@ -887,7 +887,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          await calendar.delete();
+          calendar.delete();
         });
       });
 
@@ -1129,21 +1129,63 @@ export async function test(t) {
           });
         }
 
-        t.it('updates recurrence rule', async () => {
+        t.it('updates a recurrence rule with occurrence', async () => {
           const event = createTestEvent(calendar);
 
           const newRecurrenceRule = {
             frequency: Calendar.Frequency.WEEKLY,
             interval: 1,
-            endDate: new Date(2021, 6, 5).toISOString(),
-            occurrence: 0,
+            occurrence: 3,
           };
 
           event.update({
             recurrenceRule: newRecurrenceRule,
           });
 
-          t.expect(event.recurrenceRule).toEqual(newRecurrenceRule);
+          t.expect(event.recurrenceRule.frequency).toEqual(newRecurrenceRule.frequency);
+          t.expect(event.recurrenceRule.interval).toEqual(newRecurrenceRule.interval);
+          t.expect(event.recurrenceRule.occurrence).toEqual(newRecurrenceRule.occurrence);
+          t.expect(event.recurrenceRule.endDate).toBeNull();
+        });
+
+        t.it('updates a recurrence rule with endDate', async () => {
+          const event = createTestEvent(calendar);
+
+          const newRecurrenceRule = {
+            frequency: Calendar.Frequency.WEEKLY,
+            interval: 1,
+            endDate: new Date(2021, 6, 5).toISOString(),
+          };
+
+          event.update({
+            recurrenceRule: newRecurrenceRule,
+          });
+
+          t.expect(event.recurrenceRule.frequency).toEqual(newRecurrenceRule.frequency);
+          t.expect(event.recurrenceRule.interval).toEqual(newRecurrenceRule.interval);
+          t.expect(event.recurrenceRule.endDate).toEqual(newRecurrenceRule.endDate);
+          t.expect(event.recurrenceRule.occurrence).toBeNull();
+        });
+
+        t.it('endDate takes precedence over occurrence', async () => {
+          const event = createTestEvent(calendar);
+
+          const newRecurrenceRule = {
+            frequency: Calendar.Frequency.WEEKLY,
+            interval: 1,
+            endDate: new Date(2021, 6, 5).toISOString(),
+            occurrence: 3,
+          };
+
+          event.update({
+            recurrenceRule: newRecurrenceRule,
+          });
+
+          t.expect(event.recurrenceRule.frequency).toEqual(newRecurrenceRule.frequency);
+          t.expect(event.recurrenceRule.interval).toEqual(newRecurrenceRule.interval);
+          t.expect(event.recurrenceRule.endDate).toEqual(newRecurrenceRule.endDate);
+          // The endDate takes precedence over the occurrence
+          t.expect(event.recurrenceRule.occurrence).toBeNull();
         });
 
         t.it('updates the all day property', async () => {
@@ -1183,17 +1225,6 @@ export async function test(t) {
           t.expect(event.endDate).toBe(defaultEventData.endDate.toISOString());
         });
 
-        t.it('clears timeZone when set to null', async () => {
-          const event = createTestEvent(calendar);
-          t.expect(event.timeZone).toBe(defaultEventData.timeZone);
-          event.update({
-            timeZone: null,
-          });
-          t.expect(event.timeZone).toBeNull();
-          t.expect(event.title).toBe(defaultEventData.title);
-          t.expect(event.location).toBe(defaultEventData.location);
-        });
-
         t.it('clears alarms when set to null', async () => {
           const event = createTestEvent(calendar, {
             alarms: [{ relativeOffset: -60 }],
@@ -1213,11 +1244,12 @@ export async function test(t) {
           t.expect(fetchedEvent.alarms).toEqual([]);
         });
 
-        t.it('clears recurrenceRule when set to null', async () => {
+        t.it('clears a recurrence rule when set to null', async () => {
           const event = createTestEvent(calendar, {
             recurrenceRule: {
               frequency: Calendar.Frequency.DAILY,
               interval: 1,
+              occurrence: 3,
             },
           });
           t.expect(event.recurrenceRule).toBeDefined();
@@ -1538,7 +1570,7 @@ export async function test(t) {
           });
 
           t.afterEach(async () => {
-            await reminder?.delete();
+            reminder.delete();
           });
         });
 
@@ -1556,10 +1588,10 @@ export async function test(t) {
             reminder = await createTestReminder(reminderCalendar);
 
             const updatedData: Partial<ExpoCalendarReminder> = {
-              title: 'New title ' + new Date().toISOString(),
-              location: 'New location ' + new Date().toISOString(),
+              title: `New title ${new Date().toISOString()}`,
+              location: `New location ${new Date().toISOString()}`,
               url: 'https://swmansion.com',
-              notes: 'New notes ' + new Date().toISOString(),
+              notes: `New notes ${new Date().toISOString()}`,
               dueDate: new Date(2025, 1, 1).toISOString(),
             };
             reminder.update(updatedData);
@@ -1576,7 +1608,7 @@ export async function test(t) {
           });
 
           t.it('updates the listed reminder', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               dueDate: new Date(2025, 0, 2),
             });
             const reminders = await reminderCalendar.listReminders(
@@ -1587,7 +1619,7 @@ export async function test(t) {
             const found = reminders.find((r) => r.id === reminder.id);
             t.expect(found).toBeDefined();
 
-            const newTitle = 'New title ' + new Date().toISOString();
+            const newTitle = `New title ${new Date().toISOString()}`;
             found.update({
               title: newTitle,
               dueDate: new Date(2025, 0, 5),
@@ -1598,7 +1630,7 @@ export async function test(t) {
           });
 
           t.it('marks a reminder as completed', async () => {
-            reminder = await createTestReminder(reminderCalendar);
+            reminder = createTestReminder(reminderCalendar);
             t.expect(reminder.completed).toBe(false);
 
             reminder.update({
@@ -1614,7 +1646,7 @@ export async function test(t) {
           });
 
           t.it('supports alarms', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               alarms: [
                 {
                   relativeOffset: -60,
@@ -1629,7 +1661,7 @@ export async function test(t) {
           });
 
           t.it('supports alarms with absolute dates', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               alarms: [
                 {
                   absoluteDate: new Date(2025, 0, 1, 12, 0, 0).toISOString(),
@@ -1646,7 +1678,7 @@ export async function test(t) {
 
           t.it('clears multiple fields when set to null', async () => {
             const url = 'https://example.com';
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               url,
             });
 
@@ -1664,7 +1696,7 @@ export async function test(t) {
           });
 
           t.it('clears alarms when set to null', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               alarms: [{ relativeOffset: -60 }],
             });
             t.expect(reminder.alarms).toEqual([{ relativeOffset: -60 }]);
@@ -1677,7 +1709,7 @@ export async function test(t) {
           });
 
           t.it('clears recurrenceRule when set to null', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               recurrenceRule: {
                 frequency: Calendar.Frequency.WEEKLY,
                 interval: 1,
@@ -1695,7 +1727,7 @@ export async function test(t) {
           });
 
           t.it('clears dates when set to null', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               startDate: new Date(2025, 0, 1),
               dueDate: new Date(2025, 0, 2),
               completionDate: new Date(2025, 0, 3),
@@ -1718,7 +1750,7 @@ export async function test(t) {
           });
 
           t.it('distinguishes between null and undefined values for reminders', async () => {
-            reminder = await createTestReminder(reminderCalendar, {
+            reminder = createTestReminder(reminderCalendar, {
               location: 'Original location',
               notes: 'Original notes',
             });
@@ -1756,7 +1788,7 @@ export async function test(t) {
           });
 
           t.it('deletes a reminder', async () => {
-            reminder = await createTestReminder(reminderCalendar);
+            reminder = createTestReminder(reminderCalendar);
             reminder.delete();
 
             t.expect(reminder.title).toBeNull();
@@ -1769,7 +1801,7 @@ export async function test(t) {
           });
 
           t.it('throws an error when deleting a non-existent reminder', async () => {
-            reminder = await createTestReminder(reminderCalendar);
+            reminder = createTestReminder(reminderCalendar);
             reminder.delete();
             t.expect(reminder.title).toBeNull();
             try {
