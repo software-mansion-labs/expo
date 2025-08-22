@@ -8,8 +8,8 @@ declare class ExpoCalendarNextModule extends NativeModule {
     ExpoCalendarReminder: typeof ExpoCalendarReminder;
     getDefaultCalendar(): ExpoCalendar;
     getCalendars(type?: EntityTypes): Promise<ExpoCalendar[]>;
-    createCalendarNext(details: Partial<Calendar>): ExpoCalendar;
-    listEvents(calendarIds: string[], startDate: string | Date, endDate: string | Date): Promise<ExpoCalendarEvent[]>;
+    createCalendar(details: Partial<Calendar>): ExpoCalendar;
+    listEvents(calendars: ExpoCalendar[], startDate: string | Date, endDate: string | Date): Promise<ExpoCalendarEvent[]>;
     requestCalendarPermissionsAsync(): Promise<PermissionResponse>;
     getCalendarPermissionsAsync(): Promise<PermissionResponse>;
     requestRemindersPermissionsAsync(): Promise<PermissionResponse>;

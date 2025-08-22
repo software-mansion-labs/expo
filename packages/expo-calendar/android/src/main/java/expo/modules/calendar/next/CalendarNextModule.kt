@@ -89,12 +89,13 @@ class CalendarNextModule : Module() {
       Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
     }
 
-    AsyncFunction("listEvents") { calendarIds: List<String>, startDate: String, endDate: String, promise: Promise ->
+    AsyncFunction("listEvents") { calendars: List<ExpoCalendar>, startDate: String, endDate: String, promise: Promise ->
       withPermissions(promise) {
         launchAsyncWithModuleScope(promise) {
           try {
             val allEvents = mutableListOf<ExpoCalendarEvent>()
-            val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate, calendarIds)
+            val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate,
+              calendars.map { calendar -> calendar.calendarRecord?.id ?: "" })
             cursor.use {
               while (it.moveToNext()) {
                 val event = ExpoCalendarEvent(appContext, it)
