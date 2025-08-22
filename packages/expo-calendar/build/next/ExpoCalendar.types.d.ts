@@ -1,3 +1,4 @@
+import { ProcessedColorValue } from 'react-native';
 import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod } from '../Calendar';
 type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
 type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
@@ -33,7 +34,7 @@ export declare class ExpoCalendar {
     /**
      * Color used to display this calendar's events.
      */
-    color: string;
+    color: string | ProcessedColorValue;
     /**
      * Whether the calendar is used in the Calendar or Reminders OS app.
      * @platform ios
@@ -112,7 +113,7 @@ export declare class ExpoCalendar {
      * @param eventData A map of details for the event to be created.
      * @return An instance of the created event.
      */
-    createEvent(eventData: Omit<Partial<Event>, 'id' | 'organizer'>): ExpoCalendarEvent;
+    createEvent(eventData: Omit<Partial<ExpoCalendarEvent>, 'id' | 'organizer'>): ExpoCalendarEvent;
     /**
      * Creates a new reminder in the calendar.
      * @param reminderData A map of details for the reminder to be created.
@@ -297,12 +298,6 @@ export declare class ExpoCalendarEvent {
      * Creates a new attendee and adds it to this event.
      */
     createAttendee(attendee: Pick<NonNullable<ExpoCalendarAttendee>, 'email'> & Partial<ExpoCalendarAttendee>): ExpoCalendarAttendee;
-    /**
-     * Updates an existing attendee of this event.
-     */
-    updateAttendee(attendee: Partial<ExpoCalendarAttendee> & {
-        id: string;
-    }): ExpoCalendarAttendee;
 }
 export declare class ExpoCalendarReminder {
     /**
