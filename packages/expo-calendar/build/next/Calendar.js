@@ -147,16 +147,16 @@ export function createCalendar(details = {}) {
 /**
  * Lists events from the device's calendar. It can be used to search events in multiple calendars.
  * > **Note:** If you want to search events in a single calendar, you can use [`ExpoCalendar.listEvents`](#listeventsstartdate-enddate) instead.
- * @param calendars An array of calendars to search for events.
+ * @param calendarIds An array of calendar IDs to search for events.
  * @param startDate The start date of the time range to search for events.
  * @param endDate The end date of the time range to search for events.
  * @returns An array of [`ExpoCalendarEvent`](#expocalendarevent) objects representing the events found.
  */
-export async function listEvents(calendars, startDate, endDate) {
+export async function listEvents(calendarIds, startDate, endDate) {
     if (!InternalExpoCalendar.listEvents) {
         throw new UnavailabilityError('Calendar', 'listEvents');
     }
-    return InternalExpoCalendar.listEvents(calendars, stringifyIfDate(startDate), stringifyIfDate(endDate));
+    return InternalExpoCalendar.listEvents(calendarIds, stringifyIfDate(startDate), stringifyIfDate(endDate));
 }
 /**
  * Gets an event by its ID.

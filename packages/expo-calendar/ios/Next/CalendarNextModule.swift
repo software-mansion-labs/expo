@@ -90,7 +90,7 @@ public final class CalendarNextModule: Module {
     }
 
     AsyncFunction("listEvents") {
-      ( calendars: [ExpoCalendar],
+      ( calendarIds: [String],
         startDateStr: Either<String, Double>,
         endDateStr: Either<String, Double>,
         promise: Promise) throws in
@@ -102,9 +102,9 @@ public final class CalendarNextModule: Module {
       }
 
       var eventCalendars = [EKCalendar]()
-      if !calendars.isEmpty {
+      if !calendarIds.isEmpty {
         let deviceCalendars = eventStore.calendars(for: .event)
-        let calendarIds = calendars.map { $0.calendar?.calendarIdentifier ?? "" }
+
         for calendar in deviceCalendars where calendarIds.contains(calendar.calendarIdentifier) {
           eventCalendars.append(calendar)
         }

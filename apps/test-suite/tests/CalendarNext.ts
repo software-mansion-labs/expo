@@ -320,7 +320,7 @@ export async function test(t) {
 
         t.it('returns an array of events', async () => {
           const events = await listEvents(
-            [calendar1, calendar2],
+            [calendar1.id, calendar2.id],
             new Date(2019, 3, 1),
             new Date(2019, 3, 29)
           );
@@ -330,7 +330,7 @@ export async function test(t) {
           const event1 = createTestEvent(calendar1);
           const event2 = createTestEvent(calendar2);
           const updatedEvents = await listEvents(
-            [calendar1, calendar2],
+            [calendar1.id, calendar2.id],
             new Date(2019, 3, 1),
             new Date(2019, 3, 29)
           );
@@ -339,7 +339,7 @@ export async function test(t) {
           t.expect(updatedEvents.map((e) => e.id)).toEqual([event1.id, event2.id]);
 
           const singleCalendarEvents = await listEvents(
-            [calendar1],
+            [calendar1.id],
             new Date(2019, 3, 1),
             new Date(2019, 3, 29)
           );

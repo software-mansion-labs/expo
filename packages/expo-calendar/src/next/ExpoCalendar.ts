@@ -18,10 +18,10 @@ declare class ExpoCalendarNextModule extends NativeModule {
 
   getDefaultCalendar(): ExpoCalendar;
   getCalendars(type?: EntityTypes): Promise<ExpoCalendar[]>;
-  createCalendar(details: Partial<Calendar>): ExpoCalendar;
+  createCalendarNext(details: Partial<Calendar>): ExpoCalendar;
 
   listEvents(
-    calendars: ExpoCalendar[],
+    calendarIds: string[],
     startDate: string | Date,
     endDate: string | Date
   ): Promise<ExpoCalendarEvent[]>;
