@@ -3,6 +3,7 @@ package expo.modules.calendar.next
 import android.Manifest
 import android.content.ContentUris
 import android.database.Cursor
+import android.os.Bundle
 import android.provider.CalendarContract
 import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.dialogs.CreateEventContract
