@@ -1255,7 +1255,6 @@ export async function test(t) {
           });
           t.expect(event.recurrenceRule).toBeDefined();
           t.expect(event.recurrenceRule.frequency).toBe(Calendar.Frequency.DAILY);
-          console.log('11111event', event);
           await event.update({
             recurrenceRule: null,
           });
