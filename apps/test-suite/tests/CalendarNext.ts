@@ -1,6 +1,6 @@
 import * as Calendar from 'expo-calendar';
 import {
-  createCalendarNext,
+  createCalendar,
   ExpoCalendar,
   ExpoCalendarEvent,
   getCalendarsNext,
@@ -31,7 +31,7 @@ const defaultCalendarData = {
 } satisfies Partial<ExpoCalendar>;
 
 async function createTestCalendarAsync(patch: Partial<ExpoCalendar> = {}) {
-  return createCalendarNext({
+  return createCalendar({
     ...defaultCalendarData,
     sourceId: await pickCalendarSourceIdAsync(),
     ...patch,
@@ -242,7 +242,7 @@ export async function test(t) {
         });
       }
 
-      t.describe('createCalendarNext()', () => {
+      t.describe('createCalendar()', () => {
         let calendar: ExpoCalendar;
 
         t.it('creates a calendar', async () => {

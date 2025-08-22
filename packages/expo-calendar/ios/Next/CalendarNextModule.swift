@@ -48,7 +48,7 @@ public final class CalendarNextModule: Module {
       return calendars.map { ExpoCalendar(calendar: $0) }
     }
 
-    Function("createCalendarNext") { (calendarRecord: CalendarRecordNext) throws -> ExpoCalendar in
+    Function("createCalendar") { (calendarRecord: CalendarRecordNext) throws -> ExpoCalendar in
       let calendar: EKCalendar
       switch calendarRecord.entityType {
       case .event:

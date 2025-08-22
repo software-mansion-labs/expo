@@ -53,7 +53,7 @@ export declare function getCalendarsNext(type?: EntityTypes): Promise<ExpoCalend
  * @param details A map of details for the calendar to be created.
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
-export declare function createCalendarNext(details?: Partial<Calendar>): ExpoCalendar;
+export declare function createCalendar(details?: Partial<Calendar>): ExpoCalendar;
 /**
  * Lists events from the device's calendar. It can be used to search events in multiple calendars.
  * > **Note:** If you want to search events in a single calendar, you can use [`ExpoCalendar.listEvents`](#listeventsstartdate-enddate) instead.

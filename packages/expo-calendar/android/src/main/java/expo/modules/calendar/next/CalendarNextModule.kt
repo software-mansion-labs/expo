@@ -109,7 +109,7 @@ class CalendarNextModule : Module() {
       }
     }
 
-    Function("createCalendarNext") { calendarRecord: CalendarRecord ->
+    Function("createCalendar") { calendarRecord: CalendarRecord ->
       withPermissions {
         try {
           val calendarId = ExpoCalendar.saveCalendar(calendarRecord, appContext)
