@@ -1,9 +1,9 @@
-import { AttendeeRole, AttendeeStatus, AttendeeType, Source, Event, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, Calendar, Reminder, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod } from '../Calendar';
+import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, RecurrenceRule, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod } from '../Calendar';
 type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
 type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
-export type ModifiableCalendarProperties = Pick<Calendar, 'color' | 'title'>;
-export type ModifiableEventProperties = Pick<Event, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'availability' | 'startDate' | 'endDate' | 'allDay'>;
-export type ModifiableReminderProperties = Pick<Reminder, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'startDate' | 'dueDate' | 'completed' | 'completionDate'>;
+export type ModifiableCalendarProperties = Pick<ExpoCalendar, 'color' | 'title'>;
+export type ModifiableEventProperties = Pick<ExpoCalendarEvent, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'availability' | 'startDate' | 'endDate' | 'allDay'>;
+export type ModifiableReminderProperties = Pick<ExpoCalendarReminder, 'title' | 'location' | 'timeZone' | 'url' | 'notes' | 'alarms' | 'recurrenceRule' | 'startDate' | 'dueDate' | 'completed' | 'completionDate'>;
 export type ModifiableAttendeeProperties = ExpoCalendarAttendee;
 export declare class ExpoCalendar {
     constructor(id: string);
@@ -118,7 +118,7 @@ export declare class ExpoCalendar {
      * @param reminderData A map of details for the reminder to be created.
      * @return An instance of the created reminder.
      */
-    createReminder(reminderData: Omit<Partial<Reminder>, 'id' | 'calendarId'>): ExpoCalendarReminder;
+    createReminder(reminderData: Omit<Partial<ExpoCalendarReminder>, 'id' | 'calendarId'>): ExpoCalendarReminder;
     /**
      * Updates the provided details of an existing calendar stored on the device. To remove a property,
      * explicitly set it to `null` in `details`.

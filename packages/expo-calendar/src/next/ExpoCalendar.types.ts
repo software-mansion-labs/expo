@@ -3,7 +3,6 @@ import {
   AttendeeStatus,
   AttendeeType,
   Source,
-  Event,
   RecurringEventOptions,
   CalendarType,
   Availability,
@@ -13,8 +12,6 @@ import {
   EventStatus,
   Organizer,
   ReminderStatus,
-  Calendar,
-  Reminder,
   CalendarDialogParams,
   DialogEventResult,
   OpenEventPresentationOptions,
@@ -28,10 +25,10 @@ type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationO
 
 type CalendarDialogOpenParamsNext = CalendarDialogParamsNext & OpenEventPresentationOptions;
 
-export type ModifiableCalendarProperties = Pick<Calendar, 'color' | 'title'>;
+export type ModifiableCalendarProperties = Pick<ExpoCalendar, 'color' | 'title'>;
 
 export type ModifiableEventProperties = Pick<
-  Event,
+  ExpoCalendarEvent,
   | 'title'
   | 'location'
   | 'timeZone'
@@ -46,7 +43,7 @@ export type ModifiableEventProperties = Pick<
 >;
 
 export type ModifiableReminderProperties = Pick<
-  Reminder,
+  ExpoCalendarReminder,
   | 'title'
   | 'location'
   | 'timeZone'
@@ -184,7 +181,9 @@ export declare class ExpoCalendar {
    * @param reminderData A map of details for the reminder to be created.
    * @return An instance of the created reminder.
    */
-  createReminder(reminderData: Omit<Partial<Reminder>, 'id' | 'calendarId'>): ExpoCalendarReminder;
+  createReminder(
+    reminderData: Omit<Partial<ExpoCalendarReminder>, 'id' | 'calendarId'>
+  ): ExpoCalendarReminder;
 
   /**
    * Updates the provided details of an existing calendar stored on the device. To remove a property,
