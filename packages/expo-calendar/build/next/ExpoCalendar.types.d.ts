@@ -1,4 +1,3 @@
-import { ProcessedColorValue } from 'react-native';
 import { AttendeeRole, AttendeeStatus, AttendeeType, Source, RecurringEventOptions, CalendarType, Availability, EntityTypes, Alarm, EventStatus, Organizer, ReminderStatus, CalendarDialogParams, DialogEventResult, OpenEventPresentationOptions, PresentationOptions, EventAccessLevel, CalendarAccessLevel, AlarmMethod, OpenEventDialogResult } from '../Calendar';
 import { RecurrenceRule } from './types/RecurrenceRule';
 export type CalendarDialogParamsNext = Omit<CalendarDialogParams, 'id'> & PresentationOptions;
@@ -35,7 +34,7 @@ export declare class ExpoCalendar {
     /**
      * Color used to display this calendar's events.
      */
-    color: string | ProcessedColorValue;
+    color: string;
     /**
      * Whether the calendar is used in the Calendar or Reminders OS app.
      * @platform ios

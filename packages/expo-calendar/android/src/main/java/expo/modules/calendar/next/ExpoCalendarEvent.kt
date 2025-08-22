@@ -277,7 +277,11 @@ class ExpoCalendarEvent : SharedObject {
       val startCal = Calendar.getInstance()
       val instanceStartDate = recurringEventOptions?.instanceStartDate
       try {
-        val parsedDate = sdf.parse(instanceStartDate ?: eventRecord?.startDate!!)
+        val dateString = instanceStartDate ?: eventRecord?.startDate
+        if (dateString == null) {
+          return false
+        }
+        val parsedDate = sdf.parse(dateString)
         if (parsedDate != null) {
           startCal.time = parsedDate
           exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)

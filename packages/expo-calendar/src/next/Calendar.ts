@@ -150,7 +150,7 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
   override update(details: Partial<ModifiableCalendarProperties>): void {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, color: color || undefined };
-    return super.update(newDetails);
+    return super.update(newDetails as Partial<ModifiableCalendarProperties>);
   }
 
   static override get(calendarId: string): ExpoCalendar {
@@ -208,19 +208,23 @@ export function createCalendar(details: Partial<Calendar> = {}): ExpoCalendar {
 /**
  * Lists events from the device's calendar. It can be used to search events in multiple calendars.
  * > **Note:** If you want to search events in a single calendar, you can use [`ExpoCalendar.listEvents`](#listeventsstartdate-enddate) instead.
- * @param calendarIds An array of calendar IDs to search for events.
+ * @param calendars An array of calendar IDs to search for events or [`ExpoCalendar`](#expocalendar) objects.
  * @param startDate The start date of the time range to search for events.
  * @param endDate The end date of the time range to search for events.
  * @returns An array of [`ExpoCalendarEvent`](#expocalendarevent) objects representing the events found.
  */
 export async function listEvents(
-  calendarIds: string[],
+  calendars: string[] | ExpoCalendar[],
   startDate: Date,
   endDate: Date
 ): Promise<ExpoCalendarEvent[]> {
   if (!InternalExpoCalendar.listEvents) {
     throw new UnavailabilityError('Calendar', 'listEvents');
   }
+  const calendarIds: string[] =
+    Array.isArray(calendars) && calendars.length > 0 && typeof calendars[0] !== 'string'
+      ? (calendars as ExpoCalendar[]).map((calendar) => calendar.id)
+      : (calendars as string[]);
   return InternalExpoCalendar.listEvents(
     calendarIds,
     stringifyIfDate(startDate),

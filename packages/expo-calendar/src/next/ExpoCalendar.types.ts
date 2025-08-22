@@ -1,5 +1,3 @@
-import { ProcessedColorValue } from 'react-native';
-
 import {
   AttendeeRole,
   AttendeeStatus,
@@ -91,7 +89,7 @@ export declare class ExpoCalendar {
   /**
    * Color used to display this calendar's events.
    */
-  color: string | ProcessedColorValue;
+  color: string;
   /**
    * Whether the calendar is used in the Calendar or Reminders OS app.
    * @platform ios
