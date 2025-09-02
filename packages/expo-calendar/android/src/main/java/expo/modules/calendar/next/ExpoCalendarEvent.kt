@@ -10,7 +10,6 @@ import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
-import expo.modules.calendar.next.CalendarNextUtils.removeRemindersForEvent
 import expo.modules.calendar.next.records.AlarmRecord
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.EventRecord
@@ -29,8 +28,6 @@ import java.util.TimeZone
 class ExpoCalendarEvent : SharedObject {
   var eventRecord: EventRecord?
   var recurringEventOptions: RecurringEventOptions? = null
-
-  val sdf = CalendarNextUtils.sdf
   private val localAppContext: AppContext
   private val contentResolver
     get() = (localAppContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
@@ -61,14 +58,14 @@ class ExpoCalendarEvent : SharedObject {
     val eventBuilder = CalendarEventBuilderNext()
 
     if (eventRecord.startDate != null) {
-      val timeInMillis = CalendarNextUtils.dateToMilliseconds(eventRecord.startDate)
+      val timeInMillis = dateToMilliseconds(eventRecord.startDate)
       if (timeInMillis != null) {
         eventBuilder.put(CalendarContract.Events.DTSTART, timeInMillis)
       }
     }
 
     if (eventRecord.endDate != null) {
-      val timeInMillis = CalendarNextUtils.dateToMilliseconds(eventRecord.endDate)
+      val timeInMillis = dateToMilliseconds(eventRecord.endDate)
       if (timeInMillis != null) {
         eventBuilder.put(CalendarContract.Events.DTEND, timeInMillis)
       }

@@ -9,8 +9,11 @@ import expo.modules.calendar.EventRecurrenceUtils.dateFormat
 import expo.modules.calendar.EventRecurrenceUtils.rrFormat
 import expo.modules.calendar.accessConstantMatchingString
 import expo.modules.calendar.availabilityConstantMatchingString
-import expo.modules.calendar.next.CalendarNextUtils
-import expo.modules.calendar.next.CalendarNextUtils.sdf
+import expo.modules.calendar.next.dateToString
+import expo.modules.calendar.next.optIntFromCursor
+import expo.modules.calendar.next.optStringFromCursor
+
+import expo.modules.calendar.next.sdf
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.types.Enumerable
@@ -75,34 +78,34 @@ data class EventRecord(
       val startDate = cursor.getString(3)
       val endDate = cursor.getString(4)
 
-      val eventId = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID)
-        ?: CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Instances._ID)
+      val eventId = optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID)
+        ?: optStringFromCursor(cursor, CalendarContract.Instances._ID)
 
       // unfortunately the string values of CalendarContract.Events._ID and CalendarContract.Instances._ID are equal
       // so we'll use the somewhat brittle column number from the query
-      val instanceId = if (cursor.columnCount > 18) CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Instances._ID) else "";
+      val instanceId = if (cursor.columnCount > 18) optStringFromCursor(cursor, CalendarContract.Instances._ID) else "";
 
       return EventRecord(
         id = eventId,
-        calendarId = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
-        title = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.TITLE),
-        notes = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.DESCRIPTION),
+        calendarId = optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
+        title = optStringFromCursor(cursor, CalendarContract.Events.TITLE),
+        notes = optStringFromCursor(cursor, CalendarContract.Events.DESCRIPTION),
         alarms = if (eventId != null) serializeAlarms(contentResolver, eventId)?.toList() else null,
-        recurrenceRule = extractRecurrenceRuleFromString(CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.RRULE)),
-        startDate = CalendarNextUtils.dateToString(startDate?.toLongOrNull()),
-        endDate = CalendarNextUtils.dateToString(endDate?.toLongOrNull()),
-        allDay = CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.ALL_DAY) != 0,
-        location = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_LOCATION),
-        availability = EventAvailability.fromAndroidValue(CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.AVAILABILITY)),
-        timeZone = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_TIMEZONE),
-        endTimeZone = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.EVENT_END_TIMEZONE),
-        status = EventStatus.fromAndroidValue(CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.STATUS)),
-        organizerEmail = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.ORGANIZER),
-        accessLevel = EventAccessLevel.fromAndroidValue(CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.ACCESS_LEVEL)),
-        guestsCanModify = CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_MODIFY) != 0,
-        guestsCanInviteOthers = CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS) != 0,
-        guestsCanSeeGuests = CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_SEE_GUESTS) != 0,
-        originalId = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Events.ORIGINAL_ID),
+        recurrenceRule = extractRecurrenceRuleFromString(optStringFromCursor(cursor, CalendarContract.Events.RRULE)),
+        startDate = dateToString(startDate?.toLongOrNull()),
+        endDate = dateToString(endDate?.toLongOrNull()),
+        allDay = optIntFromCursor(cursor, CalendarContract.Events.ALL_DAY) != 0,
+        location = optStringFromCursor(cursor, CalendarContract.Events.EVENT_LOCATION),
+        availability = EventAvailability.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Events.AVAILABILITY)),
+        timeZone = optStringFromCursor(cursor, CalendarContract.Events.EVENT_TIMEZONE),
+        endTimeZone = optStringFromCursor(cursor, CalendarContract.Events.EVENT_END_TIMEZONE),
+        status = EventStatus.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Events.STATUS)),
+        organizerEmail = optStringFromCursor(cursor, CalendarContract.Events.ORGANIZER),
+        accessLevel = EventAccessLevel.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Events.ACCESS_LEVEL)),
+        guestsCanModify = optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_MODIFY) != 0,
+        guestsCanInviteOthers = optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS) != 0,
+        guestsCanSeeGuests = optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_SEE_GUESTS) != 0,
+        originalId = optStringFromCursor(cursor, CalendarContract.Events.ORIGINAL_ID),
         instanceId = instanceId
       )
     }

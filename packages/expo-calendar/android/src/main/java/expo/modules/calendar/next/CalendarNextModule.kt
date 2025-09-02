@@ -78,7 +78,7 @@ class CalendarNextModule : Module() {
       withPermissions {
         try {
           val allEvents = mutableListOf<ExpoCalendarEvent>()
-          val cursor = CalendarNextUtils.findEvents(contentResolver, startDate, endDate, calendarIds)
+          val cursor = findEvents(contentResolver, startDate, endDate, calendarIds)
           cursor.use {
             while (it.moveToNext()) {
               val event = ExpoCalendarEvent(appContext, it)

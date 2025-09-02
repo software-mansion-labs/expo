@@ -9,7 +9,9 @@ import expo.modules.calendar.attendeeStatusConstantMatchingString
 import expo.modules.calendar.attendeeStatusStringMatchingConstant
 import expo.modules.calendar.attendeeTypeConstantMatchingString
 import expo.modules.calendar.attendeeTypeStringMatchingConstant
-import expo.modules.calendar.next.CalendarNextUtils
+import expo.modules.calendar.next.optIntFromCursor
+import expo.modules.calendar.next.optStringFromCursor
+
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.types.Enumerable
@@ -32,12 +34,12 @@ data class AttendeeRecord(
     @JvmStatic
     fun fromCursor(cursor: Cursor, contentResolver: ContentResolver): AttendeeRecord {
       return AttendeeRecord(
-        id = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Attendees._ID),
-        name = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_NAME),
-        role = AttendeeRole.fromAndroidValue(CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_RELATIONSHIP)),
-        status = AttendeeStatus.fromAndroidValue(CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_STATUS)),
-        type = AttendeeType.fromAndroidValue(CalendarNextUtils.optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_TYPE)),
-        email = CalendarNextUtils.optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_EMAIL),
+        id = optStringFromCursor(cursor, CalendarContract.Attendees._ID),
+        name = optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_NAME),
+        role = AttendeeRole.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_RELATIONSHIP)),
+        status = AttendeeStatus.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_STATUS)),
+        type = AttendeeType.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_TYPE)),
+        email = optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_EMAIL),
       )
     }
   }
