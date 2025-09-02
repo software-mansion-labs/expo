@@ -6,12 +6,11 @@ import android.database.Cursor
 import android.provider.CalendarContract
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
-import expo.modules.calendar.CalendarUtils
-import expo.modules.calendar.CalendarUtils.removeRemindersForEvent
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
+import expo.modules.calendar.next.CalendarNextUtils.removeRemindersForEvent
 import expo.modules.calendar.next.records.AlarmRecord
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.EventRecord
@@ -31,7 +30,7 @@ class ExpoCalendarEvent : SharedObject {
   var eventRecord: EventRecord?
   var recurringEventOptions: RecurringEventOptions? = null
 
-  val sdf = CalendarUtils.sdf
+  val sdf = CalendarNextUtils.sdf
   private val localAppContext: AppContext
   private val contentResolver
     get() = (localAppContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver

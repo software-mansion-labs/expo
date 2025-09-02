@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.ContentUris
 import android.database.Cursor
 import android.provider.CalendarContract
-import expo.modules.calendar.CalendarUtils
 import expo.modules.calendar.dialogs.CreateEventContract
 import expo.modules.calendar.dialogs.CreateEventIntentResult
 import expo.modules.calendar.dialogs.CreatedEventOptions
@@ -79,7 +78,7 @@ class CalendarNextModule : Module() {
       withPermissions(promise) {
         try {
           val allEvents = mutableListOf<ExpoCalendarEvent>()
-          val cursor = CalendarUtils.findEvents(contentResolver, startDate, endDate, calendarIds)
+          val cursor = CalendarNextUtils.findEvents(contentResolver, startDate, endDate, calendarIds)
           cursor.use {
             while (it.moveToNext()) {
               val event = ExpoCalendarEvent(appContext, it)
