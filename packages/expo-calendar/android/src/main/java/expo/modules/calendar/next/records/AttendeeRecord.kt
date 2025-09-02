@@ -1,6 +1,5 @@
 package expo.modules.calendar.next.records
 
-import android.content.ContentResolver
 import android.database.Cursor
 import android.provider.CalendarContract
 import expo.modules.calendar.CalendarUtils
@@ -30,7 +29,7 @@ data class AttendeeRecord(
 ) : Record {
   companion object {
     @JvmStatic
-    fun fromCursor(cursor: Cursor, contentResolver: ContentResolver): AttendeeRecord {
+    fun fromCursor(cursor: Cursor): AttendeeRecord {
       return AttendeeRecord(
         id = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees._ID),
         name = CalendarUtils.optStringFromCursor(cursor, CalendarContract.Attendees.ATTENDEE_NAME),

@@ -469,7 +469,7 @@ class CalendarNextModule : Module() {
   }
 
   private fun serializeExpoCalendars(cursor: Cursor): List<ExpoCalendar> {
-    val results: MutableList<ExpoCalendar> = ArrayList()
+    val results = mutableListOf<ExpoCalendar>()
     while (cursor.moveToNext()) {
       results.add(ExpoCalendar(appContext, cursor))
     }

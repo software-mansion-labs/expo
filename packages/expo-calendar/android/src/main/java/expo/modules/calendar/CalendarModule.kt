@@ -540,7 +540,7 @@ class CalendarModule : Module() {
     val isNew = !details.containsKey("id")
     val attendeeBuilder = AttendeeBuilder(details)
       .putString("name", CalendarContract.Attendees.ATTENDEE_NAME)
-      .putString("email", CalendarContract.Attendees.ATTENDEE_EMAIL, isNew)
+      .putString("email", CalendarContract.Attendees.ATTENDEE_EMAIL, isRequired = isNew)
       .putString("role", CalendarContract.Attendees.ATTENDEE_RELATIONSHIP, isNew, ::attendeeRelationshipConstantMatchingString)
       .putString("type", CalendarContract.Attendees.ATTENDEE_TYPE, isNew, ::attendeeTypeConstantMatchingString)
       .putString("status", CalendarContract.Attendees.ATTENDEE_STATUS, isNew, ::attendeeStatusConstantMatchingString)
@@ -549,7 +549,8 @@ class CalendarModule : Module() {
       attendeeBuilder.put(CalendarContract.Attendees.EVENT_ID, eventID?.toInt())
       val attendeesUri = CalendarContract.Attendees.CONTENT_URI
       val attendeeUri = contentResolver.insert(attendeesUri, attendeeBuilder.build())
-      attendeeUri!!.lastPathSegment!!.toInt()
+        ?: throw IllegalArgumentException()
+      attendeeUri.lastPathSegment!!.toInt()
     } else {
       val attendeeID = details.getString("id").toInt()
       val updateUri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
@@ -560,9 +561,8 @@ class CalendarModule : Module() {
 
   @Throws(SecurityException::class)
   private fun deleteAttendee(attendeeID: String): Boolean {
-    val rows: Int
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toInt().toLong())
-    rows = contentResolver.delete(uri, null, null)
+    val rows = contentResolver.delete(uri, null, null)
     return rows > 0
   }
 

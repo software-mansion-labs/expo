@@ -58,7 +58,8 @@ class ExpoCalendarEvent : SharedObject {
   }
 
   @Throws(EventNotSavedException::class, ParseException::class, SecurityException::class, InvalidArgumentException::class)
-  fun saveEvent(eventRecord: EventRecord, calendarId: String? = null, nullableFields: List<String>? = null): Int? {
+  fun
+    saveEvent(eventRecord: EventRecord, calendarId: String? = null, nullableFields: List<String>? = null): Int? {
     val eventBuilder = CalendarEventBuilderNext()
 
     if (eventRecord.startDate != null) {
@@ -203,9 +204,14 @@ class ExpoCalendarEvent : SharedObject {
     if (options?.instanceStartDate == null) {
       return this
     }
-    val occurrenceEvent = ExpoCalendarEvent(localAppContext, eventRecord ?: EventRecord(), options)
-    occurrenceEvent.recurringEventOptions = options
-    return occurrenceEvent
+
+    return ExpoCalendarEvent(
+      localAppContext,
+      eventRecord ?: EventRecord(),
+      options
+    ).apply {
+      recurringEventOptions = options
+    }
   }
 
   private fun cleanNullableFields(eventBuilder: CalendarEventBuilderNext, nullableFields: List<String>?) {
@@ -258,14 +264,12 @@ class ExpoCalendarEvent : SharedObject {
   }
 
   fun deleteEvent(): Boolean {
-    val rows: Int
     val eventID = eventRecord?.id?.toInt()
-    if (eventID == null) {
-      throw InvalidArgumentException("Event ID is required")
-    }
+      ?: throw InvalidArgumentException("Event ID is required")
+
     if (recurringEventOptions?.futureEvents == null || recurringEventOptions?.futureEvents == false) {
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
-      rows = contentResolver.delete(uri, null, null)
+      val rows = contentResolver.delete(uri, null, null)
       if (rows > 0) {
         this.eventRecord = null
         return true;
@@ -282,13 +286,13 @@ class ExpoCalendarEvent : SharedObject {
           return false
         }
         val parsedDate = sdf.parse(dateString)
-        if (parsedDate != null) {
-          startCal.time = parsedDate
-          exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)
-        } else {
-          Log.e(TAG, "Parsed date is null")
-          return false
-        }
+          ?: return run {
+            Log.e(TAG, "Parsed date is null")
+            false
+          }
+
+        startCal.time = parsedDate
+        exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)
       } catch (e: ParseException) {
         Log.e(TAG, "error", e)
         throw e
@@ -320,6 +324,7 @@ class ExpoCalendarEvent : SharedObject {
   private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
     for (reminder in reminders) {
       if (reminder.relativeOffset != null) {
+        // why `-`?
         val minutes = -reminder.relativeOffset
         val reminderValues = ContentValues()
         val method = reminder.method?.toAndroidValue() ?: CalendarContract.Reminders.METHOD_DEFAULT
@@ -334,7 +339,6 @@ class ExpoCalendarEvent : SharedObject {
   fun getAttendees(): List<ExpoCalendarAttendee> {
     val eventID = eventRecord?.id?.toLong()
     if (eventID == null) {
-
       throw InvalidArgumentException("Event ID is required")
     }
     val cursor = CalendarContract.Attendees.query(
@@ -355,7 +359,7 @@ class ExpoCalendarEvent : SharedObject {
 
   fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
     val attendee = ExpoCalendarAttendee(localAppContext)
-    val eventId = this.eventRecord?.id?.toIntOrNull();
+    val eventId = eventRecord?.id?.toIntOrNull();
     if (eventId == null) {
       throw Exception("Missing event id")
     }

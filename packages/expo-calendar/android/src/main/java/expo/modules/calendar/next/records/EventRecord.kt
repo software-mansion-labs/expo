@@ -121,6 +121,7 @@ data class EventRecord(
       while (cursor.moveToNext()) {
         val method = cursor.getInt(1)
         val thisAlarm = AlarmRecord(
+          // why `-`?
           relativeOffset = -cursor.getInt(0),
           method = AlarmMethod.fromAndroidValue(method)
         )
@@ -133,27 +134,29 @@ data class EventRecord(
       if (rrule == null) {
         return null
       }
-      val ruleMap = mutableMapOf<String, String>()
-      rrule.split(";").forEach { part ->
-        val keyValue = part.split("=")
-        if (keyValue.size == 2) {
-          ruleMap[keyValue[0].uppercase(Locale.getDefault())] = keyValue[1]
-        }
-      }
+//      val ruleMap = mutableMapOf<String, String>()
+//      rrule.split(";").forEach { part ->
+//        val keyValue = part.split("=")
+//        if (keyValue.size == 2) {
+//          ruleMap[keyValue[0].uppercase(Locale.getDefault())] = keyValue[1]
+//        }
+//      }
+      val ruleMap = createRuleMap(rrule)
 
       val frequency = ruleMap["FREQ"]?.lowercase(Locale.getDefault())
       val interval = ruleMap["INTERVAL"]?.toIntOrNull()
       var endDate: String? = null
       var occurrence: Int? = null
 
+//      endDate = ruleObject.until
+
       ruleMap["UNTIL"]?.let { untilValue ->
         try {
           // Try to parse the UNTIL value using the known date format, fallback to raw string if parsing fails
           endDate = try {
-            val date = rrFormat.parse(untilValue);
-            if (date == null) {
-              return null;
-            }
+            val date = rrFormat.parse(untilValue)
+              ?: return@let null
+
             dateFormat.format(date)
           } catch (e: ParseException) {
             Log.e(TAG, "Couldn't parse the `endDate` property.", e)
@@ -174,6 +177,20 @@ data class EventRecord(
         interval = interval,
         occurrence = occurrence,
       )
+    }
+
+    private fun createRuleMap(rrule: String): Map<String, String> {
+      return rrule
+        .split(";")
+        .mapNotNull { part ->
+          val keyValue = part.split("=")
+          if (keyValue.size != 2) {
+            return@mapNotNull null
+          }
+
+          keyValue[0].uppercase(Locale.getDefault()) to keyValue[1]
+        }
+        .toMap()
     }
   }
 }
@@ -203,15 +220,14 @@ data class RecurrenceRuleRecord(
     if (endDate == null) return this
     return try {
       val date = sdf.parse(endDate)
-      if (date != null) {
-        return RecurrenceRuleRecord(
-          endDate = rrFormat.format(date),
-          frequency = frequency,
-          interval = interval,
-          occurrence = occurrence,
-        )
-      } else this
-    } catch (e: Exception) {
+        ?: return this
+      RecurrenceRuleRecord(
+        endDate = rrFormat.format(date),
+        frequency = frequency,
+        interval = interval,
+        occurrence = occurrence,
+      )
+    } catch (_: Exception) {
       this
     }
   }

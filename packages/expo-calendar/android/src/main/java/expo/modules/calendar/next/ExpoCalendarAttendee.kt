@@ -24,12 +24,13 @@ class ExpoCalendarAttendee : SharedObject {
 
   constructor(appContext: AppContext) {
     this.localAppContext = appContext
-    this.attendeeRecord = null;
+    this.attendeeRecord = null
+
   }
 
   constructor(appContext: AppContext, cursor: Cursor) {
     this.localAppContext = appContext
-    this.attendeeRecord = AttendeeRecord.fromCursor(cursor, contentResolver)
+    this.attendeeRecord = AttendeeRecord.fromCursor(cursor)
   }
 
   @Throws(EventNotSavedException::class, ParseException::class, SecurityException::class, InvalidArgumentException::class)
@@ -99,7 +100,7 @@ class ExpoCalendarAttendee : SharedObject {
     cursor.use {
       if (it.count > 0) {
         it.moveToFirst()
-        attendeeRecord = AttendeeRecord.fromCursor(it, contentResolver)
+        attendeeRecord = AttendeeRecord.fromCursor(it)
       }
     }
   }

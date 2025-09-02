@@ -7,7 +7,7 @@ class CalendarEventBuilderNext() {
 
   fun getAsLong(key: String): Long = eventValues.getAsLong(key)
 
-  fun put(key: String, value: String) = apply {
+  fun put(key: String, value: String?) = apply {
     eventValues.put(key, value)
   }
 

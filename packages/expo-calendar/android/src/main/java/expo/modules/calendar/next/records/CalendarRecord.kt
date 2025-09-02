@@ -42,23 +42,23 @@ data class CalendarRecord(
     val nullableSet = nullableFields?.toSet() ?: emptySet()
 
     return CalendarRecord(
-      id = if ("id" in nullableSet) null else other.id ?: this.id,
-      title = if ("title" in nullableSet) null else other.title ?: this.title,
-      name = if ("name" in nullableSet) null else other.name ?: this.name,
-      source = if ("source" in nullableSet) null else other.source ?: this.source,
-      color = if ("color" in nullableSet) null else other.color ?: this.color,
-      isVisible = if ("isVisible" in nullableSet) this.isVisible else other.isVisible,
-      isSynced = if ("isSynced" in nullableSet) this.isSynced else other.isSynced,
-      timeZone = if ("timeZone" in nullableSet) null else other.timeZone ?: this.timeZone,
-      isPrimary = if ("isPrimary" in nullableSet) this.isPrimary else other.isPrimary,
-      allowsModifications = if ("allowsModifications" in nullableSet) this.allowsModifications else other.allowsModifications,
-      allowedAvailabilities = if ("allowedAvailabilities" in nullableSet) this.allowedAvailabilities else other.allowedAvailabilities,
-      allowedReminders = if ("allowedReminders" in nullableSet) this.allowedReminders else other.allowedReminders,
-      allowedAttendeeTypes = if ("allowedAttendeeTypes" in nullableSet) this.allowedAttendeeTypes else other.allowedAttendeeTypes,
+      id = if ("id" in nullableSet) null else other.id ?: id,
+      title = if ("title" in nullableSet) null else other.title ?: title,
+      name = if ("name" in nullableSet) null else other.name ?: name,
+      source = if ("source" in nullableSet) null else other.source ?: source,
+      color = if ("color" in nullableSet) null else other.color ?: color,
+      isVisible = if ("isVisible" in nullableSet) isVisible else other.isVisible,
+      isSynced = if ("isSynced" in nullableSet) isSynced else other.isSynced,
+      timeZone = if ("timeZone" in nullableSet) null else other.timeZone ?: timeZone,
+      isPrimary = if ("isPrimary" in nullableSet) isPrimary else other.isPrimary,
+      allowsModifications = if ("allowsModifications" in nullableSet) allowsModifications else other.allowsModifications,
+      allowedAvailabilities = if ("allowedAvailabilities" in nullableSet) allowedAvailabilities else other.allowedAvailabilities,
+      allowedReminders = if ("allowedReminders" in nullableSet) allowedReminders else other.allowedReminders,
+      allowedAttendeeTypes = if ("allowedAttendeeTypes" in nullableSet) allowedAttendeeTypes else other.allowedAttendeeTypes,
       ownerAccount = if ("ownerAccount" in nullableSet) null else other.ownerAccount
-        ?: this.ownerAccount,
+        ?: ownerAccount,
       accessLevel = if ("accessLevel" in nullableSet) null else other.accessLevel
-        ?: this.accessLevel,
+        ?: accessLevel,
     )
   }
 }
