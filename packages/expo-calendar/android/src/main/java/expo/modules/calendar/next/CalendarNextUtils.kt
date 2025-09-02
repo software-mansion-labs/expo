@@ -11,6 +11,8 @@ import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.findEventsQueryParameters
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object CalendarNextUtils {
   val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").apply {
@@ -63,48 +65,50 @@ object CalendarNextUtils {
     }
   }
 
-  fun findEvents(contentResolver: ContentResolver, startDate: Any, endDate: Any, calendars: List<String>): Cursor {
-    val eStartDate = Calendar.getInstance()
-    val eEndDate = Calendar.getInstance()
-    try {
-      setDateInCalendar(eStartDate, startDate)
-      setDateInCalendar(eEndDate, endDate)
-    } catch (e: ParseException) {
-      Log.e(TAG, "error parsing", e)
-    } catch (e: Exception) {
-      Log.e(TAG, "misc error parsing", e)
-    }
-    val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon()
-    ContentUris.appendId(uriBuilder, eStartDate.timeInMillis)
-    ContentUris.appendId(uriBuilder, eEndDate.timeInMillis)
-    val uri = uriBuilder.build()
-    var selection =
-      "((${CalendarContract.Instances.BEGIN} >= ${eStartDate.timeInMillis}) " +
-        "AND (${CalendarContract.Instances.END} <= ${eEndDate.timeInMillis}) " +
-        "AND (${CalendarContract.Instances.VISIBLE} = 1) "
-    if (calendars.isNotEmpty()) {
-      var calendarQuery = "AND ("
-      for (i in calendars.indices) {
-        calendarQuery += CalendarContract.Instances.CALENDAR_ID + " = '" + calendars[i] + "'"
-        if (i != calendars.size - 1) {
-          calendarQuery += " OR "
-        }
+  suspend fun findEvents(contentResolver: ContentResolver, startDate: Any, endDate: Any, calendars: List<String>): Cursor {
+    return withContext(Dispatchers.IO) {
+      val eStartDate = Calendar.getInstance()
+      val eEndDate = Calendar.getInstance()
+      try {
+        setDateInCalendar(eStartDate, startDate)
+        setDateInCalendar(eEndDate, endDate)
+      } catch (e: ParseException) {
+        Log.e(TAG, "error parsing", e)
+      } catch (e: Exception) {
+        Log.e(TAG, "misc error parsing", e)
       }
-      calendarQuery += ")"
-      selection += calendarQuery
-    }
-    selection += ")"
-    val sortOrder = "${CalendarContract.Instances.BEGIN} ASC"
-    val cursor = contentResolver.query(
-      uri,
-      findEventsQueryParameters,
-      selection,
-      null,
-      sortOrder
-    )
+      val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon()
+      ContentUris.appendId(uriBuilder, eStartDate.timeInMillis)
+      ContentUris.appendId(uriBuilder, eEndDate.timeInMillis)
+      val uri = uriBuilder.build()
+      var selection =
+        "((${CalendarContract.Instances.BEGIN} >= ${eStartDate.timeInMillis}) " +
+          "AND (${CalendarContract.Instances.END} <= ${eEndDate.timeInMillis}) " +
+          "AND (${CalendarContract.Instances.VISIBLE} = 1) "
+      if (calendars.isNotEmpty()) {
+        var calendarQuery = "AND ("
+        for (i in calendars.indices) {
+          calendarQuery += CalendarContract.Instances.CALENDAR_ID + " = '" + calendars[i] + "'"
+          if (i != calendars.size - 1) {
+            calendarQuery += " OR "
+          }
+        }
+        calendarQuery += ")"
+        selection += calendarQuery
+      }
+      selection += ")"
+      val sortOrder = "${CalendarContract.Instances.BEGIN} ASC"
+      val cursor = contentResolver.query(
+        uri,
+        findEventsQueryParameters,
+        selection,
+        null,
+        sortOrder
+      )
 
-    requireNotNull(cursor) { "Cursor shouldn't be null" }
-    return cursor
+      requireNotNull(cursor) { "Cursor shouldn't be null" }
+      cursor
+    }
   }
 
   private fun setDateInCalendar(calendar: Calendar, date: Any) {

@@ -74,8 +74,8 @@ class CalendarNextModule : Module() {
       Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
     }
 
-    AsyncFunction("listEvents") { calendarIds: List<String>, startDate: String, endDate: String, promise: Promise ->
-      withPermissions(promise) {
+    AsyncFunction("listEvents") Coroutine { calendarIds: List<String>, startDate: String, endDate: String ->
+      withPermissions {
         try {
           val allEvents = mutableListOf<ExpoCalendarEvent>()
           val cursor = CalendarNextUtils.findEvents(contentResolver, startDate, endDate, calendarIds)
@@ -85,9 +85,9 @@ class CalendarNextModule : Module() {
               allEvents.add(event)
             }
           }
-          promise.resolve(allEvents)
+          allEvents
         } catch (e: Exception) {
-          promise.reject("E_EVENTS_NOT_FOUND", "Events could not be found", e)
+          throw Exception("Events could not be found", e)
         }
       }
     }
@@ -181,16 +181,15 @@ class CalendarNextModule : Module() {
         expoCalendar.calendarRecord?.accessLevel
       }
 
-      AsyncFunction("listEvents") { expoCalendar: ExpoCalendar, startDate: String, endDate: String, promise: Promise ->
-        withPermissions(promise) {
+      AsyncFunction("listEvents") Coroutine { expoCalendar: ExpoCalendar, startDate: String, endDate: String ->
+        withPermissions {
           if (expoCalendar.calendarRecord?.id == null) {
-            promise.reject("E_EVENTS_NOT_FOUND", "Calendar doesn't exist", Exception())
+            throw Exception("Calendar doesn't exist")
           }
           try {
-            val expoCalendarEvents = expoCalendar.getEvents(startDate, endDate)
-            promise.resolve(expoCalendarEvents)
+            expoCalendar.getEvents(startDate, endDate)
           } catch (e: Exception) {
-            promise.reject("E_EVENTS_NOT_FOUND", "Events could not be found", e)
+            throw Exception("Events could not be found", e)
           }
         }
       }

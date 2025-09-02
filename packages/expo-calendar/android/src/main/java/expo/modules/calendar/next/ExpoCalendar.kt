@@ -76,7 +76,7 @@ class ExpoCalendar : SharedObject {
     )
   }
 
-  fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
+  suspend fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
     if (calendarRecord?.id == null) {
       throw Exception("Calendar id is null")
     }
