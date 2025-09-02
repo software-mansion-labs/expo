@@ -1,4 +1,4 @@
-package expo.modules.calendar.next
+package expo.modules.calendar.next.utils
 
 import android.content.ContentResolver
 import android.database.Cursor

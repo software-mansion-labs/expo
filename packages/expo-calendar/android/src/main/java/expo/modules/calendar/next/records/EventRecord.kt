@@ -7,13 +7,13 @@ import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.accessConstantMatchingString
 import expo.modules.calendar.availabilityConstantMatchingString
-import expo.modules.calendar.next.dateFormat
-import expo.modules.calendar.next.dateToString
-import expo.modules.calendar.next.optIntFromCursor
-import expo.modules.calendar.next.optStringFromCursor
-import expo.modules.calendar.next.rrFormat
+import expo.modules.calendar.next.utils.dateFormat
+import expo.modules.calendar.next.utils.dateToString
+import expo.modules.calendar.next.utils.optIntFromCursor
+import expo.modules.calendar.next.utils.optStringFromCursor
+import expo.modules.calendar.next.utils.rrFormat
 
-import expo.modules.calendar.next.sdf
+import expo.modules.calendar.next.utils.sdf
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.types.Enumerable

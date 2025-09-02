@@ -9,10 +9,17 @@ import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
+import expo.modules.calendar.next.exceptions.EventCouldNotBeDeletedException
+import expo.modules.calendar.next.exceptions.EventNotFoundException
+import expo.modules.calendar.next.exceptions.EventsCouldNotBeCreatedException
 import expo.modules.calendar.next.records.AlarmRecord
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
+import expo.modules.calendar.next.utils.createRecurrenceRule
+import expo.modules.calendar.next.utils.dateToMilliseconds
+import expo.modules.calendar.next.utils.removeRemindersForEvent
+import expo.modules.calendar.next.utils.sdf
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.apifeatures.EitherType
@@ -52,7 +59,6 @@ class ExpoCalendarEvent : SharedObject {
     this.eventRecord = EventRecord.fromCursor(cursor, contentResolver)
   }
 
-  @Throws(EventNotSavedException::class, ParseException::class, SecurityException::class, InvalidArgumentException::class)
   fun saveEvent(eventRecord: EventRecord, calendarId: String? = null, nullableFields: List<String>? = null): Int? {
     val eventBuilder = CalendarEventBuilderNext()
 
@@ -168,7 +174,7 @@ class ExpoCalendarEvent : SharedObject {
       // Update current event
       val eventID = this.eventRecord?.id?.toIntOrNull()
       if (eventID == null) {
-        throw InvalidArgumentException("Event ID is required")
+        throw EventNotFoundException("Event ID is required")
       }
       val updateUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       contentResolver.update(updateUri, eventBuilder.build(), null, null)
@@ -185,7 +191,7 @@ class ExpoCalendarEvent : SharedObject {
       eventBuilder.put(CalendarContract.Events.CALENDAR_ID, calendarId.toInt())
       val eventsUri = CalendarContract.Events.CONTENT_URI
       val eventUri = contentResolver.insert(eventsUri, eventBuilder.build())
-        ?: throw EventNotSavedException()
+        ?: throw EventsCouldNotBeCreatedException("Failed to insert event into the database")
       val eventID = eventUri.lastPathSegment!!.toInt()
       if (eventRecord.alarms != null) {
         createRemindersForEvent(eventID, eventRecord.alarms)
@@ -252,53 +258,47 @@ class ExpoCalendarEvent : SharedObject {
     }
   }
 
-  fun deleteEvent(): Boolean {
+  fun deleteEvent() {
     val rows: Int
     val eventID = eventRecord?.id?.toInt()
     if (eventID == null) {
-      throw InvalidArgumentException("Event ID is required")
+      throw EventCouldNotBeDeletedException("Event ID is required")
     }
     if (recurringEventOptions?.futureEvents == null || recurringEventOptions?.futureEvents == false) {
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       rows = contentResolver.delete(uri, null, null)
       if (rows > 0) {
         this.eventRecord = null
-        return true;
+      } else {
+        throw EventCouldNotBeDeletedException("Event could not be deleted");
       }
-      return false;
     } else {
       // Get the exact occurrence and create an exception for it
       val exceptionValues = ContentValues()
       val startCal = Calendar.getInstance()
       val instanceStartDate = recurringEventOptions?.instanceStartDate
-      try {
-        val dateString = instanceStartDate ?: eventRecord?.startDate
-        if (dateString == null) {
-          return false
-        }
-        val parsedDate = sdf.parse(dateString)
-        if (parsedDate != null) {
-          startCal.time = parsedDate
-          exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)
-        } else {
-          Log.e(TAG, "Parsed date is null")
-          return false
-        }
-      } catch (e: ParseException) {
-        Log.e(TAG, "error", e)
-        throw e
+      val dateString = instanceStartDate ?: eventRecord?.startDate
+
+      if (dateString == null) {
+        throw EventCouldNotBeDeletedException("Event start date is required")
+      }
+      val parsedDate = sdf.parse(dateString)
+      if (parsedDate != null) {
+        startCal.time = parsedDate
+        exceptionValues.put(CalendarContract.Events.ORIGINAL_INSTANCE_TIME, startCal.timeInMillis)
+      } else {
+        throw EventCouldNotBeDeletedException("Event start date could not be parsed")
       }
       exceptionValues.put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CANCELED)
       val exceptionUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_EXCEPTION_URI, eventID.toLong())
       contentResolver.insert(exceptionUri, exceptionValues)
-      return true
     }
   }
 
   fun reloadEvent(eventId: String? = null) {
     val eventID = (eventId ?: this.eventRecord?.id)?.toIntOrNull();
     if (eventID == null) {
-      throw InvalidArgumentException("Event ID is required")
+      throw EventNotFoundException("Event ID is required")
     }
     val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
     val cursor = contentResolver.query(uri, findEventByIdQueryParameters, null, null, null)
@@ -311,7 +311,6 @@ class ExpoCalendarEvent : SharedObject {
     }
   }
 
-  @Throws(SecurityException::class)
   private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
     for (reminder in reminders) {
       if (reminder.relativeOffset != null) {
@@ -329,8 +328,7 @@ class ExpoCalendarEvent : SharedObject {
   fun getAttendees(): List<ExpoCalendarAttendee> {
     val eventID = eventRecord?.id?.toLong()
     if (eventID == null) {
-
-      throw InvalidArgumentException("Event ID is required")
+      throw EventNotFoundException("Event ID is required")
     }
     val cursor = CalendarContract.Attendees.query(
       contentResolver,
@@ -352,7 +350,7 @@ class ExpoCalendarEvent : SharedObject {
     val attendee = ExpoCalendarAttendee(localAppContext)
     val eventId = this.eventRecord?.id?.toIntOrNull();
     if (eventId == null) {
-      throw Exception("Missing event id")
+      throw EventNotFoundException("Event ID is required")
     }
     val newAttendeeId = attendee.saveAttendee(attendeeRecord, eventId)
     attendee.reloadAttendee(newAttendeeId)

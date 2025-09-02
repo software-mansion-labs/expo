@@ -9,8 +9,8 @@ import expo.modules.calendar.attendeeStatusConstantMatchingString
 import expo.modules.calendar.attendeeStatusStringMatchingConstant
 import expo.modules.calendar.attendeeTypeConstantMatchingString
 import expo.modules.calendar.attendeeTypeStringMatchingConstant
-import expo.modules.calendar.next.optIntFromCursor
-import expo.modules.calendar.next.optStringFromCursor
+import expo.modules.calendar.next.utils.optIntFromCursor
+import expo.modules.calendar.next.utils.optStringFromCursor
 
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record

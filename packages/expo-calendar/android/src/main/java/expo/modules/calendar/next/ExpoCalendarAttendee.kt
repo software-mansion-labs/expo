@@ -4,17 +4,17 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
-import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.attendeeRelationshipConstantMatchingString
 import expo.modules.calendar.attendeeStatusConstantMatchingString
 import expo.modules.calendar.attendeeTypeConstantMatchingString
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
+import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeCreatedException
+import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeDeletedException
+import expo.modules.calendar.next.exceptions.AttendeeNotFoundException
 import expo.modules.calendar.next.records.AttendeeRecord
-import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
-import java.text.ParseException
 
 class ExpoCalendarAttendee : SharedObject {
   var attendeeRecord: AttendeeRecord?
@@ -32,23 +32,22 @@ class ExpoCalendarAttendee : SharedObject {
     this.attendeeRecord = AttendeeRecord.fromCursor(cursor, contentResolver)
   }
 
-  @Throws(EventNotSavedException::class, ParseException::class, SecurityException::class, InvalidArgumentException::class)
   fun saveAttendee(attendeeRecord: AttendeeRecord, eventId: Int? = null, nullableFields: List<String>? = null): String {
     val attendeeValues = buildAttendeeContentValues(attendeeRecord, eventId)
     cleanNullableFields(attendeeValues, nullableFields)
     if (this.attendeeRecord?.id == null) {
       if (eventId == null) {
-        throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
+        throw AttendeeCouldNotBeCreatedException( "Event ID must be provided when creating a new attendee")
       }
       val attendeeUri = contentResolver.insert(CalendarContract.Attendees.CONTENT_URI, attendeeValues)
-        ?: throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
+        ?: throw AttendeeCouldNotBeCreatedException( "Failed to insert attendee into the database")
       val attendeeId = attendeeUri.lastPathSegment
-        ?: throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
+        ?: throw AttendeeCouldNotBeCreatedException("Failed to retrieve attendee ID after insertion")
       return attendeeId
     } else {
       val attendeeID = this.attendeeRecord?.id
       if (attendeeID == null) {
-        throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_CREATED")
+        throw AttendeeCouldNotBeCreatedException("Attendee ID is missing for an existing attendee record during update.")
       }
       val updateUri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
       contentResolver.update(updateUri, attendeeValues, null, null)
@@ -75,12 +74,11 @@ class ExpoCalendarAttendee : SharedObject {
     }
   }
 
-  @Throws(SecurityException::class)
   fun deleteAttendee(): Boolean {
     val rows: Int
     val attendeeID = attendeeRecord?.id?.toIntOrNull()
     if (attendeeID == null) {
-      throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_DELETED")
+      throw AttendeeCouldNotBeDeletedException("Attendee ID not found")
     }
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
     rows = contentResolver.delete(uri, null, null)
@@ -91,7 +89,7 @@ class ExpoCalendarAttendee : SharedObject {
   fun reloadAttendee(attendeeID: String? = null) {
     val attendeeID = (attendeeID ?: attendeeRecord?.id)?.toIntOrNull()
     if (attendeeID == null) {
-      throw Exceptions.IllegalStateException("E_ATTENDEE_NOT_RELOADED")
+      throw AttendeeNotFoundException("Attendee ID not found")
     }
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
     val cursor = contentResolver.query(uri, findAttendeesByEventIdQueryParameters, null, null, null)
