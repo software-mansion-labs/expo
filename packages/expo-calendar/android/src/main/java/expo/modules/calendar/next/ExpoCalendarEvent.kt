@@ -7,7 +7,6 @@ import android.provider.CalendarContract
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.EventNotSavedException
-import expo.modules.calendar.EventRecurrenceUtils.createRecurrenceRule
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
 import expo.modules.calendar.next.records.AlarmRecord

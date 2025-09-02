@@ -5,13 +5,13 @@ import android.database.Cursor
 import android.provider.CalendarContract
 import android.util.Log
 import expo.modules.calendar.CalendarModule.Companion.TAG
-import expo.modules.calendar.EventRecurrenceUtils.dateFormat
-import expo.modules.calendar.EventRecurrenceUtils.rrFormat
 import expo.modules.calendar.accessConstantMatchingString
 import expo.modules.calendar.availabilityConstantMatchingString
+import expo.modules.calendar.next.dateFormat
 import expo.modules.calendar.next.dateToString
 import expo.modules.calendar.next.optIntFromCursor
 import expo.modules.calendar.next.optStringFromCursor
+import expo.modules.calendar.next.rrFormat
 
 import expo.modules.calendar.next.sdf
 import expo.modules.kotlin.records.Field

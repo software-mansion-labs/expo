@@ -85,14 +85,7 @@ suspend fun findEvents(contentResolver: ContentResolver, startDate: Any, endDate
         "AND (${CalendarContract.Instances.END} <= ${eEndDate.timeInMillis}) " +
         "AND (${CalendarContract.Instances.VISIBLE} = 1) "
     if (calendars.isNotEmpty()) {
-      var calendarQuery = "AND ("
-      for (i in calendars.indices) {
-        calendarQuery += CalendarContract.Instances.CALENDAR_ID + " = '" + calendars[i] + "'"
-        if (i != calendars.size - 1) {
-          calendarQuery += " OR "
-        }
-      }
-      calendarQuery += ")"
+      val calendarQuery = "AND (${calendars.joinToString(" OR ") { "${CalendarContract.Instances.CALENDAR_ID} = '$it'" }})"
       selection += calendarQuery
     }
     selection += ")"
