@@ -176,7 +176,9 @@ export declare class ExpoCalendar {
    * @param eventData A map of details for the event to be created.
    * @return An instance of the created event.
    */
-  createEvent(eventData: Omit<Partial<ExpoCalendarEvent>, 'id' | 'organizer'>): ExpoCalendarEvent;
+  createEvent(
+    eventData: Omit<Partial<ExpoCalendarEvent>, 'id' | 'organizer'>
+  ): Promise<ExpoCalendarEvent>;
 
   /**
    * Creates a new reminder in the calendar.
@@ -192,7 +194,7 @@ export declare class ExpoCalendar {
    * explicitly set it to `null` in `details`.
    * @param details A map of properties to be updated.
    */
-  update(details: Partial<ModifiableCalendarProperties>): void;
+  update(details: Partial<ModifiableCalendarProperties>): Promise<void>;
 
   /**
    * Deletes the calendar.
@@ -379,26 +381,26 @@ export declare class ExpoCalendarEvent {
   update(
     details: Partial<ModifiableEventProperties>,
     nullableFields?: (keyof ModifiableEventProperties)[]
-  ): void;
+  ): Promise<void>;
 
   /**
    * Deletes the event.
    */
-  delete(): void;
+  delete(): Promise<void>;
 
   /**
    * Creates a new attendee and adds it to this event.
    */
   createAttendee(
     attendee: Pick<NonNullable<Attendee>, 'email'> & Partial<Attendee>
-  ): ExpoCalendarAttendee;
+  ): Promise<ExpoCalendarAttendee>;
 
   /**
    * Gets an event by its ID. Throws an error if the event with the given ID does not exist.
    * @param eventId The ID of the event to get.
    * @returns An [`ExpoCalendarEvent`](#expocalendarevent) object representing the event.
    */
-  static get(eventId: string): ExpoCalendarEvent;
+  static get(eventId: string): Promise<ExpoCalendarEvent>;
 }
 
 export declare class ExpoCalendarReminder {
@@ -535,11 +537,11 @@ export declare class ExpoCalendarAttendee {
   update(
     details: Partial<ModifiableAttendeeProperties>,
     nullableFields?: (keyof ModifiableAttendeeProperties)[]
-  ): void;
+  ): Promise<void>;
 
   /**
    * Deletes the attendee.
    * @platform android
    */
-  delete(): void;
+  delete(): Promise<void>;
 }

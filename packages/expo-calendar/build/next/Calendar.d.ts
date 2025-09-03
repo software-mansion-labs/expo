@@ -5,8 +5,8 @@ import { ModifiableEventProperties, ModifiableReminderProperties, ModifiableCale
  * Represents a calendar attendee object.
  */
 export declare class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAttendee {
-    update(details: Partial<ModifiableAttendeeProperties>): void;
-    delete(): void;
+    update(details: Partial<ModifiableAttendeeProperties>): Promise<void>;
+    delete(): Promise<void>;
 }
 /**
  * Represents a calendar event object that can be accessed and modified using the Expo Calendar Next API.
@@ -16,10 +16,10 @@ export declare class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendar
     editInCalendarAsync(params?: CalendarDialogParamsNext): Promise<DialogEventResult>;
     getOccurrence(recurringEventOptions?: RecurringEventOptions): ExpoCalendarEvent;
     getAttendeesAsync(): Promise<ExpoCalendarAttendee[]>;
-    createAttendee(attendee: Attendee): ExpoCalendarAttendee;
-    update(details: Partial<ModifiableEventProperties>): void;
-    delete(): void;
-    static get(eventId: string): ExpoCalendarEvent;
+    createAttendee(attendee: Attendee): Promise<ExpoCalendarAttendee>;
+    update(details: Partial<ModifiableEventProperties>): Promise<void>;
+    delete(): Promise<void>;
+    static get(eventId: string): Promise<ExpoCalendarEvent>;
 }
 /**
  * Represents a calendar reminder object that can be accessed and modified using the Expo Calendar Next API.
@@ -35,11 +35,11 @@ export declare class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalen
  * such as retrieving its events, updating its details, and accessing its metadata.
  */
 export declare class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
-    createEvent(details: Partial<Omit<Event, 'creationDate' | 'lastModifiedDate' | 'originalStartDate' | 'isDetached' | 'status' | 'organizer'>>): ExpoCalendarEvent;
+    createEvent(details: Partial<Omit<Event, 'creationDate' | 'lastModifiedDate' | 'originalStartDate' | 'isDetached' | 'status' | 'organizer'>>): Promise<ExpoCalendarEvent>;
     createReminder(details: Partial<Reminder>): ExpoCalendarReminder;
     listEvents(startDate: Date, endDate: Date): Promise<ExpoCalendarEvent[]>;
     listReminders(startDate?: Date | null, endDate?: Date | null, status?: ReminderStatus | null): Promise<ExpoCalendarReminder[]>;
-    update(details: Partial<ModifiableCalendarProperties>): void;
+    update(details: Partial<ModifiableCalendarProperties>): Promise<void>;
     static get(calendarId: string): Promise<ExpoCalendar>;
 }
 /**
@@ -61,7 +61,7 @@ export declare function getCalendars(type?: EntityTypes): Promise<ExpoCalendar[]
  * @param details A map of details for the calendar to be created.
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
-export declare function createCalendar(details?: Partial<Calendar>): ExpoCalendar;
+export declare function createCalendar(details?: Partial<Calendar>): Promise<ExpoCalendar>;
 /**
  * Lists events from the device's calendar. It can be used to search events in multiple calendars.
  * > **Note:** If you want to search events in a single calendar, you can use [`ExpoCalendar.listEvents`](#listeventsstartdate-enddate) instead.

@@ -33,7 +33,7 @@ const defaultCalendarData = {
   },
 } satisfies Partial<ExpoCalendar>;
 
-function createTestCalendar(patch: Partial<ExpoCalendar> = {}) {
+function createTestCalendar(patch: Partial<ExpoCalendar> = {}): Promise<ExpoCalendar> {
   return createCalendar({
     ...defaultCalendarData,
     sourceId: pickCalendarSourceId(),
@@ -68,12 +68,12 @@ function createEventData(customArgs = {}) {
   };
 }
 
-function createTestEvent(
+async function createTestEvent(
   calendar: ExpoCalendar,
   customArgs: Partial<ExpoCalendarEvent> = {}
-): ExpoCalendarEvent {
+): Promise<ExpoCalendarEvent> {
   const eventData = createEventData(customArgs);
-  return calendar.createEvent(eventData);
+  return await calendar.createEvent(eventData);
 }
 
 async function fetchCreatedEvent(
@@ -106,15 +106,15 @@ function createTestReminder(
   return calendar.createReminder(reminderData);
 }
 
-function createTestAttendee(
+async function createTestAttendee(
   event: ExpoCalendarEvent,
   customArgs: Partial<ExpoCalendarAttendee> = {}
-): ExpoCalendarAttendee {
+): Promise<ExpoCalendarAttendee> {
   const attendeeData = {
     ...defaultAttendeeData,
     ...customArgs,
   };
-  return event.createAttendee(attendeeData);
+  return await event.createAttendee(attendeeData);
 }
 
 async function getReminderCalendar() {
@@ -259,7 +259,7 @@ export async function test(t) {
         t.it('cannot create a calendar without a title', async () => {
           let error: any;
           try {
-            createTestCalendar({ title: undefined });
+            await createTestCalendar({ title: undefined });
           } catch (e) {
             error = e;
           }
@@ -278,7 +278,7 @@ export async function test(t) {
         let calendar: ExpoCalendar;
 
         t.beforeAll(async () => {
-          calendar = createTestCalendar();
+          calendar = await createTestCalendar();
         });
 
         t.it('returns an array of calendars with correct shape', async () => {
@@ -326,8 +326,8 @@ export async function test(t) {
           t.expect(Array.isArray(events)).toBe(true);
           t.expect(events.length).toBe(0);
 
-          const event1 = createTestEvent(calendar1);
-          const event2 = createTestEvent(calendar2);
+          const event1 = await createTestEvent(calendar1);
+          const event2 = await createTestEvent(calendar2);
           const updatedEvents = await listEvents(
             [calendar1.id, calendar2.id],
             new Date(2019, 3, 1),
@@ -350,8 +350,8 @@ export async function test(t) {
         t.it(
           'returns an array of events when calendars are provided as ExpoCalendar objects',
           async () => {
-            const event1 = createTestEvent(calendar1);
-            const event2 = createTestEvent(calendar2);
+            const event1 = await createTestEvent(calendar1);
+            const event2 = await createTestEvent(calendar2);
 
             const events = await listEvents(
               [calendar1, calendar2],
@@ -424,7 +424,7 @@ export async function test(t) {
       });
 
       t.it('can preview an event', async () => {
-        const event = createTestEvent(calendar);
+        const event = await createTestEvent(calendar);
         await alertAndWaitForResponse(
           'Please verify event details are shown and close the dialog.'
         );
@@ -437,7 +437,7 @@ export async function test(t) {
       });
 
       t.it('can edit an event', async () => {
-        const event = createTestEvent(calendar);
+        const event = await createTestEvent(calendar);
         await alertAndWaitForResponse('Please verify you can see the event and close the dialog.');
         const result = await event.editInCalendarAsync(dontStartNewTask);
         t.expect(typeof result.action).toBe('string'); // done or canceled
@@ -455,7 +455,7 @@ export async function test(t) {
         let calendar: ExpoCalendar;
 
         t.beforeEach(async () => {
-          calendar = createTestCalendar();
+          calendar = await createTestCalendar();
         });
 
         t.it('returns a calendar by its ID', async () => {
@@ -495,7 +495,7 @@ export async function test(t) {
         t.it('updates a calendar', async () => {
           const newTitle = 'New test-suite calendar title!!!';
           const newColor = '#111111';
-          calendar.update({
+          await calendar.update({
             title: newTitle,
             color: newColor,
           });
@@ -508,7 +508,7 @@ export async function test(t) {
 
         t.it('keeps other properties unchanged when updating title', async () => {
           const newTitle = 'New the coolest title ever';
-          calendar.update({
+          await calendar.update({
             title: newTitle,
           });
           t.expect(calendar.title).toBe(newTitle);
@@ -520,7 +520,7 @@ export async function test(t) {
 
         t.it('keeps other properties unchanged when updating color', async () => {
           const color = '#001A72';
-          calendar.update({
+          await calendar.update({
             color,
           });
           t.expect(calendar.color).toBe(color);
@@ -533,7 +533,7 @@ export async function test(t) {
         t.it('updates a calendar, and verifies the changes are persisted', async () => {
           const newTitle = 'New test-suite calendar title!!!';
           const newColor = '#111111';
-          calendar.update({
+          await calendar.update({
             title: newTitle,
             color: newColor,
           });
@@ -547,7 +547,7 @@ export async function test(t) {
         t.it('throws an error when updating a non-existent calendar', async () => {
           try {
             const calendar = await ExpoCalendar.get('non-existent-calendar-id');
-            calendar.update({
+            await calendar.update({
               title: 'New title',
             });
           } catch (e) {
@@ -600,7 +600,7 @@ export async function test(t) {
         });
 
         t.it('creates an event in the specific calendar', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
 
           t.expect(event).toBeDefined();
           t.expect(typeof event.id).toBe('string');
@@ -619,7 +619,7 @@ export async function test(t) {
             frequency: Calendar.Frequency.DAILY,
             interval: 1,
           };
-          const event = createTestEvent(calendar, {
+          const event = await createTestEvent(calendar, {
             recurrenceRule,
           });
 
@@ -633,7 +633,7 @@ export async function test(t) {
 
         if (Platform.OS === 'android') {
           t.it('creates an event with alarms', async () => {
-            const event = createTestEvent(calendar, {
+            const event = await createTestEvent(calendar, {
               alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALARM }],
             });
             t.expect(event.alarms).toEqual([
@@ -801,7 +801,7 @@ export async function test(t) {
         });
 
         t.it('resolves to an array with an event of the correct shape', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const events = await calendar.listEvents(new Date(2019, 3, 1), new Date(2019, 3, 29));
 
           t.expect(Array.isArray(events)).toBe(true);
@@ -811,7 +811,7 @@ export async function test(t) {
         });
 
         t.it('returns a list of events', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const events = await calendar.listEvents(new Date(2019, 3, 1), new Date(2019, 3, 29));
           t.expect(Array.isArray(events)).toBe(true);
           t.expect(events.length).toBe(1);
@@ -820,12 +820,12 @@ export async function test(t) {
         });
 
         t.it('modifies a listed event', async () => {
-          createTestEvent(calendar);
+          await createTestEvent(calendar);
           const events = await calendar.listEvents(new Date(2019, 3, 1), new Date(2019, 3, 29));
           const newTitle = `New title + ${new Date().toISOString()}`;
           const startDate = new Date(2019, 3, 2);
           const endDate = new Date(2019, 3, 3);
-          events[0].update({
+          await events[0].update({
             title: newTitle,
             startDate,
             endDate,
@@ -835,7 +835,7 @@ export async function test(t) {
         });
 
         t.it('returns a list of recurring events', async () => {
-          createTestEvent(calendar, {
+          await createTestEvent(calendar, {
             recurrenceRule: {
               frequency: Calendar.Frequency.DAILY,
             },
@@ -862,28 +862,28 @@ export async function test(t) {
         });
 
         t.it('gets an event by id', async () => {
-          const event = createTestEvent(calendar);
-          const fetchedEvent = ExpoCalendarEvent.get(event.id);
+          const event = await createTestEvent(calendar);
+          const fetchedEvent = await ExpoCalendarEvent.get(event.id);
           t.expect(fetchedEvent).toEqual(event);
           testEventShape(fetchedEvent);
         });
 
         t.it('throws an error when getting a non-existent event', async () => {
           try {
-            ExpoCalendarEvent.get('non-existent-event-id');
+            await ExpoCalendarEvent.get('non-existent-event-id');
           } catch (e) {
             t.expect(e).toBeDefined();
           }
         });
 
         t.it('returns a modified event', async () => {
-          const event = createTestEvent(calendar);
-          event.update({
+          const event = await createTestEvent(calendar);
+          await event.update({
             title: 'New title',
             location: 'New location',
           });
 
-          const event2 = ExpoCalendarEvent.get(event.id);
+          const event2 = await ExpoCalendarEvent.get(event.id);
           t.expect(event2).toBeDefined();
           t.expect(event2.title).toBe('New title');
           t.expect(event2.location).toBe('New location');
@@ -902,9 +902,9 @@ export async function test(t) {
         });
 
         t.it('updates the event title', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const newTitle = 'New title + ' + new Date().toISOString();
-          event.update({
+          await event.update({
             title: newTitle,
           });
 
@@ -912,14 +912,14 @@ export async function test(t) {
         });
 
         t.it('updates an event', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const updatedData = {
             location: 'New location ' + new Date().toISOString(),
             url: 'https://swmansion.com',
             notes: 'New notes ' + new Date().toISOString(),
           };
 
-          event.update(updatedData);
+          await event.update(updatedData);
 
           t.expect(event).toBeDefined();
           t.expect(event.location).toBe(updatedData.location);
@@ -930,11 +930,11 @@ export async function test(t) {
         });
 
         t.it('updates an event with a date string', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const startDate = new Date(2022, 2, 3);
           const endDate = new Date(2022, 5, 6);
 
-          event.update({
+          await event.update({
             startDate,
             endDate,
           });
@@ -944,11 +944,11 @@ export async function test(t) {
         });
 
         t.it('updates an event with Date objects', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const startDate = new Date(2022, 2, 3);
           const endDate = new Date(2022, 5, 6);
 
-          event.update({
+          await event.update({
             startDate,
             endDate,
           });
@@ -959,7 +959,7 @@ export async function test(t) {
         });
 
         t.it('updates an event and verifies it appears in the correct date range', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const newTitle = 'I am an updated event + ' + new Date().toISOString();
           const newStartDate = new Date(2023, 2, 3);
           const newEndDate = new Date(2023, 2, 4);
@@ -970,7 +970,7 @@ export async function test(t) {
           );
           t.expect(initialFetchedEvents.length).toBe(0);
 
-          event.update({
+          await event.update({
             title: newTitle,
             startDate: newStartDate,
             endDate: newEndDate,
@@ -989,11 +989,11 @@ export async function test(t) {
         });
 
         t.it('keeps other properties unchanged when updating title', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const updatedData: Partial<ExpoCalendarEvent> = {
             title: 'New title ' + new Date().toISOString(),
           };
-          event.update(updatedData);
+          await event.update(updatedData);
 
           t.expect(event.title).toBe(updatedData.title);
           t.expect(event.location).toBe(defaultEventData.location);
@@ -1007,11 +1007,11 @@ export async function test(t) {
         });
 
         t.it('keeps other properties unchanged when updating location', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const updatedData: Partial<ExpoCalendarEvent> = {
             location: 'New location ' + new Date().toISOString(),
           };
-          event.update(updatedData);
+          await event.update(updatedData);
 
           t.expect(event.location).toBe(updatedData.location);
           t.expect(event.title).toBe(defaultEventData.title);
@@ -1025,8 +1025,8 @@ export async function test(t) {
         });
 
         t.it('clears a field when set to null', async () => {
-          const event = createTestEvent(calendar);
-          event.update({
+          const event = await createTestEvent(calendar);
+          await event.update({
             location: null,
           });
           t.expect(event.title).toBe(defaultEventData.title);
@@ -1041,21 +1041,21 @@ export async function test(t) {
         });
 
         t.it('clears a field and sets it to a new value', async () => {
-          const event = createTestEvent(calendar);
-          event.update({
+          const event = await createTestEvent(calendar);
+          await event.update({
             location: null,
           });
           t.expect(event.location).toBeNull();
 
           const newLocation = `New location ${new Date().toISOString()}`;
-          event.update({
+          await event.update({
             location: newLocation,
           });
           t.expect(event.location).toBe(newLocation);
         });
 
         t.it('updates an event and verifies it is stored correctly', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
 
           const updatedData = {
             title: 'Updated title',
@@ -1072,7 +1072,7 @@ export async function test(t) {
             guestsCanInviteOthers: true,
           } satisfies Partial<ExpoCalendarEvent>;
 
-          event.update(updatedData);
+          await event.update(updatedData);
 
           // Force fetch the event from the device database
           const fetchedEvents = await calendar.listEvents(
@@ -1106,7 +1106,7 @@ export async function test(t) {
         // Updating with `instanceStartDate` is not supported on Android
         if (Platform.OS === 'ios') {
           t.it('handles detached events', async () => {
-            const event = createTestEvent(calendar, {
+            const event = await createTestEvent(calendar, {
               recurrenceRule: {
                 frequency: Calendar.Frequency.DAILY,
               },
@@ -1132,7 +1132,7 @@ export async function test(t) {
           });
 
           t.it('updates future occurrences in a recurring event', async () => {
-            const event = createTestEvent(calendar, {
+            const event = await createTestEvent(calendar, {
               recurrenceRule: {
                 frequency: Calendar.Frequency.DAILY,
               },
@@ -1151,7 +1151,7 @@ export async function test(t) {
 
             // Update all events after the occurrence
             const newTitle = 'Updated title';
-            occurrence.update({
+            await occurrence.update({
               title: newTitle,
             });
 
@@ -1169,7 +1169,7 @@ export async function test(t) {
         }
 
         t.it('updates a recurrence rule with occurrence', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
 
           const newRecurrenceRule = {
             frequency: Calendar.Frequency.WEEKLY,
@@ -1177,7 +1177,7 @@ export async function test(t) {
             occurrence: 3,
           };
 
-          event.update({
+          await event.update({
             recurrenceRule: newRecurrenceRule,
           });
 
@@ -1188,7 +1188,7 @@ export async function test(t) {
         });
 
         t.it('updates a recurrence rule with endDate', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
 
           const newRecurrenceRule = {
             frequency: Calendar.Frequency.WEEKLY,
@@ -1196,7 +1196,7 @@ export async function test(t) {
             endDate: new Date(2021, 6, 5).toISOString(),
           };
 
-          event.update({
+          await event.update({
             recurrenceRule: newRecurrenceRule,
           });
 
@@ -1207,7 +1207,7 @@ export async function test(t) {
         });
 
         t.it('endDate takes precedence over occurrence', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
 
           const newRecurrenceRule = {
             frequency: Calendar.Frequency.WEEKLY,
@@ -1216,7 +1216,7 @@ export async function test(t) {
             occurrence: 3,
           };
 
-          event.update({
+          await event.update({
             recurrenceRule: newRecurrenceRule,
           });
 
@@ -1228,30 +1228,30 @@ export async function test(t) {
         });
 
         t.it('updates the all day property', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           t.expect(event.allDay).toBe(false);
-          event.update({
+          await event.update({
             allDay: true,
           });
           t.expect(event.allDay).toBe(true);
         });
 
         t.it('updates timeZone', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           t.expect(event.timeZone).toBe(defaultEventData.timeZone);
-          event.update({
+          await event.update({
             timeZone: 'GMT-5',
           });
           t.expect(event.timeZone).toBe('GMT-5');
-          event.update({
+          await event.update({
             timeZone: 'GMT+1',
           });
           t.expect(event.timeZone).toBe('GMT+1');
         });
 
         t.it('clears multiple fields when set to null', async () => {
-          const event = createTestEvent(calendar);
-          event.update({
+          const event = await createTestEvent(calendar);
+          await event.update({
             notes: null,
             url: null,
           });
@@ -1265,12 +1265,12 @@ export async function test(t) {
         });
 
         t.it('clears alarms when set to null', async () => {
-          const event = createTestEvent(calendar, {
+          const event = await createTestEvent(calendar, {
             alarms: [{ relativeOffset: -60 }],
           });
           t.expect(event.alarms.length).toBe(1);
           t.expect(event.alarms[0].relativeOffset).toEqual(-60);
-          event.update({
+          await event.update({
             alarms: null,
           });
 
@@ -1284,7 +1284,7 @@ export async function test(t) {
         });
 
         t.it('clears a recurrence rule when set to null', async () => {
-          const event = createTestEvent(calendar, {
+          const event = await createTestEvent(calendar, {
             recurrenceRule: {
               frequency: Calendar.Frequency.DAILY,
               interval: 1,
@@ -1293,7 +1293,7 @@ export async function test(t) {
           });
           t.expect(event.recurrenceRule).toBeDefined();
           t.expect(event.recurrenceRule.frequency).toBe(Calendar.Frequency.DAILY);
-          event.update({
+          await event.update({
             recurrenceRule: null,
           });
           const fetchedEvent = await fetchCreatedEvent(
@@ -1307,11 +1307,11 @@ export async function test(t) {
         });
 
         t.it('distinguishes between null and undefined values', async () => {
-          const event = createTestEvent(calendar);
+          const event = await createTestEvent(calendar);
           const originalNotes = event.notes;
 
           // Update with undefined values (should be ignored)
-          event.update({
+          await event.update({
             title: 'Updated Title',
             notes: undefined,
           });
@@ -1320,7 +1320,7 @@ export async function test(t) {
           t.expect(event.notes).toBe(originalNotes); // Should remain unchanged
 
           // Update with null values (should clear fields)
-          event.update({
+          await event.update({
             notes: null,
           });
 
@@ -1342,7 +1342,7 @@ export async function test(t) {
           });
 
           t.it('returns an instance of a recurring event', async () => {
-            const recurringEvent = createTestEvent(calendar, {
+            const recurringEvent = await createTestEvent(calendar, {
               recurrenceRule: {
                 frequency: Calendar.Frequency.DAILY,
               },
@@ -1375,8 +1375,8 @@ export async function test(t) {
         });
 
         t.it('deletes an event', async () => {
-          const event = createTestEvent(calendar);
-          event.delete();
+          const event = await createTestEvent(calendar);
+          await event.delete();
           let error;
 
           try {
@@ -1389,8 +1389,8 @@ export async function test(t) {
         });
 
         t.it('deletes an event and verifies it is deleted', async () => {
-          const event = createTestEvent(calendar);
-          event.delete();
+          const event = await createTestEvent(calendar);
+          await event.delete();
           t.expect(event.title).toBeNull();
           t.expect(event.location).toBeNull();
           t.expect(event.notes).toBeNull();
@@ -1401,7 +1401,7 @@ export async function test(t) {
         });
 
         t.it('deletes a recurring event', async () => {
-          const recurringEvent = createTestEvent(calendar, {
+          const recurringEvent = await createTestEvent(calendar, {
             recurrenceRule: {
               frequency: Calendar.Frequency.DAILY,
             },
@@ -1415,7 +1415,7 @@ export async function test(t) {
           t.expect(eventsBeforeDelete.length).toBe(4);
 
           const occurrence = recurringEvent.getOccurrence({ futureEvents: true });
-          occurrence.delete();
+          await occurrence.delete();
 
           const eventsAfterDelete = await calendar.listEvents(
             new Date(2019, 3, 4),
@@ -1428,7 +1428,7 @@ export async function test(t) {
 
         if (Platform.OS === 'ios') {
           t.it('deletes an instance of a recurring event', async () => {
-            const recurringEvent = createTestEvent(calendar, {
+            const recurringEvent = await createTestEvent(calendar, {
               recurrenceRule: {
                 frequency: Calendar.Frequency.DAILY,
               },
@@ -1464,7 +1464,7 @@ export async function test(t) {
           t.it(
             'deletes a single occurrence of a recurring event via the occurrence instance',
             async () => {
-              const recurringEvent = createTestEvent(calendar, {
+              const recurringEvent = await createTestEvent(calendar, {
                 recurrenceRule: {
                   frequency: Calendar.Frequency.DAILY,
                 },
@@ -1501,7 +1501,7 @@ export async function test(t) {
           t.it(
             'deletes all future occurrences of a recurring event from a given instance',
             async () => {
-              const recurringEvent = createTestEvent(calendar, {
+              const recurringEvent = await createTestEvent(calendar, {
                 recurrenceRule: {
                   frequency: Calendar.Frequency.DAILY,
                 },
@@ -1536,11 +1536,11 @@ export async function test(t) {
         }
 
         t.it('throws an error when deleting a non-existent event', async () => {
-          const event = createTestEvent(calendar);
-          event.delete();
+          const event = await createTestEvent(calendar);
+          await event.delete();
           t.expect(event.title).toBeNull();
           try {
-            event.delete();
+            await event.delete();
           } catch (e) {
             t.expect(e).toBeDefined();
           }
@@ -1557,7 +1557,7 @@ export async function test(t) {
 
         t.beforeAll(async () => {
           calendar = await createTestCalendar();
-          event = createTestEvent(calendar);
+          event = await createTestEvent(calendar);
         });
 
         t.it('lists attendees', async () => {
@@ -1567,7 +1567,7 @@ export async function test(t) {
         });
 
         t.it('lists attendees for a recurring event', async () => {
-          const recurringEvent = createTestEvent(calendar, {
+          const recurringEvent = await createTestEvent(calendar, {
             recurrenceRule: {
               frequency: Calendar.Frequency.DAILY,
             },
@@ -1882,8 +1882,8 @@ export async function test(t) {
       let event: ExpoCalendarEvent;
 
       t.beforeEach(async () => {
-        calendar = createTestCalendar();
-        event = createTestEvent(calendar);
+        calendar = await createTestCalendar();
+        event = await createTestEvent(calendar);
       });
 
       if (Platform.OS === 'ios') {
@@ -1911,7 +1911,7 @@ export async function test(t) {
         });
 
         t.it('creates a new attendee', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           testAttendeeShape(attendee);
           t.expect(attendee).toBeDefined();
           t.expect(attendee.email).toBe(defaultAttendeeData.email);
@@ -1922,7 +1922,7 @@ export async function test(t) {
         });
 
         t.it('lists attendees for an event', async () => {
-          createTestAttendee(event);
+          await createTestAttendee(event);
           const attendees = await event.getAttendeesAsync();
           t.expect(Array.isArray(attendees)).toBe(true);
           t.expect(attendees.length).toBe(1);
@@ -1934,9 +1934,9 @@ export async function test(t) {
         });
 
         t.it('updates an attendee name', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           const name = 'Updated Attendee';
-          attendee.update({
+          await attendee.update({
             name,
           });
           t.expect(attendee.name).toBe(name);
@@ -1946,9 +1946,9 @@ export async function test(t) {
         });
 
         t.it('updates an attendee email', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           const email = 'updated@test.com';
-          attendee.update({
+          await attendee.update({
             email,
           });
           t.expect(attendee.email).toBe(email);
@@ -1958,12 +1958,12 @@ export async function test(t) {
         });
 
         t.it('updates attendee role/status/type', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           const nextRole = Calendar.AttendeeRole.ORGANIZER;
           const nextStatus = Calendar.AttendeeStatus.TENTATIVE;
           const nextType = Calendar.AttendeeType.NONE;
 
-          attendee.update({
+          await attendee.update({
             role: nextRole,
             status: nextStatus,
             type: nextType,
@@ -1977,10 +1977,10 @@ export async function test(t) {
         });
 
         t.it('preserves attendee id when updating', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           const originalId = attendee.id;
 
-          attendee.update({ name: 'Changed Name', email: 'changed@test.com' });
+          await attendee.update({ name: 'Changed Name', email: 'changed@test.com' });
           const attendees = await event.getAttendeesAsync();
 
           t.expect(attendees.length).toBe(1);
@@ -1988,10 +1988,10 @@ export async function test(t) {
         });
 
         t.it('preserves attendee data when updating an event', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           const name = 'Updated Attendee';
           const email = 'updated@test.com';
-          attendee.update({
+          await attendee.update({
             name,
             email,
           });
@@ -2005,8 +2005,8 @@ export async function test(t) {
         });
 
         t.it('clears attendee email when set to null', async () => {
-          const attendee = createTestAttendee(event);
-          attendee.update({
+          const attendee = await createTestAttendee(event);
+          await attendee.update({
             email: null,
           });
           t.expect(attendee.email).toBeNull();
@@ -2016,32 +2016,32 @@ export async function test(t) {
         });
 
         t.it('clears attendee name when set to null', async () => {
-          const attendee = createTestAttendee(event);
-          attendee.update({
+          const attendee = await createTestAttendee(event);
+          await attendee.update({
             name: null,
           });
           t.expect(attendee.name).toBeNull();
         });
 
         t.it('clears attendee role when set to null', async () => {
-          const attendee = createTestAttendee(event);
-          attendee.update({
+          const attendee = await createTestAttendee(event);
+          await attendee.update({
             role: null,
           });
           t.expect(attendee.role).toBe(Calendar.AttendeeRole.NONE);
         });
 
         t.it('clears attendee status when set to null', async () => {
-          const attendee = createTestAttendee(event);
-          attendee.update({
+          const attendee = await createTestAttendee(event);
+          await attendee.update({
             status: null,
           });
           t.expect(attendee.status).toBe(Calendar.AttendeeStatus.NONE);
         });
 
         t.it('clears attendee type when set to null', async () => {
-          const attendee = createTestAttendee(event);
-          attendee.update({
+          const attendee = await createTestAttendee(event);
+          await attendee.update({
             type: null,
           });
           t.expect(attendee.type).toBe(Calendar.AttendeeType.NONE);
@@ -2049,32 +2049,32 @@ export async function test(t) {
 
         t.it('creates many attendees', async () => {
           const attendees = [
-            createTestAttendee(event),
-            createTestAttendee(event),
-            createTestAttendee(event),
+            await createTestAttendee(event),
+            await createTestAttendee(event),
+            await createTestAttendee(event),
           ];
           t.expect(attendees.length).toBe(3);
           t.expect(attendees.every((attendee) => attendee.name === defaultAttendeeData.name));
         });
 
         t.it('deletes an attendee', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
           const attendees = await event.getAttendeesAsync();
           t.expect(attendees.length).toBe(1);
 
-          attendee.delete();
+          await attendee.delete();
           const attendeesAfterDelete = await event.getAttendeesAsync();
           t.expect(attendeesAfterDelete.length).toBe(0);
         });
 
         t.it('throws when deleting attendee twice', async () => {
-          const attendee = createTestAttendee(event);
+          const attendee = await createTestAttendee(event);
 
-          attendee.delete();
+          await attendee.delete();
 
           let error: any = null;
           try {
-            attendee.delete();
+            await attendee.delete();
           } catch (e) {
             error = e;
           }

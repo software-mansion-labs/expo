@@ -27,7 +27,7 @@ import {
  * Represents a calendar attendee object.
  */
 export class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAttendee {
-  override update(details: Partial<ModifiableAttendeeProperties>): void {
+  override async update(details: Partial<ModifiableAttendeeProperties>): Promise<void> {
     if (!super.update) {
       throw new UnavailabilityError('ExpoCalendarAttendee', 'update');
     }
@@ -35,11 +35,11 @@ export class ExpoCalendarAttendee extends InternalExpoCalendar.ExpoCalendarAtten
     return super.update(stringifyDateValues(details), nullableDetailsFields);
   }
 
-  override delete(): void {
+  override async delete(): Promise<void> {
     if (!super.delete) {
       throw new UnavailabilityError('ExpoCalendarAttendee', 'delete');
     }
-    super.delete();
+    await super.delete();
   }
 }
 
@@ -58,7 +58,7 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     params?: CalendarDialogParamsNext
   ): Promise<DialogEventResult> {
     // We have to pass null here because the core doesn't support skipping the first param
-    return super.editInCalendarAsync(params ?? null);
+    return await super.editInCalendarAsync(params ?? null);
   }
 
   override getOccurrence(recurringEventOptions: RecurringEventOptions = {}): ExpoCalendarEvent {
@@ -75,26 +75,26 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
     });
   }
 
-  override createAttendee(attendee: Attendee): ExpoCalendarAttendee {
+  override async createAttendee(attendee: Attendee): Promise<ExpoCalendarAttendee> {
     if (!super.createAttendee) {
       throw new UnavailabilityError('ExpoCalendarEvent', 'createAttendee');
     }
-    const newAttendee = super.createAttendee(attendee);
+    const newAttendee = await super.createAttendee(attendee);
     Object.setPrototypeOf(newAttendee, ExpoCalendarAttendee.prototype);
     return newAttendee;
   }
 
-  override update(details: Partial<ModifiableEventProperties>): void {
+  override async update(details: Partial<ModifiableEventProperties>): Promise<void> {
     const nullableDetailsFields = getNullableDetailsFields(details);
-    return super.update(stringifyDateValues(details), nullableDetailsFields);
+    return await super.update(stringifyDateValues(details), nullableDetailsFields);
   }
 
-  override delete(): void {
-    super.delete();
+  override async delete(): Promise<void> {
+    await super.delete();
   }
 
-  static override get(eventId: string): ExpoCalendarEvent {
-    const event = InternalExpoCalendar.getEventById(eventId);
+  static override async get(eventId: string): Promise<ExpoCalendarEvent> {
+    const event = await InternalExpoCalendar.getEventById(eventId);
     Object.setPrototypeOf(event, ExpoCalendarEvent.prototype);
     return event;
   }
@@ -123,7 +123,7 @@ export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarRemin
  * such as retrieving its events, updating its details, and accessing its metadata.
  */
 export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
-  override createEvent(
+  override async createEvent(
     details: Partial<
       Omit<
         Event,
@@ -135,8 +135,8 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
         | 'organizer'
       >
     >
-  ): ExpoCalendarEvent {
-    const newEvent = super.createEvent(stringifyDateValues(details));
+  ): Promise<ExpoCalendarEvent> {
+    const newEvent = await super.createEvent(stringifyDateValues(details));
     Object.setPrototypeOf(newEvent, ExpoCalendarEvent.prototype);
     return newEvent;
   }
@@ -177,10 +177,10 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     });
   }
 
-  override update(details: Partial<ModifiableCalendarProperties>): void {
+  override async update(details: Partial<ModifiableCalendarProperties>): Promise<void> {
     const color = details.color ? processColor(details.color) : undefined;
     const newDetails = { ...details, color: color || undefined };
-    return super.update(newDetails as Partial<ModifiableCalendarProperties>);
+    return await super.update(newDetails as Partial<ModifiableCalendarProperties>);
   }
 
   static override async get(calendarId: string): Promise<ExpoCalendar> {
@@ -227,10 +227,10 @@ export async function getCalendars(type?: EntityTypes): Promise<ExpoCalendar[]> 
  * @param details A map of details for the calendar to be created.
  * @returns An [`ExpoCalendar`](#expocalendar) object representing the newly created calendar.
  */
-export function createCalendar(details: Partial<Calendar> = {}): ExpoCalendar {
+export async function createCalendar(details: Partial<Calendar> = {}): Promise<ExpoCalendar> {
   const color = details.color ? processColor(details.color) : undefined;
   const newDetails = { ...details, id: undefined, color: color || undefined };
-  const createdCalendar = InternalExpoCalendar.createCalendar(newDetails);
+  const createdCalendar = await InternalExpoCalendar.createCalendar(newDetails);
   Object.setPrototypeOf(createdCalendar, ExpoCalendar.prototype);
   return createdCalendar;
 }

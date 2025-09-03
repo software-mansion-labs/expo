@@ -7,7 +7,7 @@ import {
   ExpoCalendarEvent,
   ExpoCalendarReminder,
 } from './ExpoCalendar.types';
-import { Calendar, EntityTypes, Source } from '../Calendar';
+import { EntityTypes, Source } from '../Calendar';
 import ExpoGoCalendarNextStub from './ExpoGoCalendarNextStub';
 
 declare class ExpoCalendarNextModule extends NativeModule {
@@ -18,7 +18,6 @@ declare class ExpoCalendarNextModule extends NativeModule {
 
   getDefaultCalendar(): ExpoCalendar;
   getCalendars(type?: EntityTypes): Promise<ExpoCalendar[]>;
-  createCalendarNext(details: Partial<Calendar>): ExpoCalendar;
 
   listEvents(
     calendars: string[],
@@ -27,7 +26,7 @@ declare class ExpoCalendarNextModule extends NativeModule {
   ): Promise<ExpoCalendarEvent[]>;
 
   getCalendarById(calendarId: string): Promise<ExpoCalendar>;
-  getEventById(eventId: string): ExpoCalendarEvent;
+  getEventById(eventId: string): Promise<ExpoCalendarEvent>;
   getReminderById(reminderId: string): ExpoCalendarReminder;
 
   requestCalendarPermissionsAsync(): Promise<PermissionResponse>;

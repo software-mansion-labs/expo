@@ -12,6 +12,7 @@ import expo.modules.calendar.next.ExpoCalendar.Companion.findExpoCalendars
 import expo.modules.calendar.next.ExpoCalendar.Companion.listEvents
 import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeCreatedException
 import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeDeletedException
+import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeUpdatedException
 import expo.modules.calendar.next.exceptions.CalendarCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.EventNotFoundException
 import expo.modules.calendar.next.records.AttendeeRecord
@@ -68,18 +69,16 @@ class CalendarNextModule : Module() {
     }
 
 
-    Function("createCalendar") { calendarRecord: CalendarRecord ->
+    AsyncFunction("createCalendar") Coroutine { calendarRecord: CalendarRecord ->
       permissionsDelegate.requireSystemPermissions(true)
-      val calendarId = ExpoCalendar.saveCalendar(calendarRecord, appContext)
+      val calendarId = ExpoCalendar.saveCalendar(appContext, calendarRecord)
       val newCalendarRecord = calendarRecord.copy(id = calendarId.toString())
       ExpoCalendar(appContext, newCalendarRecord)
     }
 
-    Function("getEventById") { eventId: String ->
+    AsyncFunction("getEventById") Coroutine { eventId: String ->
       permissionsDelegate.requireSystemPermissions(false)
-      val event = ExpoCalendarEvent.findEventById(eventId, appContext)
-        ?: throw EventNotFoundException("Event with id $eventId not found")
-      return@Function event
+      ExpoCalendarEvent.findEventById(eventId, appContext)
     }
 
     Class(ExpoCalendar::class) {
@@ -154,16 +153,16 @@ class CalendarNextModule : Module() {
         expoCalendar.getEvents(startDate, endDate)
       }
 
-      Function("createEvent") { expoCalendar: ExpoCalendar, record: EventRecord ->
+      AsyncFunction("createEvent") Coroutine { expoCalendar: ExpoCalendar, record: EventRecord ->
         permissionsDelegate.requireSystemPermissions(true)
         expoCalendar.createEvent(record)
       }
 
-      Function("update") { expoCalendar: ExpoCalendar, details: CalendarRecord ->
+      AsyncFunction("update") Coroutine { expoCalendar: ExpoCalendar, details: CalendarRecord ->
         permissionsDelegate.requireSystemPermissions(true)
         val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
           ?: throw CalendarNotFoundException("Calendar record is null")
-        ExpoCalendar.updateCalendar(updatedRecord, appContext, isNew = false)
+        ExpoCalendar.updateCalendar(appContext, updatedRecord, isNew = false)
         expoCalendar.calendarRecord = updatedRecord
       }
 
@@ -176,12 +175,6 @@ class CalendarNextModule : Module() {
     Class(ExpoCalendarEvent::class) {
       Constructor { id: String ->
         ExpoCalendarEvent(appContext)
-      }
-
-      Function("createAttendee") { expoCalendarEvent: ExpoCalendarEvent, record: AttendeeRecord ->
-        permissionsDelegate.requireSystemPermissions(true)
-        expoCalendarEvent.createAttendee(record)
-          ?: throw AttendeeCouldNotBeCreatedException("Attendee could not be created")
       }
 
       Property("id") { expoCalendarEvent: ExpoCalendarEvent ->
@@ -268,6 +261,11 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.eventRecord?.instanceId
       }
 
+      AsyncFunction("createAttendee") Coroutine { expoCalendarEvent: ExpoCalendarEvent, record: AttendeeRecord ->
+        permissionsDelegate.requireSystemPermissions(true)
+        expoCalendarEvent.createAttendee(record)
+      }
+
       AsyncFunction("openInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions ->
         val eventId = expoCalendarEvent.eventRecord?.id
           ?: throw EventNotFoundException("Event id is null")
@@ -293,10 +291,9 @@ class CalendarNextModule : Module() {
         return@Coroutine editResult
       }
 
-      AsyncFunction("getAttendeesAsync") { expoCalendarEvent: ExpoCalendarEvent, promise: Promise ->
+      AsyncFunction("getAttendeesAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent ->
         permissionsDelegate.requireSystemPermissions(false)
-        val attendees = expoCalendarEvent.getAttendees()
-        promise.resolve(attendees)
+        expoCalendarEvent.getAttendees()
       }
 
       Function("getOccurrence") { expoCalendarEvent: ExpoCalendarEvent, options: RecurringEventOptions? ->
@@ -304,13 +301,13 @@ class CalendarNextModule : Module() {
         expoCalendarEvent.getOccurrence(options)
       }
 
-      Function("update") { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, nullableFields: List<String> ->
+      AsyncFunction("update") Coroutine { expoCalendarEvent: ExpoCalendarEvent, eventRecord: EventRecord, nullableFields: List<String> ->
         permissionsDelegate.requireSystemPermissions(true)
         expoCalendarEvent.saveEvent(eventRecord, nullableFields = nullableFields)
         expoCalendarEvent.reloadEvent()
       }
 
-      Function("delete") { expoCalendarEvent: ExpoCalendarEvent ->
+      AsyncFunction("delete") Coroutine { expoCalendarEvent: ExpoCalendarEvent ->
         permissionsDelegate.requireSystemPermissions(true)
         expoCalendarEvent.deleteEvent()
       }
@@ -345,19 +342,18 @@ class CalendarNextModule : Module() {
         expoCalendarAttendee.attendeeRecord?.email
       }
 
-
-
-      Function("update") { expoCalendarAttendee: ExpoCalendarAttendee, attendeeRecord: AttendeeRecord, nullableFields: List<String> ->
+      AsyncFunction("update") Coroutine { expoCalendarAttendee: ExpoCalendarAttendee, attendeeRecord: AttendeeRecord, nullableFields: List<String> ->
         permissionsDelegate.requireSystemPermissions(true)
         expoCalendarAttendee.saveAttendee(attendeeRecord, nullableFields = nullableFields)
         expoCalendarAttendee.reloadAttendee()
       }
 
-      Function("delete") { expoCalendarAttendee: ExpoCalendarAttendee ->
+      AsyncFunction("delete") Coroutine { expoCalendarAttendee: ExpoCalendarAttendee ->
         permissionsDelegate.requireSystemPermissions(true)
-        check(expoCalendarAttendee.deleteAttendee()) { throw AttendeeCouldNotBeDeletedException("An error occurred while deleting attendee") }
+        expoCalendarAttendee.deleteAttendee()
       }
     }
+
     Class(ExpoCalendarReminder::class) {
       Constructor { id: String ->
         ExpoCalendarReminder(id)
