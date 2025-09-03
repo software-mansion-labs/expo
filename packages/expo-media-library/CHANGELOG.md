@@ -10,6 +10,14 @@
 
 ### 💡 Others
 
+- Extracted the read permission check from `FileSystemUtilities` ([#39210](https://github.com/expo/expo/pull/39210) by [@kosmydel](https://github.com/kosmydel))
+
+## 18.0.6 — 2025-09-02
+
+### 💡 Others
+
+- Change Constants to Constant/Property. ([#38926](https://github.com/expo/expo/pull/38926) by [@jakex7](https://github.com/jakex7))
+
 ## 18.0.5 — 2025-08-31
 
 _This version does not introduce any user-facing changes._
