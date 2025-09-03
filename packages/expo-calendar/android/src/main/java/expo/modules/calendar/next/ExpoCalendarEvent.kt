@@ -9,6 +9,8 @@ import expo.modules.calendar.findEventByIdQueryParameters
 import expo.modules.calendar.next.exceptions.EventCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.EventNotFoundException
 import expo.modules.calendar.next.exceptions.EventsCouldNotBeCreatedException
+import expo.modules.calendar.next.extensions.toAttendeeRecord
+import expo.modules.calendar.next.extensions.toEventRecord
 import expo.modules.calendar.next.records.AlarmRecord
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.calendar.next.records.EventRecord
@@ -283,7 +285,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     cursor.use {
       if (it.count > 0) {
         it.moveToFirst()
-        this.eventRecord = EventRecord.fromCursor(it, contentResolver)
+        this.eventRecord = it.toEventRecord(contentResolver)
       }
     }
   }
@@ -321,11 +323,9 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
 
   private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {
     val results: MutableList<ExpoCalendarAttendee> = ArrayList()
-    val contentResolver = context.reactContext?.contentResolver
-      ?: throw Exceptions.ReactContextLost()
 
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendarAttendee(context, attendeeRecord = AttendeeRecord.fromCursor(cursor, contentResolver)))
+      results.add(ExpoCalendarAttendee(context, attendeeRecord = cursor.toAttendeeRecord()))
     }
     return results
   }
@@ -359,7 +359,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
       return cursor.use {
         if (cursor.count > 0) {
           cursor.moveToFirst()
-          ExpoCalendarEvent(appContext, eventRecord = EventRecord.fromCursor(cursor, contentResolver))
+          ExpoCalendarEvent(appContext, eventRecord = cursor.toEventRecord(contentResolver))
         } else {
           null
         }

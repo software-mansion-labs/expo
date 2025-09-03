@@ -1,24 +1,14 @@
 package expo.modules.calendar.next.records
 
-import android.content.ContentResolver
-import android.database.Cursor
 import android.provider.CalendarContract
-import android.util.Log
-import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.accessConstantMatchingString
 import expo.modules.calendar.availabilityConstantMatchingString
-import expo.modules.calendar.next.utils.dateFormat
-import expo.modules.calendar.next.utils.dateToString
-import expo.modules.calendar.next.utils.optIntFromCursor
-import expo.modules.calendar.next.utils.optStringFromCursor
 import expo.modules.calendar.next.utils.rrFormat
 
 import expo.modules.calendar.next.utils.sdf
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.types.Enumerable
-import java.text.ParseException
-import java.util.Locale
 
 data class EventRecord(
   @Field
@@ -63,122 +53,7 @@ data class EventRecord(
   val originalId: String? = null,
   @Field
   val instanceId: String? = null,
-) : Record {
-
-  companion object {
-    /**
-     * Creates an EventRecord from a Cursor.
-     *
-     * @param cursor The Cursor to create the EventRecord from. The cursor should be the result of `findEventsQueryParameters` query.
-     * @return The EventRecord created from the Cursor.
-     */
-    @JvmStatic
-    fun fromCursor(cursor: Cursor, contentResolver: ContentResolver): EventRecord {
-      // may be CalendarContract.Instances.BEGIN or CalendarContract.Events.DTSTART (which have different string values)
-      val startDate = cursor.getString(3)
-      val endDate = cursor.getString(4)
-
-      val eventId = optStringFromCursor(cursor, CalendarContract.Instances.EVENT_ID)
-        ?: optStringFromCursor(cursor, CalendarContract.Instances._ID)
-
-      // unfortunately the string values of CalendarContract.Events._ID and CalendarContract.Instances._ID are equal
-      // so we'll use the somewhat brittle column number from the query
-      val instanceId = if (cursor.columnCount > 18) optStringFromCursor(cursor, CalendarContract.Instances._ID) else "";
-
-      return EventRecord(
-        id = eventId,
-        calendarId = optStringFromCursor(cursor, CalendarContract.Events.CALENDAR_ID),
-        title = optStringFromCursor(cursor, CalendarContract.Events.TITLE),
-        notes = optStringFromCursor(cursor, CalendarContract.Events.DESCRIPTION),
-        alarms = if (eventId != null) serializeAlarms(contentResolver, eventId)?.toList() else null,
-        recurrenceRule = extractRecurrenceRuleFromString(optStringFromCursor(cursor, CalendarContract.Events.RRULE)),
-        startDate = dateToString(startDate?.toLongOrNull()),
-        endDate = dateToString(endDate?.toLongOrNull()),
-        allDay = optIntFromCursor(cursor, CalendarContract.Events.ALL_DAY) != 0,
-        location = optStringFromCursor(cursor, CalendarContract.Events.EVENT_LOCATION),
-        availability = EventAvailability.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Events.AVAILABILITY)),
-        timeZone = optStringFromCursor(cursor, CalendarContract.Events.EVENT_TIMEZONE),
-        endTimeZone = optStringFromCursor(cursor, CalendarContract.Events.EVENT_END_TIMEZONE),
-        status = EventStatus.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Events.STATUS)),
-        organizerEmail = optStringFromCursor(cursor, CalendarContract.Events.ORGANIZER),
-        accessLevel = EventAccessLevel.fromAndroidValue(optIntFromCursor(cursor, CalendarContract.Events.ACCESS_LEVEL)),
-        guestsCanModify = optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_MODIFY) != 0,
-        guestsCanInviteOthers = optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS) != 0,
-        guestsCanSeeGuests = optIntFromCursor(cursor, CalendarContract.Events.GUESTS_CAN_SEE_GUESTS) != 0,
-        originalId = optStringFromCursor(cursor, CalendarContract.Events.ORIGINAL_ID),
-        instanceId = instanceId
-      )
-    }
-
-    private fun serializeAlarms(contentResolver: ContentResolver, eventId: String): ArrayList<AlarmRecord>? {
-      val alarms = ArrayList<AlarmRecord>()
-      val cursor = CalendarContract.Reminders.query(
-        contentResolver,
-        eventId.toLong(),
-        arrayOf(
-          CalendarContract.Reminders.MINUTES,
-          CalendarContract.Reminders.METHOD
-        )
-      )
-      while (cursor.moveToNext()) {
-        val method = cursor.getInt(1)
-        val thisAlarm = AlarmRecord(
-          relativeOffset = -cursor.getInt(0),
-          method = AlarmMethod.fromAndroidValue(method)
-        )
-        alarms.add(thisAlarm)
-      }
-      return alarms
-    }
-
-    private fun extractRecurrenceRuleFromString(rrule: String?): RecurrenceRuleRecord? {
-      if (rrule == null) {
-        return null
-      }
-      val ruleMap = mutableMapOf<String, String>()
-      rrule.split(";").forEach { part ->
-        val keyValue = part.split("=")
-        if (keyValue.size == 2) {
-          ruleMap[keyValue[0].uppercase(Locale.getDefault())] = keyValue[1]
-        }
-      }
-
-      val frequency = ruleMap["FREQ"]?.lowercase(Locale.getDefault())
-      val interval = ruleMap["INTERVAL"]?.toIntOrNull()
-      var endDate: String? = null
-      var occurrence: Int? = null
-
-      ruleMap["UNTIL"]?.let { untilValue ->
-        try {
-          // Try to parse the UNTIL value using the known date format, fallback to raw string if parsing fails
-          endDate = try {
-            val date = rrFormat.parse(untilValue);
-            if (date == null) {
-              return null;
-            }
-            dateFormat.format(date)
-          } catch (e: ParseException) {
-            Log.e(TAG, "Couldn't parse the `endDate` property.", e)
-            untilValue
-          }
-        } catch (e: Exception) {
-          Log.e(TAG, "endDate is null or invalid", e)
-          endDate = untilValue
-        }
-      }
-
-      ruleMap["COUNT"]?.let { countValue ->
-        occurrence = countValue.toIntOrNull()
-      }
-      return RecurrenceRuleRecord(
-        endDate = endDate,
-        frequency = frequency,
-        interval = interval,
-        occurrence = occurrence,
-      )
-    }
-  }
-}
+) : Record
 
 data class AlarmRecord(
   @Field
@@ -213,7 +88,7 @@ data class RecurrenceRuleRecord(
           occurrence = occurrence,
         )
       } else this
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       this
     }
   }

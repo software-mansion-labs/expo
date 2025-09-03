@@ -10,6 +10,7 @@ import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeCreatedException
 import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.AttendeeNotFoundException
+import expo.modules.calendar.next.extensions.toAttendeeRecord
 import expo.modules.calendar.next.records.AttendeeRecord
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.Exceptions
@@ -87,7 +88,7 @@ class ExpoCalendarAttendee(val context: AppContext, var attendeeRecord: Attendee
     cursor.use {
       if (it.count > 0) {
         it.moveToFirst()
-        attendeeRecord = AttendeeRecord.fromCursor(it, contentResolver)
+        attendeeRecord = it.toAttendeeRecord()
       }
     }
   }

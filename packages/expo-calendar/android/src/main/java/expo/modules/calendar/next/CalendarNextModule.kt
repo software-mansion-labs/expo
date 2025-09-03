@@ -28,6 +28,8 @@ import expo.modules.calendar.next.exceptions.CalendarNotFoundException
 import expo.modules.calendar.next.exceptions.CalendarNotSupportedException
 import expo.modules.calendar.next.exceptions.EventCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.EventCouldNotBeUpdatedException
+import expo.modules.calendar.next.extensions.toCalendarRecord
+import expo.modules.calendar.next.extensions.toEventRecord
 import expo.modules.calendar.next.permissions.CalendarPermissionsDelegate
 import expo.modules.calendar.next.utils.findEvents
 import expo.modules.interfaces.permissions.Permissions
@@ -95,7 +97,7 @@ class CalendarNextModule : Module() {
         val cursor = findEvents(contentResolver, startDate, endDate, calendarIds)
         cursor.use {
           while (it.moveToNext()) {
-            val event = ExpoCalendarEvent(appContext, eventRecord = EventRecord.fromCursor(it, contentResolver))
+            val event = ExpoCalendarEvent(appContext, eventRecord = cursor.toEventRecord(contentResolver))
             allEvents.add(event)
           }
         }
