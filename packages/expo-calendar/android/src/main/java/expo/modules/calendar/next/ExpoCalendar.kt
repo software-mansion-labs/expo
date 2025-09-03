@@ -7,6 +7,7 @@ import android.provider.CalendarContract
 import android.text.TextUtils
 import expo.modules.calendar.availabilityConstantMatchingString
 import expo.modules.calendar.next.exceptions.CalendarCouldNotBeUpdatedException
+import expo.modules.calendar.next.exceptions.EventNotFoundException
 import expo.modules.calendar.next.exceptions.EventsCouldNotBeCreatedException
 import expo.modules.calendar.next.extensions.toEventRecord
 import expo.modules.calendar.next.records.CalendarAccessLevel
@@ -16,15 +17,15 @@ import expo.modules.calendar.next.utils.findEvents
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.TimeZone
-class ExpoCalendar(val context: AppContext, var calendar: CalendarRecord? = CalendarRecord()) : SharedObject(context) {
-  var calendarRecord: CalendarRecord?
-    get () = calendar
-    set(value) { calendar = value }
+
+class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? = CalendarRecord()) : SharedObject(context) {
 
   suspend fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
     if (calendarRecord?.id == null) {
-      throw Exception("Calendar id is null")
+      throw EventNotFoundException("Calendar id is null")
     }
     val contentResolver = (context.reactContext
       ?: throw Exceptions.ReactContextLost()).contentResolver
@@ -33,18 +34,20 @@ class ExpoCalendar(val context: AppContext, var calendar: CalendarRecord? = Cale
     return cursor.use { serializeExpoCalendarEvents(cursor) }
   }
 
-  fun deleteCalendar(): Boolean {
-    val rows: Int
-    val calendarID = calendarRecord?.id?.toIntOrNull()
-    if (calendarID == null) {
-      throw Exceptions.IllegalStateException("E_CALENDAR_NOT_DELETED")
+  suspend fun deleteCalendar(): Boolean {
+    return withContext(Dispatchers.IO) {
+      val rows: Int
+      val calendarID = calendarRecord?.id?.toIntOrNull()
+      if (calendarID == null) {
+        throw EventNotFoundException("Calendar id is null")
+      }
+      val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toLong())
+      val contentResolver = (context.reactContext
+        ?: throw Exceptions.ReactContextLost()).contentResolver
+      rows = contentResolver.delete(uri, null, null)
+      calendarRecord = null
+      rows > 0
     }
-    val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toLong())
-    val contentResolver = (context.reactContext
-      ?: throw Exceptions.ReactContextLost()).contentResolver
-    rows = contentResolver.delete(uri, null, null)
-    calendarRecord = null
-    return rows > 0
   }
 
   fun createEvent(record: EventRecord): ExpoCalendarEvent? {

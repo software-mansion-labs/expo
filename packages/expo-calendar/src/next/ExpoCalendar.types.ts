@@ -197,7 +197,7 @@ export declare class ExpoCalendar {
   /**
    * Deletes the calendar.
    */
-  delete(): void;
+  delete(): Promise<void>;
 
   /**
    * Gets a calendar by its ID. Throws an error if the calendar with the given ID does not exist.

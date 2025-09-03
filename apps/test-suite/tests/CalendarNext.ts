@@ -269,7 +269,7 @@ export async function test(t) {
         t.afterEach(async () => {
           // Clean up only if the calendar was successfully created
           if (calendar?.title) {
-            calendar.delete();
+            await calendar.delete();
           }
         });
       });
@@ -304,7 +304,7 @@ export async function test(t) {
         }
 
         t.afterAll(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
@@ -444,9 +444,9 @@ export async function test(t) {
         t.expect(result.id).toBe(null);
       });
 
-      t.afterEach(() => {
+      t.afterEach(async () => {
         t.jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
-        calendar.delete();
+        await calendar.delete();
       });
     });
 
@@ -481,7 +481,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
@@ -556,11 +556,11 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
-      t.describe('Calendar.delete()', () => {
+      t.describe('await calendar.delete()', () => {
         let calendar: ExpoCalendar;
 
         t.beforeEach(async () => {
@@ -568,17 +568,17 @@ export async function test(t) {
         });
 
         t.it('deletes a calendar', async () => {
-          calendar.delete();
+          await calendar.delete();
 
           const calendars = getCalendars();
           t.expect((await calendars).findIndex((c) => c.id === calendar.id)).toBe(-1);
         });
 
         t.it('throws an error when deleting a non-existent calendar', async () => {
-          calendar.delete();
+          await calendar.delete();
           t.expect(calendar.title).toBeNull();
           try {
-            calendar.delete();
+            await calendar.delete();
           } catch (e) {
             t.expect(e).toBeDefined();
           }
@@ -587,7 +587,7 @@ export async function test(t) {
         t.afterEach(async () => {
           // Call only if not already deleted
           if (calendar?.title) {
-            calendar.delete();
+            await calendar.delete();
           }
         });
       });
@@ -655,7 +655,7 @@ export async function test(t) {
         }
 
         t.afterAll(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
@@ -848,7 +848,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
     });
@@ -890,7 +890,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
@@ -1329,7 +1329,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
@@ -1362,7 +1362,7 @@ export async function test(t) {
           });
 
           t.afterEach(async () => {
-            calendar.delete();
+            await calendar.delete();
           });
         });
       }
@@ -1547,7 +1547,7 @@ export async function test(t) {
         });
 
         t.afterEach(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
 
@@ -1578,7 +1578,7 @@ export async function test(t) {
         });
 
         t.afterAll(async () => {
-          calendar.delete();
+          await calendar.delete();
         });
       });
     });
@@ -2083,7 +2083,7 @@ export async function test(t) {
       }
 
       t.afterEach(async () => {
-        calendar.delete();
+        await calendar.delete();
       });
     });
   });

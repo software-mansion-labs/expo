@@ -27,9 +27,6 @@ import java.util.Calendar
 import java.util.TimeZone
 
 class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? = EventRecord(), var options: RecurringEventOptions? = RecurringEventOptions()) : SharedObject(context) {
-  var recurringEventOptions: RecurringEventOptions?
-    get () = options
-    set(value) { recurringEventOptions = value }
 
   fun saveEvent(eventRecord: EventRecord, calendarId: String? = null, nullableFields: List<String>? = null): Int? {
     val eventBuilder = CalendarEventBuilderNext()
@@ -241,19 +238,19 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     if (eventID == null) {
       throw EventCouldNotBeDeletedException("Event ID is required")
     }
-    if (recurringEventOptions?.futureEvents == null || recurringEventOptions?.futureEvents == false) {
+    if (options?.futureEvents == null || options?.futureEvents == false) {
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       rows = contentResolver.delete(uri, null, null)
       if (rows > 0) {
         this.eventRecord = null
       } else {
-        throw EventCouldNotBeDeletedException("Event could not be deleted");
+        throw EventCouldNotBeDeletedException("Event could not be deleted")
       }
     } else {
       // Get the exact occurrence and create an exception for it
       val exceptionValues = ContentValues()
       val startCal = Calendar.getInstance()
-      val instanceStartDate = recurringEventOptions?.instanceStartDate
+      val instanceStartDate = options?.instanceStartDate
       val dateString = instanceStartDate ?: eventRecord?.startDate
 
       if (dateString == null) {
@@ -273,7 +270,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
   }
 
   fun reloadEvent(eventId: String? = null) {
-    val eventID = (eventId ?: this.eventRecord?.id)?.toIntOrNull();
+    val eventID = (eventId ?: this.eventRecord?.id)?.toIntOrNull()
     if (eventID == null) {
       throw EventNotFoundException("Event ID is required")
     }
@@ -332,7 +329,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
 
   fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
     val attendee = ExpoCalendarAttendee(context)
-    val eventId = this.eventRecord?.id?.toIntOrNull();
+    val eventId = this.eventRecord?.id?.toIntOrNull()
     if (eventId == null) {
       throw EventNotFoundException("Event ID is required")
     }

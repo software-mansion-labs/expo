@@ -229,7 +229,7 @@ class CalendarNextModule : Module() {
         }
       }
 
-      Function("delete") { expoCalendar: ExpoCalendar ->
+      AsyncFunction("delete") Coroutine { expoCalendar: ExpoCalendar ->
         permissionsDelegate.requireSystemPermissions(true)
         val successful = expoCalendar.deleteCalendar()
         if (!successful) {
@@ -335,7 +335,7 @@ class CalendarNextModule : Module() {
 
       AsyncFunction("openInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions ->
         val eventId = expoCalendarEvent.eventRecord?.id
-          ?: throw EventNotFoundException("Event id is null");
+          ?: throw EventNotFoundException("Event id is null")
 
         val params = ViewedEventOptions(
           id = eventId,
@@ -348,7 +348,7 @@ class CalendarNextModule : Module() {
 
       AsyncFunction("editInCalendarAsync") Coroutine { expoCalendarEvent: ExpoCalendarEvent, rawParams: ViewedEventOptions? ->
         val eventId = expoCalendarEvent.eventRecord?.id
-          ?: throw EventNotFoundException("Event id is null");
+          ?: throw EventNotFoundException("Event id is null")
         val params = ViewedEventOptions(
           id = eventId,
           startNewActivityTask = rawParams?.startNewActivityTask ?: true
@@ -466,7 +466,7 @@ class CalendarNextModule : Module() {
   private fun serializeExpoCalendars(cursor: Cursor): List<ExpoCalendar> {
     val results: MutableList<ExpoCalendar> = ArrayList()
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendar(appContext, calendar = cursor.toCalendarRecord()))
+      results.add(ExpoCalendar(appContext, calendarRecord = cursor.toCalendarRecord()))
     }
     return results
   }
@@ -485,7 +485,7 @@ class CalendarNextModule : Module() {
       cursor.use {
         if (it.count > 0) {
           it.moveToFirst()
-          ExpoCalendar(appContext, calendar = cursor.toCalendarRecord())
+          ExpoCalendar(appContext, calendarRecord = cursor.toCalendarRecord())
         } else {
           null
         }
