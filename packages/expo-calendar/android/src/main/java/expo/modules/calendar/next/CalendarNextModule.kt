@@ -38,6 +38,8 @@ import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class CalendarNextModule : Module() {
   private val contentResolver
@@ -62,26 +64,27 @@ class CalendarNextModule : Module() {
       )
     }
 
-    AsyncFunction("getCalendars") { type: String?, promise: Promise ->
+    AsyncFunction("getCalendars") Coroutine { type: String? ->
       try {
         permissionsDelegate.requireSystemPermissions(false)
         if (type != null && type == "reminder") {
           throw CalendarNotSupportedException("Calendars of type `reminder` are not supported on Android")
         }
-        val expoCalendars = findExpoCalendars()
-        promise.resolve(expoCalendars)
+        findExpoCalendars()
+      } catch (e: CalendarNotSupportedException) {
+        throw e
       } catch (e: Exception) {
         throw CalendarNotFoundException( "Calendars could not be found", e)
       }
     }
 
-    Function("getCalendarById") { calendarId: String ->
+    AsyncFunction("getCalendarById") Coroutine { calendarId: String ->
       permissionsDelegate.requireSystemPermissions(false)
       val calendar = findExpoCalendarById(calendarId)
       if (calendar == null) {
         throw CalendarNotFoundException("Calendar with id $calendarId not found")
       }
-      return@Function calendar
+      calendar
     }
 
     AsyncFunction("requestCalendarPermissionsAsync") { promise: Promise ->
@@ -452,11 +455,13 @@ class CalendarNextModule : Module() {
     }
   }
 
-  private fun findExpoCalendars(): List<ExpoCalendar> {
-    val uri = CalendarContract.Calendars.CONTENT_URI
-    val cursor = contentResolver.query(uri, findCalendarsQueryParameters, null, null, null)
-    requireNotNull(cursor) { "Cursor shouldn't be null" }
-    return cursor.use(::serializeExpoCalendars)
+  private suspend fun findExpoCalendars(): List<ExpoCalendar> {
+    return withContext(Dispatchers.IO) {
+      val uri = CalendarContract.Calendars.CONTENT_URI
+      val cursor = contentResolver.query(uri, findCalendarsQueryParameters, null, null, null)
+      requireNotNull(cursor) { "Cursor shouldn't be null" }
+      cursor.use(::serializeExpoCalendars)
+    }
   }
 
   private fun serializeExpoCalendars(cursor: Cursor): List<ExpoCalendar> {
@@ -467,22 +472,24 @@ class CalendarNextModule : Module() {
     return results
   }
 
-  private fun findExpoCalendarById(calendarID: String): ExpoCalendar? {
-    val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toInt().toLong())
-    val cursor = contentResolver.query(
-      uri,
-      findCalendarByIdQueryFields,
-      null,
-      null,
-      null
-    )
-    requireNotNull(cursor) { "Cursor shouldn't be null" }
-    return cursor.use {
-      if (it.count > 0) {
-        it.moveToFirst()
-        ExpoCalendar(appContext, cursor)
-      } else {
+  private suspend fun findExpoCalendarById(calendarID: String): ExpoCalendar? {
+    return withContext(Dispatchers.IO) {
+      val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toInt().toLong())
+      val cursor = contentResolver.query(
+        uri,
+        findCalendarByIdQueryFields,
+        null,
+        null,
         null
+      )
+      requireNotNull(cursor) { "Cursor shouldn't be null" }
+      cursor.use {
+        if (it.count > 0) {
+          it.moveToFirst()
+          ExpoCalendar(appContext, cursor)
+        } else {
+          null
+        }
       }
     }
   }

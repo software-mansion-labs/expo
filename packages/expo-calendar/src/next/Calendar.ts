@@ -183,8 +183,8 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     return super.update(newDetails as Partial<ModifiableCalendarProperties>);
   }
 
-  static override get(calendarId: string): ExpoCalendar {
-    const calendar = InternalExpoCalendar.getCalendarById(calendarId);
+  static override async get(calendarId: string): Promise<ExpoCalendar> {
+    const calendar = await InternalExpoCalendar.getCalendarById(calendarId);
     Object.setPrototypeOf(calendar, ExpoCalendar.prototype);
     return calendar;
   }

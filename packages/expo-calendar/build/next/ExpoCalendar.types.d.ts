@@ -135,7 +135,7 @@ export declare class ExpoCalendar {
      * @param calendarId The ID of the calendar to get.
      * @returns An [`ExpoCalendar`](#expocalendar) object representing the calendar.
      */
-    static get(calendarId: string): ExpoCalendar;
+    static get(calendarId: string): Promise<ExpoCalendar>;
 }
 export declare class ExpoCalendarEvent {
     constructor(id: string);

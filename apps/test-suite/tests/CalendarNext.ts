@@ -259,7 +259,7 @@ export async function test(t) {
         t.it('cannot create a calendar without a title', async () => {
           let error: any;
           try {
-            await createTestCalendar({ title: undefined });
+            createTestCalendar({ title: undefined });
           } catch (e) {
             error = e;
           }
@@ -278,7 +278,7 @@ export async function test(t) {
         let calendar: ExpoCalendar;
 
         t.beforeAll(async () => {
-          calendar = await createTestCalendar();
+          calendar = createTestCalendar();
         });
 
         t.it('returns an array of calendars with correct shape', async () => {
@@ -455,11 +455,11 @@ export async function test(t) {
         let calendar: ExpoCalendar;
 
         t.beforeEach(async () => {
-          calendar = await createTestCalendar();
+          calendar = createTestCalendar();
         });
 
         t.it('returns a calendar by its ID', async () => {
-          const fetchedCalendar = ExpoCalendar.get(calendar.id);
+          const fetchedCalendar = await ExpoCalendar.get(calendar.id);
           t.expect(fetchedCalendar).toBeDefined();
           t.expect(fetchedCalendar).toEqual(calendar);
           testCalendarShape(fetchedCalendar);
@@ -467,7 +467,7 @@ export async function test(t) {
 
         t.it('throws an error when getting a non-existent calendar', async () => {
           try {
-            ExpoCalendar.get('non-existent-calendar-id');
+            await ExpoCalendar.get('non-existent-calendar-id');
           } catch (e) {
             t.expect(e).toBeDefined();
           }
@@ -499,7 +499,7 @@ export async function test(t) {
             title: newTitle,
             color: newColor,
           });
-          const updatedCalendar = ExpoCalendar.get(calendar.id);
+          const updatedCalendar = await ExpoCalendar.get(calendar.id);
 
           t.expect(updatedCalendar.id).toBe(calendar.id);
           t.expect(updatedCalendar.color).toBe(newColor);
@@ -538,7 +538,7 @@ export async function test(t) {
             color: newColor,
           });
 
-          const updatedCalendar = ExpoCalendar.get(calendar.id);
+          const updatedCalendar = await ExpoCalendar.get(calendar.id);
           t.expect(updatedCalendar.id).toBe(calendar.id);
           t.expect(updatedCalendar.color).toBe(newColor);
           t.expect(updatedCalendar.title).toBe(newTitle);
@@ -546,7 +546,8 @@ export async function test(t) {
 
         t.it('throws an error when updating a non-existent calendar', async () => {
           try {
-            ExpoCalendar.get('non-existent-calendar-id').update({
+            const calendar = await ExpoCalendar.get('non-existent-calendar-id');
+            calendar.update({
               title: 'New title',
             });
           } catch (e) {

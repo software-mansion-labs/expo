@@ -3,8 +3,6 @@ package expo.modules.calendar.next.permissions
 import android.Manifest
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.CodedException
-import expo.modules.kotlin.exception.Exceptions
-
 class CalendarPermissionsDelegate(private val appContext: AppContext) {
   private fun hasReadPermissions(): Boolean {
     return appContext.permissions
