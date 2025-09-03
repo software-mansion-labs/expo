@@ -242,7 +242,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
       rows = contentResolver.delete(uri, null, null)
       if (rows > 0) {
-        this.eventRecord = null
+        eventRecord = null
       } else {
         throw EventCouldNotBeDeletedException("Event could not be deleted")
       }
@@ -270,7 +270,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
   }
 
   fun reloadEvent(eventId: String? = null) {
-    val eventID = (eventId ?: this.eventRecord?.id)?.toIntOrNull()
+    val eventID = (eventId ?: eventRecord?.id)?.toIntOrNull()
     if (eventID == null) {
       throw EventNotFoundException("Event ID is required")
     }
@@ -282,7 +282,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     cursor.use {
       if (it.count > 0) {
         it.moveToFirst()
-        this.eventRecord = it.toEventRecord(contentResolver)
+        eventRecord = it.toEventRecord(contentResolver)
       }
     }
   }
@@ -329,7 +329,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
 
   fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
     val attendee = ExpoCalendarAttendee(context)
-    val eventId = this.eventRecord?.id?.toIntOrNull()
+    val eventId = eventRecord?.id?.toIntOrNull()
     if (eventId == null) {
       throw EventNotFoundException("Event ID is required")
     }

@@ -52,7 +52,7 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
 
   fun createEvent(record: EventRecord): ExpoCalendarEvent? {
     val event = ExpoCalendarEvent(context, record)
-    val calendarId = this.calendarRecord?.id
+    val calendarId = calendarRecord?.id
     if (calendarId == null) {
       throw EventsCouldNotBeCreatedException("Calendar id is null")
     }
