@@ -2,7 +2,6 @@ package expo.modules.calendar.next
 
 import android.content.ContentUris
 import android.content.ContentValues
-import android.database.Cursor
 import android.provider.CalendarContract
 import expo.modules.calendar.attendeeRelationshipConstantMatchingString
 import expo.modules.calendar.attendeeStatusConstantMatchingString
@@ -16,24 +15,11 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
 
-class ExpoCalendarAttendee : SharedObject {
-  var attendeeRecord: AttendeeRecord?
-  var localAppContext: AppContext
-  private val contentResolver
-    get() = (localAppContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
-
-  constructor(appContext: AppContext) {
-    this.localAppContext = appContext
-    this.attendeeRecord = null;
-  }
-
-  constructor(appContext: AppContext, cursor: Cursor) {
-    this.localAppContext = appContext
-    this.attendeeRecord = AttendeeRecord.fromCursor(cursor, contentResolver)
-  }
-
+class ExpoCalendarAttendee(val context: AppContext, var attendeeRecord: AttendeeRecord? = AttendeeRecord()) : SharedObject(context) {
   fun saveAttendee(attendeeRecord: AttendeeRecord, eventId: Int? = null, nullableFields: List<String>? = null): String {
     val attendeeValues = buildAttendeeContentValues(attendeeRecord, eventId)
+    val contentResolver = (context.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     cleanNullableFields(attendeeValues, nullableFields)
     if (this.attendeeRecord?.id == null) {
       if (eventId == null) {
@@ -80,6 +66,8 @@ class ExpoCalendarAttendee : SharedObject {
     if (attendeeID == null) {
       throw AttendeeCouldNotBeDeletedException("Attendee ID not found")
     }
+    val contentResolver = (context.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
     rows = contentResolver.delete(uri, null, null)
     attendeeRecord = null
@@ -91,6 +79,8 @@ class ExpoCalendarAttendee : SharedObject {
     if (attendeeID == null) {
       throw AttendeeNotFoundException("Attendee ID not found")
     }
+    val contentResolver = (context.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
     val cursor = contentResolver.query(uri, findAttendeesByEventIdQueryParameters, null, null, null)
     requireNotNull(cursor) { "Cursor shouldn't be null" }

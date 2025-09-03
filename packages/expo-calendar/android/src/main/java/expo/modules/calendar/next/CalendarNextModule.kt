@@ -33,7 +33,6 @@ import expo.modules.calendar.next.utils.findEvents
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
-import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
@@ -50,8 +49,6 @@ class CalendarNextModule : Module() {
   private val permissionsDelegate by lazy {
     CalendarPermissionsDelegate(appContext)
   }
-
-  @OptIn(EitherType::class)
   override fun definition() = ModuleDefinition {
     Name("CalendarNext")
 
@@ -98,7 +95,7 @@ class CalendarNextModule : Module() {
         val cursor = findEvents(contentResolver, startDate, endDate, calendarIds)
         cursor.use {
           while (it.moveToNext()) {
-            val event = ExpoCalendarEvent(appContext, it)
+            val event = ExpoCalendarEvent(appContext, eventRecord = EventRecord.fromCursor(it, contentResolver))
             allEvents.add(event)
           }
         }
@@ -467,7 +464,7 @@ class CalendarNextModule : Module() {
   private fun serializeExpoCalendars(cursor: Cursor): List<ExpoCalendar> {
     val results: MutableList<ExpoCalendar> = ArrayList()
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendar(appContext, cursor))
+      results.add(ExpoCalendar(appContext, calendar = cursor.toCalendarRecord()))
     }
     return results
   }
@@ -486,7 +483,7 @@ class CalendarNextModule : Module() {
       cursor.use {
         if (it.count > 0) {
           it.moveToFirst()
-          ExpoCalendar(appContext, cursor)
+          ExpoCalendar(appContext, calendar = cursor.toCalendarRecord())
         } else {
           null
         }

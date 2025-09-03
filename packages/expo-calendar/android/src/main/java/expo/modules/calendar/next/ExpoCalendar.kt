@@ -18,73 +18,67 @@ import expo.modules.calendar.next.utils.findEvents
 import expo.modules.calendar.next.utils.optIntFromCursor
 import expo.modules.calendar.next.utils.optStringFromCursor
 import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
 import java.util.TimeZone
 
-@OptIn(EitherType::class)
-class ExpoCalendar : SharedObject {
-  val localAppContext: AppContext
+
+fun Cursor.toCalendarRecord() : CalendarRecord {
+  return CalendarRecord(
+    id = optStringFromCursor(this, CalendarContract.Calendars._ID),
+    title = optStringFromCursor(this, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME),
+    isPrimary = optIntFromCursor(this, CalendarContract.Calendars.IS_PRIMARY) == 1,
+    name = optStringFromCursor(this, CalendarContract.Calendars.NAME),
+    color = optIntFromCursor(this, CalendarContract.Calendars.CALENDAR_COLOR),
+    ownerAccount = optStringFromCursor(this, CalendarContract.Calendars.OWNER_ACCOUNT),
+    timeZone = optStringFromCursor(this, CalendarContract.Calendars.CALENDAR_TIME_ZONE),
+    isVisible = optIntFromCursor(this, CalendarContract.Calendars.VISIBLE) != 0,
+    isSynced = optIntFromCursor(this, CalendarContract.Calendars.SYNC_EVENTS) != 0,
+    allowsModifications = optIntFromCursor(this, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_ROOT ||
+      optIntFromCursor(this, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_OWNER ||
+      optIntFromCursor(this, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
+      optIntFromCursor(this, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR,
+    accessLevel = optStringFromCursor(this, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL)?.let { accessLevelString ->
+      try {
+        CalendarAccessLevel.entries.find { it.value == accessLevelString }
+          ?: CalendarAccessLevel.NONE
+      } catch (_: Exception) {
+        CalendarAccessLevel.NONE
+      }
+    } ?: CalendarAccessLevel.NONE,
+    allowedReminders = optStringFromCursor(this, CalendarContract.Calendars.ALLOWED_REMINDERS)?.split(",")?.filter { it.isNotEmpty() }?.map { reminderString ->
+      try {
+        AlarmMethod.entries.find { it.value == reminderString } ?: AlarmMethod.DEFAULT
+      } catch (_: Exception) {
+        AlarmMethod.DEFAULT
+      }
+    } ?: emptyList(),
+    allowedAttendeeTypes = optStringFromCursor(this, CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES)?.split(",")?.filter { it.isNotEmpty() }?.map { attendeeTypeString ->
+      try {
+        AttendeeType.entries.find { it.value == attendeeTypeString } ?: AttendeeType.NONE
+      } catch (_: Exception) {
+        AttendeeType.NONE
+      }
+    } ?: emptyList(),
+    source = Source(
+      id = optStringFromCursor(this, CalendarContract.Calendars.ACCOUNT_NAME),
+      type = optStringFromCursor(this, CalendarContract.Calendars.ACCOUNT_TYPE),
+      name = optStringFromCursor(this, CalendarContract.Calendars.ACCOUNT_NAME),
+      isLocalAccount = optStringFromCursor(this, CalendarContract.Calendars.ACCOUNT_TYPE) == CalendarContract.ACCOUNT_TYPE_LOCAL
+    ),
+  )
+}
+
+class ExpoCalendar(val context: AppContext, var calendar: CalendarRecord? = CalendarRecord()) : SharedObject(context) {
   var calendarRecord: CalendarRecord?
-
-  constructor(appContext: AppContext, calendar: CalendarRecord) {
-    this.localAppContext = appContext
-    this.calendarRecord = calendar
-  }
-
-  constructor(appContext: AppContext, cursor: Cursor) {
-    this.localAppContext = appContext
-    this.calendarRecord = CalendarRecord(
-      id = optStringFromCursor(cursor, CalendarContract.Calendars._ID),
-      title = optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_DISPLAY_NAME),
-      isPrimary = optIntFromCursor(cursor, CalendarContract.Calendars.IS_PRIMARY) == 1,
-      name = optStringFromCursor(cursor, CalendarContract.Calendars.NAME),
-      color = optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_COLOR),
-      ownerAccount = optStringFromCursor(cursor, CalendarContract.Calendars.OWNER_ACCOUNT),
-      timeZone = optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_TIME_ZONE),
-      isVisible = optIntFromCursor(cursor, CalendarContract.Calendars.VISIBLE) != 0,
-      isSynced = optIntFromCursor(cursor, CalendarContract.Calendars.SYNC_EVENTS) != 0,
-      allowsModifications = optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_ROOT ||
-        optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_OWNER ||
-        optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_EDITOR ||
-        optIntFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL) == CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR,
-      accessLevel = optStringFromCursor(cursor, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL)?.let { accessLevelString ->
-        try {
-          CalendarAccessLevel.entries.find { it.value == accessLevelString }
-            ?: CalendarAccessLevel.NONE
-        } catch (_: Exception) {
-          CalendarAccessLevel.NONE
-        }
-      } ?: CalendarAccessLevel.NONE,
-      allowedReminders = optStringFromCursor(cursor, CalendarContract.Calendars.ALLOWED_REMINDERS)?.split(",")?.filter { it.isNotEmpty() }?.map { reminderString ->
-        try {
-          AlarmMethod.entries.find { it.value == reminderString } ?: AlarmMethod.DEFAULT
-        } catch (_: Exception) {
-          AlarmMethod.DEFAULT
-        }
-      } ?: emptyList(),
-      allowedAttendeeTypes = optStringFromCursor(cursor, CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES)?.split(",")?.filter { it.isNotEmpty() }?.map { attendeeTypeString ->
-        try {
-          AttendeeType.entries.find { it.value == attendeeTypeString } ?: AttendeeType.NONE
-        } catch (_: Exception) {
-          AttendeeType.NONE
-        }
-      } ?: emptyList(),
-      source = Source(
-        id = optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_NAME),
-        type = optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_TYPE),
-        name = optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_NAME),
-        isLocalAccount = optStringFromCursor(cursor, CalendarContract.Calendars.ACCOUNT_TYPE) == CalendarContract.ACCOUNT_TYPE_LOCAL
-      ),
-    )
-  }
+    get () = calendar
+    set(value) { calendar = value }
 
   suspend fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
     if (calendarRecord?.id == null) {
       throw Exception("Calendar id is null")
     }
-    val contentResolver = (appContext?.reactContext
+    val contentResolver = (context.reactContext
       ?: throw Exceptions.ReactContextLost()).contentResolver
     val cursor = findEvents(contentResolver, startDate, endDate, listOf(calendarRecord?.id
       ?: ""))
@@ -98,7 +92,7 @@ class ExpoCalendar : SharedObject {
       throw Exceptions.IllegalStateException("E_CALENDAR_NOT_DELETED")
     }
     val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toLong())
-    val contentResolver = (appContext?.reactContext
+    val contentResolver = (context.reactContext
       ?: throw Exceptions.ReactContextLost()).contentResolver
     rows = contentResolver.delete(uri, null, null)
     calendarRecord = null
@@ -106,7 +100,7 @@ class ExpoCalendar : SharedObject {
   }
 
   fun createEvent(record: EventRecord): ExpoCalendarEvent? {
-    val event = ExpoCalendarEvent(localAppContext, record)
+    val event = ExpoCalendarEvent(context, record)
     val calendarId = this.calendarRecord?.id
     if (calendarId == null) {
       throw EventsCouldNotBeCreatedException("Calendar id is null")
@@ -118,8 +112,10 @@ class ExpoCalendar : SharedObject {
 
   private fun serializeExpoCalendarEvents(cursor: Cursor): List<ExpoCalendarEvent> {
     val results: MutableList<ExpoCalendarEvent> = ArrayList()
+    val contentResolver = (context.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendarEvent(localAppContext, cursor))
+      results.add(ExpoCalendarEvent(context, eventRecord = EventRecord.fromCursor(cursor, contentResolver)))
     }
     return results
   }

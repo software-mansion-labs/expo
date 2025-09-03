@@ -4,9 +4,6 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
 import android.provider.CalendarContract
-import android.util.Log
-import expo.modules.calendar.CalendarModule.Companion.TAG
-import expo.modules.calendar.EventNotSavedException
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
 import expo.modules.calendar.next.exceptions.EventCouldNotBeDeletedException
@@ -22,42 +19,15 @@ import expo.modules.calendar.next.utils.removeRemindersForEvent
 import expo.modules.calendar.next.utils.sdf
 import expo.modules.core.errors.InvalidArgumentException
 import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.apifeatures.EitherType
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.sharedobjects.SharedObject
-import java.text.ParseException
 import java.util.Calendar
 import java.util.TimeZone
 
-
-@OptIn(EitherType::class)
-class ExpoCalendarEvent : SharedObject {
-  var eventRecord: EventRecord?
-  var recurringEventOptions: RecurringEventOptions? = null
-  private val localAppContext: AppContext
-  private val contentResolver
-    get() = (localAppContext.reactContext ?: throw Exceptions.ReactContextLost()).contentResolver
-
-  constructor(appContext: AppContext) {
-    this.localAppContext = appContext;
-    this.eventRecord = null
-  }
-
-  constructor(appContext: AppContext, eventRecord: EventRecord) {
-    this.localAppContext = appContext;
-    this.eventRecord = eventRecord
-  }
-
-  constructor(appContext: AppContext, eventRecord: EventRecord, options: RecurringEventOptions) {
-    this.localAppContext = appContext
-    this.eventRecord = eventRecord
-    this.recurringEventOptions = options
-  }
-
-  constructor(appContext: AppContext, cursor: Cursor) {
-    this.localAppContext = appContext;
-    this.eventRecord = EventRecord.fromCursor(cursor, contentResolver)
-  }
+class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? = EventRecord(), var options: RecurringEventOptions? = RecurringEventOptions()) : SharedObject(context) {
+  var recurringEventOptions: RecurringEventOptions?
+    get () = options
+    set(value) { recurringEventOptions = value }
 
   fun saveEvent(eventRecord: EventRecord, calendarId: String? = null, nullableFields: List<String>? = null): Int? {
     val eventBuilder = CalendarEventBuilderNext()
@@ -177,6 +147,8 @@ class ExpoCalendarEvent : SharedObject {
         throw EventNotFoundException("Event ID is required")
       }
       val updateUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
+      val contentResolver = (appContext?.reactContext
+        ?: throw Exceptions.ReactContextLost()).contentResolver
       contentResolver.update(updateUri, eventBuilder.build(), null, null)
       removeRemindersForEvent(contentResolver, eventID)
       if (eventRecord.alarms != null) {
@@ -190,6 +162,8 @@ class ExpoCalendarEvent : SharedObject {
       }
       eventBuilder.put(CalendarContract.Events.CALENDAR_ID, calendarId.toInt())
       val eventsUri = CalendarContract.Events.CONTENT_URI
+      val contentResolver = (appContext?.reactContext
+        ?: throw Exceptions.ReactContextLost()).contentResolver
       val eventUri = contentResolver.insert(eventsUri, eventBuilder.build())
         ?: throw EventsCouldNotBeCreatedException("Failed to insert event into the database")
       val eventID = eventUri.lastPathSegment!!.toInt()
@@ -204,10 +178,9 @@ class ExpoCalendarEvent : SharedObject {
     if (options?.instanceStartDate == null) {
       return this
     }
-    val occurrenceEvent = ExpoCalendarEvent(localAppContext, eventRecord ?: EventRecord(), options)
-    occurrenceEvent.recurringEventOptions = options
-    return occurrenceEvent
+    return ExpoCalendarEvent(context, eventRecord ?: EventRecord(), options)
   }
+
 
   private fun cleanNullableFields(eventBuilder: CalendarEventBuilderNext, nullableFields: List<String>?) {
     val nullableSet = nullableFields?.toSet() ?: emptySet()
@@ -261,6 +234,8 @@ class ExpoCalendarEvent : SharedObject {
   fun deleteEvent() {
     val rows: Int
     val eventID = eventRecord?.id?.toInt()
+    val contentResolver = (appContext?.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     if (eventID == null) {
       throw EventCouldNotBeDeletedException("Event ID is required")
     }
@@ -300,6 +275,8 @@ class ExpoCalendarEvent : SharedObject {
     if (eventID == null) {
       throw EventNotFoundException("Event ID is required")
     }
+    val contentResolver = (appContext?.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toLong())
     val cursor = contentResolver.query(uri, findEventByIdQueryParameters, null, null, null)
     requireNotNull(cursor) { "Cursor shouldn't be null" }
@@ -312,6 +289,8 @@ class ExpoCalendarEvent : SharedObject {
   }
 
   private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
+    val contentResolver = (appContext?.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     for (reminder in reminders) {
       if (reminder.relativeOffset != null) {
         val minutes = -reminder.relativeOffset
@@ -330,6 +309,8 @@ class ExpoCalendarEvent : SharedObject {
     if (eventID == null) {
       throw EventNotFoundException("Event ID is required")
     }
+    val contentResolver = (appContext?.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
     val cursor = CalendarContract.Attendees.query(
       contentResolver,
       eventID,
@@ -340,14 +321,17 @@ class ExpoCalendarEvent : SharedObject {
 
   private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {
     val results: MutableList<ExpoCalendarAttendee> = ArrayList()
+    val contentResolver = context.reactContext?.contentResolver
+      ?: throw Exceptions.ReactContextLost()
+
     while (cursor.moveToNext()) {
-      results.add(ExpoCalendarAttendee(localAppContext, cursor))
+      results.add(ExpoCalendarAttendee(context, attendeeRecord = AttendeeRecord.fromCursor(cursor, contentResolver)))
     }
     return results
   }
 
   fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
-    val attendee = ExpoCalendarAttendee(localAppContext)
+    val attendee = ExpoCalendarAttendee(context)
     val eventId = this.eventRecord?.id?.toIntOrNull();
     if (eventId == null) {
       throw EventNotFoundException("Event ID is required")
@@ -358,11 +342,12 @@ class ExpoCalendarEvent : SharedObject {
   }
 
   companion object {
-    fun findEventById(eventID: String, localAppContext: AppContext): ExpoCalendarEvent? {
+    fun findEventById(eventID: String, appContext: AppContext): ExpoCalendarEvent? {
       val uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventID.toInt().toLong())
       val selection = "((${CalendarContract.Events.DELETED} != 1))"
-      val contentResolver = localAppContext.reactContext?.contentResolver
+      val contentResolver = appContext.reactContext?.contentResolver
         ?: throw Exceptions.ReactContextLost()
+
       val cursor = contentResolver.query(
         uri,
         findEventByIdQueryParameters,
@@ -374,7 +359,7 @@ class ExpoCalendarEvent : SharedObject {
       return cursor.use {
         if (cursor.count > 0) {
           cursor.moveToFirst()
-          ExpoCalendarEvent(localAppContext, cursor)
+          ExpoCalendarEvent(appContext, eventRecord = EventRecord.fromCursor(cursor, contentResolver))
         } else {
           null
         }

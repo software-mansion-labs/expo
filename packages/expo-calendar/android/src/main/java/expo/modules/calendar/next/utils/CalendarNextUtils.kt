@@ -6,10 +6,7 @@ import java.util.Calendar
 import java.util.TimeZone
 import android.content.ContentUris
 import android.provider.CalendarContract
-import android.util.Log
-import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.findEventsQueryParameters
-import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,9 +18,10 @@ val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").apply {
 fun dateToMilliseconds(stringValue: String?): Long? {
   if (stringValue == null) return null
   try {
-    val cal = Calendar.getInstance()
-    val parsedDate = sdf.parse(stringValue)
-    cal.time = parsedDate ?: return null
+    val parsedDate = sdf.parse(stringValue) ?: return null
+    val cal = Calendar.getInstance().apply {
+      time = parsedDate
+    }
     return cal.timeInMillis
   } catch (_: Exception) {
     return null
@@ -32,8 +30,9 @@ fun dateToMilliseconds(stringValue: String?): Long? {
 
 fun dateToString(longValue: Long?): String? {
   if (longValue == null) return null
-  val cal = Calendar.getInstance()
-  cal.timeInMillis = longValue
+  val cal = Calendar.getInstance().apply {
+    timeInMillis = longValue
+  }
   return sdf.format(cal.time)
 }
 
@@ -71,10 +70,8 @@ suspend fun findEvents(contentResolver: ContentResolver, startDate: Any, endDate
     try {
       setDateInCalendar(eStartDate, startDate)
       setDateInCalendar(eEndDate, endDate)
-    } catch (e: ParseException) {
-      Log.e(TAG, "error parsing", e)
     } catch (e: Exception) {
-      Log.e(TAG, "misc error parsing", e)
+      throw Exception("Error parsing date", e)
     }
     val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon()
     ContentUris.appendId(uriBuilder, eStartDate.timeInMillis)
@@ -110,7 +107,7 @@ private fun setDateInCalendar(calendar: Calendar, date: Any) {
       if (parsedDate != null) {
         calendar.time = parsedDate
       } else {
-        Log.e(TAG, "Parsed date is null")
+        throw Exception("Error parsing date")
       }
     }
 
@@ -119,12 +116,11 @@ private fun setDateInCalendar(calendar: Calendar, date: Any) {
     }
 
     else -> {
-      Log.e(TAG, "date has unsupported type")
+      throw Exception("Date has unsupported type")
     }
   }
 }
 
-@Throws(SecurityException::class)
 internal fun removeRemindersForEvent(contentResolver: ContentResolver, eventID: Int) {
   val cursor = CalendarContract.Reminders.query(
     contentResolver,

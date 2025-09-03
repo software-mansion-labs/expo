@@ -223,7 +223,7 @@ data class RecurringEventOptions(
   @Field
   val instanceStartDate: String? = null,
   @Field
-  var futureEvents: Boolean?
+  var futureEvents: Boolean? = false
 ) : Record
 
 enum class EventAvailability(val value: String) : Enumerable {
