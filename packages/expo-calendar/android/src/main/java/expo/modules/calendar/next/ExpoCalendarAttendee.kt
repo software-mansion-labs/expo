@@ -64,11 +64,11 @@ class ExpoCalendarAttendee(val context: AppContext, var attendeeRecord: Attendee
   fun deleteAttendee(): Boolean {
     val rows: Int
     val attendeeID = attendeeRecord?.id?.toIntOrNull()
-    if (attendeeID == null) {
-      throw AttendeeCouldNotBeDeletedException("Attendee ID not found")
-    }
+      ?: throw AttendeeCouldNotBeDeletedException("Attendee ID not found")
+
     val contentResolver = (context.reactContext
       ?: throw Exceptions.ReactContextLost()).contentResolver
+
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())
     rows = contentResolver.delete(uri, null, null)
     attendeeRecord = null
@@ -77,9 +77,8 @@ class ExpoCalendarAttendee(val context: AppContext, var attendeeRecord: Attendee
 
   fun reloadAttendee(attendeeID: String? = null) {
     val attendeeID = (attendeeID ?: attendeeRecord?.id)?.toIntOrNull()
-    if (attendeeID == null) {
-      throw AttendeeNotFoundException("Attendee ID not found")
-    }
+      ?: throw AttendeeNotFoundException("Attendee ID not found")
+
     val contentResolver = (context.reactContext
       ?: throw Exceptions.ReactContextLost()).contentResolver
     val uri = ContentUris.withAppendedId(CalendarContract.Attendees.CONTENT_URI, attendeeID.toLong())

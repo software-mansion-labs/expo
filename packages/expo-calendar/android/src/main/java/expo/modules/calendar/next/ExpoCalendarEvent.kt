@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.provider.CalendarContract
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
+import expo.modules.calendar.next.exceptions.AttendeeNotFoundException
 import expo.modules.calendar.next.exceptions.EventCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.EventNotFoundException
 import expo.modules.calendar.next.exceptions.EventsCouldNotBeCreatedException
@@ -304,18 +305,22 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
   }
 
   fun getAttendees(): List<ExpoCalendarAttendee> {
-    val eventID = eventRecord?.id?.toLong()
-    if (eventID == null) {
-      throw EventNotFoundException("Event ID is required")
+    try {
+      val eventID = eventRecord?.id?.toLong()
+      if (eventID == null) {
+        throw EventNotFoundException("Event ID is required")
+      }
+      val contentResolver = (appContext?.reactContext
+        ?: throw Exceptions.ReactContextLost()).contentResolver
+      val cursor = CalendarContract.Attendees.query(
+        contentResolver,
+        eventID,
+        findAttendeesByEventIdQueryParameters
+      )
+      return cursor.use { serializeExpoCalendarAttendees(it) }
+    } catch (e: Exception) {
+      throw AttendeeNotFoundException("Attendees could not be found", e)
     }
-    val contentResolver = (appContext?.reactContext
-      ?: throw Exceptions.ReactContextLost()).contentResolver
-    val cursor = CalendarContract.Attendees.query(
-      contentResolver,
-      eventID,
-      findAttendeesByEventIdQueryParameters
-    )
-    return cursor.use { serializeExpoCalendarAttendees(it) }
   }
 
   private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {

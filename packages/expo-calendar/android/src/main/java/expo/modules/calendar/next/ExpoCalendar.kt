@@ -6,9 +6,14 @@ import android.database.Cursor
 import android.provider.CalendarContract
 import android.text.TextUtils
 import expo.modules.calendar.availabilityConstantMatchingString
+import expo.modules.calendar.findCalendarByIdQueryFields
+import expo.modules.calendar.findCalendarsQueryParameters
 import expo.modules.calendar.next.exceptions.CalendarCouldNotBeUpdatedException
+import expo.modules.calendar.next.exceptions.CalendarNotFoundException
+import expo.modules.calendar.next.exceptions.CalendarNotSupportedException
 import expo.modules.calendar.next.exceptions.EventNotFoundException
 import expo.modules.calendar.next.exceptions.EventsCouldNotBeCreatedException
+import expo.modules.calendar.next.extensions.toCalendarRecord
 import expo.modules.calendar.next.extensions.toEventRecord
 import expo.modules.calendar.next.records.CalendarAccessLevel
 import expo.modules.calendar.next.records.CalendarRecord
@@ -22,25 +27,26 @@ import kotlinx.coroutines.withContext
 import java.util.TimeZone
 
 class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? = CalendarRecord()) : SharedObject(context) {
-
   suspend fun getEvents(startDate: Any, endDate: Any): List<ExpoCalendarEvent> {
-    if (calendarRecord?.id == null) {
-      throw EventNotFoundException("Calendar id is null")
+    try {
+      if (calendarRecord?.id == null) {
+        throw EventNotFoundException("Calendar id is null")
+      }
+      val contentResolver = (context.reactContext
+        ?: throw Exceptions.ReactContextLost()).contentResolver
+      val cursor = findEvents(contentResolver, startDate, endDate, listOf(calendarRecord?.id
+        ?: ""))
+      return cursor.use { serializeExpoCalendarEvents(cursor) }
+    } catch (e: Exception) {
+      throw EventNotFoundException("Events could not be found", e)
     }
-    val contentResolver = (context.reactContext
-      ?: throw Exceptions.ReactContextLost()).contentResolver
-    val cursor = findEvents(contentResolver, startDate, endDate, listOf(calendarRecord?.id
-      ?: ""))
-    return cursor.use { serializeExpoCalendarEvents(cursor) }
   }
 
   suspend fun deleteCalendar(): Boolean {
     return withContext(Dispatchers.IO) {
       val rows: Int
       val calendarID = calendarRecord?.id?.toIntOrNull()
-      if (calendarID == null) {
-        throw EventNotFoundException("Calendar id is null")
-      }
+        ?: throw EventNotFoundException("Calendar id is null")
       val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toLong())
       val contentResolver = (context.reactContext
         ?: throw Exceptions.ReactContextLost()).contentResolver
@@ -51,14 +57,16 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
   }
 
   fun createEvent(record: EventRecord): ExpoCalendarEvent? {
-    val event = ExpoCalendarEvent(context, record)
-    val calendarId = calendarRecord?.id
-    if (calendarId == null) {
-      throw EventsCouldNotBeCreatedException("Calendar id is null")
+    try {
+      val event = ExpoCalendarEvent(context, record)
+      val calendarId = calendarRecord?.id
+        ?: throw EventsCouldNotBeCreatedException("Calendar id is null")
+      val newEventId = event.saveEvent(record, calendarId)
+      event.reloadEvent(newEventId.toString())
+      return event
+    } catch (e: Exception) {
+      throw EventsCouldNotBeCreatedException("Event could not be created", e)
     }
-    val newEventId = event.saveEvent(record, calendarId)
-    event.reloadEvent(newEventId.toString())
-    return event
   }
 
   private fun serializeExpoCalendarEvents(cursor: Cursor): List<ExpoCalendarEvent> {
@@ -174,6 +182,74 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
           throw CalendarCouldNotBeUpdatedException("Failed to update calendar")
         }
         calendarRecord.id!!.toInt()
+      }
+    }
+
+    suspend fun findExpoCalendars(context: AppContext, type: String?): List<ExpoCalendar> {
+      return withContext(Dispatchers.IO) {
+        try {
+          if (type != null && type == "reminder") {
+            throw CalendarNotSupportedException("Calendars of type `reminder` are not supported on Android")
+          }
+          val contentResolver = (context.reactContext
+            ?: throw Exceptions.ReactContextLost()).contentResolver
+          val uri = CalendarContract.Calendars.CONTENT_URI
+          val cursor = contentResolver.query(uri, findCalendarsQueryParameters, null, null, null)
+          requireNotNull(cursor) { "Cursor shouldn't be null" }
+          cursor.use { serializeExpoCalendars(context, it) }
+        } catch (e: Exception) {
+          throw CalendarNotFoundException( "Calendars could not be found", e)
+        }
+      }
+    }
+
+    private fun serializeExpoCalendars(context: AppContext, cursor: Cursor): List<ExpoCalendar> {
+      val results: MutableList<ExpoCalendar> = ArrayList()
+      while (cursor.moveToNext()) {
+        results.add(ExpoCalendar(context, calendarRecord = cursor.toCalendarRecord()))
+      }
+      return results
+    }
+
+    suspend fun findExpoCalendarById(context: AppContext, calendarID: String): ExpoCalendar? {
+      return withContext(Dispatchers.IO) {
+        val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toInt().toLong())
+        val contentResolver = (context.reactContext
+          ?: throw Exceptions.ReactContextLost()).contentResolver
+        val cursor = contentResolver.query(
+          uri,
+          findCalendarByIdQueryFields,
+          null,
+          null,
+          null
+        )
+        requireNotNull(cursor) { "Cursor shouldn't be null" }
+        cursor.use {
+          if (it.count > 0) {
+            it.moveToFirst()
+            ExpoCalendar(context, calendarRecord = cursor.toCalendarRecord())
+          } else {
+            null
+          }
+        } ?: throw CalendarNotFoundException("Calendar with id $calendarID not found")
+      }
+    }
+
+    suspend fun listEvents(context: AppContext, calendarIds: List<String>, startDate: String, endDate: String): List<ExpoCalendarEvent> {
+      try {
+        val contentResolver = (context.reactContext
+          ?: throw Exceptions.ReactContextLost()).contentResolver
+        val allEvents = mutableListOf<ExpoCalendarEvent>()
+        val cursor = findEvents(contentResolver, startDate, endDate, calendarIds)
+        cursor.use {
+          while (it.moveToNext()) {
+            val event = ExpoCalendarEvent(context, eventRecord = cursor.toEventRecord(contentResolver))
+            allEvents.add(event)
+          }
+        }
+        return allEvents
+      } catch (e: Exception) {
+        throw EventNotFoundException("Events could not be found", e)
       }
     }
   }
