@@ -6,7 +6,6 @@ import android.database.Cursor
 import android.provider.CalendarContract
 import expo.modules.calendar.findAttendeesByEventIdQueryParameters
 import expo.modules.calendar.findEventByIdQueryParameters
-import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeCreatedException
 import expo.modules.calendar.next.exceptions.AttendeeNotFoundException
 import expo.modules.calendar.next.exceptions.EventCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.EventNotFoundException
@@ -299,17 +298,20 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
   private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
     val contentResolver = (appContext?.reactContext
       ?: throw Exceptions.ReactContextLost()).contentResolver
-    for (reminder in reminders) {
-      if (reminder.relativeOffset != null) {
-        val minutes = -reminder.relativeOffset
-        val reminderValues = ContentValues()
+    reminders
+      .filter { it.relativeOffset != null }
+      .map { reminder ->
+        val minutes = -reminder.relativeOffset!!
         val method = reminder.method?.toAndroidValue() ?: CalendarContract.Reminders.METHOD_DEFAULT
-        reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID)
-        reminderValues.put(CalendarContract.Reminders.MINUTES, minutes)
-        reminderValues.put(CalendarContract.Reminders.METHOD, method)
+        ContentValues().apply {
+          put(CalendarContract.Reminders.EVENT_ID, eventID)
+          put(CalendarContract.Reminders.MINUTES, minutes)
+          put(CalendarContract.Reminders.METHOD, method)
+        }
+      }
+      .forEach { reminderValues ->
         contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues)
       }
-    }
   }
 
   suspend fun getAttendees(): List<ExpoCalendarAttendee> {
@@ -334,7 +336,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
   }
 
   private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {
-    val results: MutableList<ExpoCalendarAttendee> = ArrayList()
+    val results = mutableListOf<ExpoCalendarAttendee>()
 
     while (cursor.moveToNext()) {
       results.add(ExpoCalendarAttendee(context, attendeeRecord = cursor.toAttendeeRecord()))

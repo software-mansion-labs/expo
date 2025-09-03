@@ -3,8 +3,6 @@ package expo.modules.calendar.next.extensions
 import android.content.ContentResolver
 import android.database.Cursor
 import android.provider.CalendarContract
-import android.util.Log
-import expo.modules.calendar.CalendarModule.Companion.TAG
 import expo.modules.calendar.next.records.AlarmMethod
 import expo.modules.calendar.next.records.AlarmRecord
 import expo.modules.calendar.next.records.AttendeeRecord
@@ -121,8 +119,8 @@ fun Cursor.toEventRecord(contentResolver: ContentResolver): EventRecord {
   )
 }
 
-private fun serializeAlarms(contentResolver: ContentResolver, eventId: String): ArrayList<AlarmRecord>? {
-  val alarms = ArrayList<AlarmRecord>()
+private fun serializeAlarms(contentResolver: ContentResolver, eventId: String): MutableList<AlarmRecord>? {
+  val alarms = mutableListOf<AlarmRecord>()
   val cursor = CalendarContract.Reminders.query(
     contentResolver,
     eventId.toLong(),
@@ -169,12 +167,10 @@ private fun extractRecurrenceRuleFromString(rrule: String?): RecurrenceRuleRecor
         }
         dateFormat.format(date)
       } catch (e: ParseException) {
-        Log.e(TAG, "Couldn't parse the `endDate` property.", e)
-        untilValue
+        throw Exception("Couldn't parse the `endDate` property.", e)
       }
     } catch (e: Exception) {
-      Log.e(TAG, "endDate is null or invalid", e)
-      endDate = untilValue
+      throw Exception("EndDate is null or invalid", e)
     }
   }
 
