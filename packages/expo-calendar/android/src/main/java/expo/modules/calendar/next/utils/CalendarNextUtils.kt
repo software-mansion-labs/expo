@@ -16,76 +16,51 @@ val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").apply {
 }
 
 fun dateToMilliseconds(stringValue: String?): Long? {
-  if (stringValue == null) return null
-  try {
-    val parsedDate = sdf.parse(stringValue) ?: return null
-    val cal = Calendar.getInstance().apply {
-      time = parsedDate
-    }
-    return cal.timeInMillis
-  } catch (_: Exception) {
+  if (stringValue == null) {
     return null
   }
+  val parsedDate = sdf.parse(stringValue)
+    ?: return null
+  val cal = Calendar.getInstance().apply {
+    time = parsedDate
+  }
+  return cal.timeInMillis
 }
 
 fun dateToString(longValue: Long?): String? {
-  if (longValue == null) return null
+  if (longValue == null) {
+    return null
+  }
   val cal = Calendar.getInstance().apply {
     timeInMillis = longValue
   }
   return sdf.format(cal.time)
 }
 
-fun optStringFromCursor(cursor: Cursor, columnName: String): String? {
-  val index = cursor.getColumnIndex(columnName)
-  return if (index == -1) {
-    null
-  } else {
-    cursor.getString(index)
-  }
-}
-
-fun stringFromCursor(cursor: Cursor, columnName: String): String {
-  val index = cursor.getColumnIndex(columnName)
-  if (index == -1) {
-    throw Exception("String not found")
-  } else {
-    return cursor.getString(index)
-  }
-}
-
-fun optIntFromCursor(cursor: Cursor, columnName: String): Int {
-  val index = cursor.getColumnIndex(columnName)
-  return if (index == -1) {
-    0
-  } else {
-    cursor.getInt(index)
-  }
-}
-
 suspend fun findEvents(contentResolver: ContentResolver, startDate: Any, endDate: Any, calendars: List<String>): Cursor {
   return withContext(Dispatchers.IO) {
     val eStartDate = Calendar.getInstance()
     val eEndDate = Calendar.getInstance()
-    try {
-      setDateInCalendar(eStartDate, startDate)
-      setDateInCalendar(eEndDate, endDate)
-    } catch (e: Exception) {
-      throw Exception("Error parsing date", e)
-    }
+
+    setDateInCalendar(eStartDate, startDate)
+    setDateInCalendar(eEndDate, endDate)
+
     val uriBuilder = CalendarContract.Instances.CONTENT_URI.buildUpon()
     ContentUris.appendId(uriBuilder, eStartDate.timeInMillis)
     ContentUris.appendId(uriBuilder, eEndDate.timeInMillis)
+
     val uri = uriBuilder.build()
     var selection =
       "((${CalendarContract.Instances.BEGIN} >= ${eStartDate.timeInMillis}) " +
         "AND (${CalendarContract.Instances.END} <= ${eEndDate.timeInMillis}) " +
         "AND (${CalendarContract.Instances.VISIBLE} = 1) "
+
     if (calendars.isNotEmpty()) {
       val calendarQuery = "AND (${calendars.joinToString(" OR ") { "${CalendarContract.Instances.CALENDAR_ID} = '$it'" }})"
       selection += calendarQuery
     }
     selection += ")"
+
     val sortOrder = "${CalendarContract.Instances.BEGIN} ASC"
     val cursor = contentResolver.query(
       uri,
@@ -94,7 +69,6 @@ suspend fun findEvents(contentResolver: ContentResolver, startDate: Any, endDate
       null,
       sortOrder
     )
-
     requireNotNull(cursor) { "Cursor shouldn't be null" }
     cursor
   }

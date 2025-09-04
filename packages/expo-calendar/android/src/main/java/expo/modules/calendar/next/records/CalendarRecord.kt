@@ -13,8 +13,6 @@ data class CalendarRecord(
   @Field
   val source: Source? = null,
   @Field
-  // Note: For this moment we are using ProcessedColorValue on the TypeScript side which forces here
-  // the use of mapping to Int, we will change this to String after removing ProcessedColorValue
   val color: Int? = null,
   @Field
   val isVisible: Boolean = true,
