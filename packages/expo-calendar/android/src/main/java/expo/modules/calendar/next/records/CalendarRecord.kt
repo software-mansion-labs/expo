@@ -34,32 +34,7 @@ data class CalendarRecord(
   var ownerAccount: String? = null,
   @Field
   val accessLevel: CalendarAccessLevel? = null,
-) : Record {
-
-  fun getUpdatedRecord(other: CalendarRecord, nullableFields: List<String>? = null): CalendarRecord {
-    val nullableSet = nullableFields?.toSet() ?: emptySet()
-
-    return CalendarRecord(
-      id = if ("id" in nullableSet) null else other.id ?: id,
-      title = if ("title" in nullableSet) null else other.title ?: title,
-      name = if ("name" in nullableSet) null else other.name ?: name,
-      source = if ("source" in nullableSet) null else other.source ?: source,
-      color = if ("color" in nullableSet) null else other.color ?: color,
-      isVisible = if ("isVisible" in nullableSet) isVisible else other.isVisible,
-      isSynced = if ("isSynced" in nullableSet) isSynced else other.isSynced,
-      timeZone = if ("timeZone" in nullableSet) null else other.timeZone ?: timeZone,
-      isPrimary = if ("isPrimary" in nullableSet) isPrimary else other.isPrimary,
-      allowsModifications = if ("allowsModifications" in nullableSet) allowsModifications else other.allowsModifications,
-      allowedAvailabilities = if ("allowedAvailabilities" in nullableSet) allowedAvailabilities else other.allowedAvailabilities,
-      allowedReminders = if ("allowedReminders" in nullableSet) allowedReminders else other.allowedReminders,
-      allowedAttendeeTypes = if ("allowedAttendeeTypes" in nullableSet) allowedAttendeeTypes else other.allowedAttendeeTypes,
-      ownerAccount = if ("ownerAccount" in nullableSet) null else other.ownerAccount
-        ?: ownerAccount,
-      accessLevel = if ("accessLevel" in nullableSet) null else other.accessLevel
-        ?: accessLevel,
-    )
-  }
-}
+) : Record
 
 enum class CalendarAccessLevel(val value: String) {
   CONTRIBUTOR("contributor"),

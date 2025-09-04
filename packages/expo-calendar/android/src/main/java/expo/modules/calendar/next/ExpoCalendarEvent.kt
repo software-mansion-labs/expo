@@ -33,7 +33,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
 
   suspend fun saveEvent(eventRecord: EventRecord, calendarId: String? = null, nullableFields: List<String>? = null): Int? {
     return withContext(Dispatchers.IO) {
-      val eventBuilder = CalendarEventBuilderNext()
+      val eventBuilder = CalendarBuilderNext()
 
       if (eventRecord.startDate != null) {
         val timeInMillis = dateToMilliseconds(eventRecord.startDate)
@@ -277,7 +277,7 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     return ExpoCalendarEvent(context, eventRecord ?: EventRecord(), options)
   }
 
-  private fun cleanNullableFields(eventBuilder: CalendarEventBuilderNext, nullableFields: List<String>?) {
+  private fun cleanNullableFields(eventBuilder: CalendarBuilderNext, nullableFields: List<String>?) {
     val nullableSet = nullableFields?.toSet() ?: emptySet()
     
     val fieldMappings = mapOf(

@@ -69,6 +69,35 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
     }
   }
 
+  fun getUpdatedRecord(other: CalendarRecord, nullableFields: List<String>? = null): CalendarRecord {
+    val nullableSet = nullableFields?.toSet() ?: emptySet()
+    val current = calendarRecord ?: CalendarRecord()
+    
+    fun <T> getValue(fieldName: String, otherValue: T?, currentValue: T): T = 
+      if (fieldName in nullableSet) currentValue else otherValue ?: currentValue
+    
+    fun <T> getNullableValue(fieldName: String, otherValue: T?, currentValue: T?): T? = 
+      if (fieldName in nullableSet) null else otherValue ?: currentValue
+
+    return CalendarRecord(
+      id = getNullableValue("id", other.id, current.id),
+      title = getNullableValue("title", other.title, current.title),
+      name = getNullableValue("name", other.name, current.name),
+      source = getNullableValue("source", other.source, current.source),
+      color = getNullableValue("color", other.color, current.color),
+      isVisible = getValue("isVisible", other.isVisible, current.isVisible),
+      isSynced = getValue("isSynced", other.isSynced, current.isSynced),
+      timeZone = getNullableValue("timeZone", other.timeZone, current.timeZone),
+      isPrimary = getValue("isPrimary", other.isPrimary, current.isPrimary),
+      allowsModifications = getValue("allowsModifications", other.allowsModifications, current.allowsModifications),
+      allowedAvailabilities = getValue("allowedAvailabilities", other.allowedAvailabilities, current.allowedAvailabilities),
+      allowedReminders = getValue("allowedReminders", other.allowedReminders, current.allowedReminders),
+      allowedAttendeeTypes = getValue("allowedAttendeeTypes", other.allowedAttendeeTypes, current.allowedAttendeeTypes),
+      ownerAccount = getNullableValue("ownerAccount", other.ownerAccount, current.ownerAccount),
+      accessLevel = getNullableValue("accessLevel", other.accessLevel, current.accessLevel)
+    )
+  }
+
   private fun serializeExpoCalendarEvents(cursor: Cursor): List<ExpoCalendarEvent> {
     val results: MutableList<ExpoCalendarEvent> = ArrayList()
     val contentResolver = (context.reactContext

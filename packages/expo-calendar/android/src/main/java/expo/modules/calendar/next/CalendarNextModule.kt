@@ -154,8 +154,7 @@ class CalendarNextModule : Module() {
 
       AsyncFunction("update") Coroutine { expoCalendar: ExpoCalendar, details: CalendarRecord ->
         permissionsDelegate.requireSystemPermissions(true)
-        val updatedRecord = expoCalendar.calendarRecord?.getUpdatedRecord(details)
-          ?: throw CalendarNotFoundException("Calendar record is null")
+        val updatedRecord = expoCalendar.getUpdatedRecord(details)
         ExpoCalendar.updateCalendar(appContext, updatedRecord, isNew = false)
         expoCalendar.calendarRecord = updatedRecord
       }
