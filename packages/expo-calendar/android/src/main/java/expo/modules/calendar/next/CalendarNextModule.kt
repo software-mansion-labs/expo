@@ -10,9 +10,6 @@ import expo.modules.calendar.dialogs.ViewedEventOptions
 import expo.modules.calendar.next.ExpoCalendar.Companion.findExpoCalendarById
 import expo.modules.calendar.next.ExpoCalendar.Companion.findExpoCalendars
 import expo.modules.calendar.next.ExpoCalendar.Companion.listEvents
-import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeCreatedException
-import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeDeletedException
-import expo.modules.calendar.next.exceptions.AttendeeCouldNotBeUpdatedException
 import expo.modules.calendar.next.exceptions.CalendarCouldNotBeDeletedException
 import expo.modules.calendar.next.exceptions.EventNotFoundException
 import expo.modules.calendar.next.records.AttendeeRecord
@@ -20,13 +17,10 @@ import expo.modules.calendar.next.records.CalendarRecord
 import expo.modules.calendar.next.records.EventRecord
 import expo.modules.calendar.next.records.RecurringEventOptions
 import expo.modules.calendar.next.exceptions.CalendarNotFoundException
-import expo.modules.calendar.next.extensions.toEventRecord
 import expo.modules.calendar.next.permissions.CalendarPermissionsDelegate
-import expo.modules.calendar.next.utils.findEvents
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.activityresult.AppContextActivityResultLauncher
-import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -71,7 +65,7 @@ class CalendarNextModule : Module() {
 
     AsyncFunction("createCalendar") Coroutine { calendarRecord: CalendarRecord ->
       permissionsDelegate.requireSystemPermissions(true)
-      val calendarId = ExpoCalendar.saveCalendar(appContext, calendarRecord)
+      val calendarId = ExpoCalendar.updateCalendar(appContext, calendarRecord, isNew = true)
       val newCalendarRecord = calendarRecord.copy(id = calendarId.toString())
       ExpoCalendar(appContext, newCalendarRecord)
     }

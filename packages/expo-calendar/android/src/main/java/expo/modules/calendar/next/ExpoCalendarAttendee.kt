@@ -46,25 +46,6 @@ class ExpoCalendarAttendee(val context: AppContext, var attendeeRecord: Attendee
     }
   }
 
-  private fun cleanNullableFields(attendeeBuilder: ContentValues, nullableFields: List<String>?) {
-    val nullableSet = nullableFields?.toSet() ?: emptySet()
-    if ("email" in nullableSet) {
-      attendeeBuilder.putNull(CalendarContract.Attendees.ATTENDEE_EMAIL)
-    }
-    if ("name" in nullableSet) {
-      attendeeBuilder.putNull(CalendarContract.Attendees.ATTENDEE_NAME)
-    }
-    if ("role" in nullableSet) {
-      attendeeBuilder.putNull(CalendarContract.Attendees.ATTENDEE_RELATIONSHIP)
-    }
-    if ("type" in nullableSet) {
-      attendeeBuilder.putNull(CalendarContract.Attendees.ATTENDEE_TYPE)
-    }
-    if ("status" in nullableSet) {
-      attendeeBuilder.putNull(CalendarContract.Attendees.ATTENDEE_STATUS)
-    }
-  }
-
   suspend fun deleteAttendee() {
     return withContext(Dispatchers.IO) {
       val rows: Int
@@ -96,6 +77,24 @@ class ExpoCalendarAttendee(val context: AppContext, var attendeeRecord: Attendee
           it.moveToFirst()
           attendeeRecord = it.toAttendeeRecord()
         }
+      }
+    }
+  }
+
+  private fun cleanNullableFields(attendeeBuilder: ContentValues, nullableFields: List<String>?) {
+    val nullableSet = nullableFields?.toSet() ?: emptySet()
+    
+    val fieldMappings = mapOf(
+      "email" to CalendarContract.Attendees.ATTENDEE_EMAIL,
+      "name" to CalendarContract.Attendees.ATTENDEE_NAME,
+      "role" to CalendarContract.Attendees.ATTENDEE_RELATIONSHIP,
+      "type" to CalendarContract.Attendees.ATTENDEE_TYPE,
+      "status" to CalendarContract.Attendees.ATTENDEE_STATUS
+    )
+    
+    fieldMappings.forEach { (fieldName, columnName) ->
+      if (fieldName in nullableSet) {
+        attendeeBuilder.putNull(columnName)
       }
     }
   }

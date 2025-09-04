@@ -80,10 +80,6 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
   }
 
   companion object {
-    suspend fun saveCalendar(appContext: AppContext, calendarRecord: CalendarRecord): Int {
-      return updateCalendar(appContext, calendarRecord, isNew = true)
-    }
-
     suspend fun updateCalendar(appContext: AppContext, calendarRecord: CalendarRecord, isNew: Boolean = false): Int {
       return withContext(Dispatchers.IO) {
         if (isNew) {
@@ -205,14 +201,6 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
       }
     }
 
-    private fun serializeExpoCalendars(context: AppContext, cursor: Cursor): List<ExpoCalendar> {
-      val results: MutableList<ExpoCalendar> = ArrayList()
-      while (cursor.moveToNext()) {
-        results.add(ExpoCalendar(context, calendarRecord = cursor.toCalendarRecord()))
-      }
-      return results
-    }
-
     suspend fun findExpoCalendarById(context: AppContext, calendarID: String): ExpoCalendar? {
       return withContext(Dispatchers.IO) {
         val uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarID.toInt().toLong())
@@ -253,6 +241,14 @@ class ExpoCalendar(val context: AppContext, var calendarRecord: CalendarRecord? 
       } catch (e: Exception) {
         throw EventNotFoundException("Events could not be found", e)
       }
+    }
+
+    private fun serializeExpoCalendars(context: AppContext, cursor: Cursor): List<ExpoCalendar> {
+      val results: MutableList<ExpoCalendar> = ArrayList()
+      while (cursor.moveToNext()) {
+        results.add(ExpoCalendar(context, calendarRecord = cursor.toCalendarRecord()))
+      }
+      return results
     }
   }
 }

@@ -178,60 +178,14 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     }
   }
 
-  fun getOccurrence(options: RecurringEventOptions?): ExpoCalendarEvent {
-    if (options?.instanceStartDate == null) {
-      return this
-    }
-    return ExpoCalendarEvent(context, eventRecord ?: EventRecord(), options)
-  }
+  suspend fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
+    val attendee = ExpoCalendarAttendee(context)
+    val eventId = eventRecord?.id?.toIntOrNull()
+      ?: throw EventNotFoundException("Event ID is required")
 
-  private fun cleanNullableFields(eventBuilder: CalendarEventBuilderNext, nullableFields: List<String>?) {
-    val nullableSet = nullableFields?.toSet() ?: emptySet()
-    if ("location" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.EVENT_LOCATION)
-    }
-    if ("timeZone" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.EVENT_TIMEZONE)
-    }
-    if ("endTimeZone" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.EVENT_END_TIMEZONE)
-    }
-    if ("notes" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.DESCRIPTION)
-    }
-    if ("recurrenceRule" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.RRULE)
-    }
-    if ("accessLevel" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.ACCESS_LEVEL)
-    }
-    if ("guestsCanModify" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.GUESTS_CAN_MODIFY)
-    }
-    if ("guestsCanInviteOthers" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS)
-    }
-    if ("guestsCanSeeGuests" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.GUESTS_CAN_SEE_GUESTS)
-    }
-    if ("organizerEmail" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.ORGANIZER)
-    }
-    if ("status" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.STATUS)
-    }
-    if ("availability" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.AVAILABILITY)
-    }
-    if ("allDay" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.ALL_DAY)
-    }
-    if ("startDate" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.DTSTART)
-    }
-    if ("endDate" in nullableSet) {
-      eventBuilder.putNull(CalendarContract.Events.DTEND)
-    }
+    val newAttendeeId = attendee.saveAttendee(attendeeRecord, eventId)
+    attendee.reloadAttendee(newAttendeeId)
+    return attendee
   }
 
   suspend fun deleteEvent() {
@@ -295,25 +249,6 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     }
   }
 
-  private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
-    val contentResolver = (appContext?.reactContext
-      ?: throw Exceptions.ReactContextLost()).contentResolver
-    reminders
-      .filter { it.relativeOffset != null }
-      .map { reminder ->
-        val minutes = -reminder.relativeOffset!!
-        val method = reminder.method?.toAndroidValue() ?: CalendarContract.Reminders.METHOD_DEFAULT
-        ContentValues().apply {
-          put(CalendarContract.Reminders.EVENT_ID, eventID)
-          put(CalendarContract.Reminders.MINUTES, minutes)
-          put(CalendarContract.Reminders.METHOD, method)
-        }
-      }
-      .forEach { reminderValues ->
-        contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues)
-      }
-  }
-
   suspend fun getAttendees(): List<ExpoCalendarAttendee> {
     return withContext(Dispatchers.IO) {
       try {
@@ -335,6 +270,60 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
     }
   }
 
+  fun getOccurrence(options: RecurringEventOptions?): ExpoCalendarEvent {
+    if (options?.instanceStartDate == null) {
+      return this
+    }
+    return ExpoCalendarEvent(context, eventRecord ?: EventRecord(), options)
+  }
+
+  private fun cleanNullableFields(eventBuilder: CalendarEventBuilderNext, nullableFields: List<String>?) {
+    val nullableSet = nullableFields?.toSet() ?: emptySet()
+    
+    val fieldMappings = mapOf(
+      "location" to CalendarContract.Events.EVENT_LOCATION,
+      "timeZone" to CalendarContract.Events.EVENT_TIMEZONE,
+      "endTimeZone" to CalendarContract.Events.EVENT_END_TIMEZONE,
+      "notes" to CalendarContract.Events.DESCRIPTION,
+      "recurrenceRule" to CalendarContract.Events.RRULE,
+      "accessLevel" to CalendarContract.Events.ACCESS_LEVEL,
+      "guestsCanModify" to CalendarContract.Events.GUESTS_CAN_MODIFY,
+      "guestsCanInviteOthers" to CalendarContract.Events.GUESTS_CAN_INVITE_OTHERS,
+      "guestsCanSeeGuests" to CalendarContract.Events.GUESTS_CAN_SEE_GUESTS,
+      "organizerEmail" to CalendarContract.Events.ORGANIZER,
+      "status" to CalendarContract.Events.STATUS,
+      "availability" to CalendarContract.Events.AVAILABILITY,
+      "allDay" to CalendarContract.Events.ALL_DAY,
+      "startDate" to CalendarContract.Events.DTSTART,
+      "endDate" to CalendarContract.Events.DTEND
+    )
+    
+    fieldMappings.forEach { (fieldName, columnName) ->
+      if (fieldName in nullableSet) {
+        eventBuilder.putNull(columnName)
+      }
+    }
+  }
+
+  private fun createRemindersForEvent(eventID: Int, reminders: List<AlarmRecord>) {
+    val contentResolver = (appContext?.reactContext
+      ?: throw Exceptions.ReactContextLost()).contentResolver
+    reminders
+      .filter { it.relativeOffset != null }
+      .map { reminder ->
+        val minutes = -reminder.relativeOffset!!
+        val method = reminder.method?.toAndroidValue() ?: CalendarContract.Reminders.METHOD_DEFAULT
+        ContentValues().apply {
+          put(CalendarContract.Reminders.EVENT_ID, eventID)
+          put(CalendarContract.Reminders.MINUTES, minutes)
+          put(CalendarContract.Reminders.METHOD, method)
+        }
+      }
+      .forEach { reminderValues ->
+        contentResolver.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues)
+      }
+  }
+
   private fun serializeExpoCalendarAttendees(cursor: Cursor): List<ExpoCalendarAttendee> {
     val results = mutableListOf<ExpoCalendarAttendee>()
 
@@ -342,16 +331,6 @@ class ExpoCalendarEvent(val context: AppContext, var eventRecord: EventRecord? =
       results.add(ExpoCalendarAttendee(context, attendeeRecord = cursor.toAttendeeRecord()))
     }
     return results
-  }
-
-  suspend fun createAttendee(attendeeRecord: AttendeeRecord): ExpoCalendarAttendee? {
-    val attendee = ExpoCalendarAttendee(context)
-    val eventId = eventRecord?.id?.toIntOrNull()
-      ?: throw EventNotFoundException("Event ID is required")
-
-    val newAttendeeId = attendee.saveAttendee(attendeeRecord, eventId)
-    attendee.reloadAttendee(newAttendeeId)
-    return attendee
   }
 
   companion object {
