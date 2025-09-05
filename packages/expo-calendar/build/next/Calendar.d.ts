@@ -25,8 +25,8 @@ export declare class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendar
  * Represents a calendar reminder object that can be accessed and modified using the Expo Calendar Next API.
  */
 export declare class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarReminder {
-    update(details: Partial<ModifiableReminderProperties>): void;
-    static get(reminderId: string): ExpoCalendarReminder;
+    update(details: Partial<ModifiableReminderProperties>): Promise<void>;
+    static get(reminderId: string): Promise<ExpoCalendarReminder>;
 }
 /**
  * Represents a calendar object that can be accessed and modified using the Expo Calendar Next API.
@@ -36,7 +36,7 @@ export declare class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalen
  */
 export declare class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
     createEvent(details: Partial<Omit<Event, 'creationDate' | 'lastModifiedDate' | 'originalStartDate' | 'isDetached' | 'status' | 'organizer'>>): Promise<ExpoCalendarEvent>;
-    createReminder(details: Partial<Reminder>): ExpoCalendarReminder;
+    createReminder(details: Partial<Reminder>): Promise<ExpoCalendarReminder>;
     listEvents(startDate: Date, endDate: Date): Promise<ExpoCalendarEvent[]>;
     listReminders(startDate?: Date | null, endDate?: Date | null, status?: ReminderStatus | null): Promise<ExpoCalendarReminder[]>;
     update(details: Partial<ModifiableCalendarProperties>): Promise<void>;

@@ -98,12 +98,12 @@ const defaultAttendeeData = {
   type: Calendar.AttendeeType.RESOURCE,
 } satisfies Partial<ExpoCalendarAttendee>;
 
-function createTestReminder(
+async function createTestReminder(
   calendar: ExpoCalendar,
   customArgs: Partial<ExpoCalendarReminder> = {}
-): ExpoCalendarReminder {
+): Promise<ExpoCalendarReminder> {
   const reminderData = createEventData(customArgs);
-  return calendar.createReminder(reminderData);
+  return await calendar.createReminder(reminderData);
 }
 
 async function createTestAttendee(
@@ -646,7 +646,7 @@ export async function test(t) {
           t.it('rejects when time zone is invalid', async () => {
             let error;
             try {
-              createTestEvent(calendar, { timeZone: '' });
+              await createTestEvent(calendar, { timeZone: '' });
             } catch (e) {
               error = e;
             }
@@ -673,7 +673,7 @@ export async function test(t) {
           t.it('fails to create a reminder in the event calendar', async () => {
             let error: any;
             try {
-              createTestReminder(eventCalendar);
+              await createTestReminder(eventCalendar);
             } catch (e) {
               error = e;
             }
@@ -686,7 +686,7 @@ export async function test(t) {
           });
 
           t.it('creates a reminder in the reminder calendar', async () => {
-            reminder = createTestReminder(reminderCalendar);
+            reminder = await createTestReminder(reminderCalendar);
             t.expect(reminder).toBeDefined();
             t.expect(typeof reminder.id).toBe('string');
             t.expect(reminder.calendarId).toBe(reminderCalendar.id);
@@ -696,7 +696,7 @@ export async function test(t) {
           });
 
           t.it('creates a reminder with dueDate', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               dueDate: new Date(2025, 1, 1),
             });
             t.expect(reminder.dueDate).toBe(new Date(2025, 1, 1).toISOString());
@@ -714,7 +714,7 @@ export async function test(t) {
 
           t.beforeEach(async () => {
             reminderCalendar = await getReminderCalendar();
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               startDate: new Date(2025, 0, 2, 6),
               dueDate: new Date(2025, 0, 2, 9),
             });
@@ -750,7 +750,7 @@ export async function test(t) {
           });
 
           t.it('lists reminders with completed status', async () => {
-            reminder.update({
+            await reminder.update({
               completionDate: new Date(2025, 0, 2, 10),
             });
 
@@ -774,7 +774,7 @@ export async function test(t) {
           });
 
           t.it('does not list reminders completed outside of the date range', async () => {
-            reminder.update({
+            await reminder.update({
               completionDate: new Date(2025, 0, 5),
             });
             const reminders = await reminderCalendar.listReminders(
@@ -787,7 +787,7 @@ export async function test(t) {
 
           t.afterEach(async () => {
             if (reminder?.title) {
-              reminder.delete();
+              await reminder.delete();
             }
           });
         });
@@ -1120,7 +1120,7 @@ export async function test(t) {
 
             const title = 'Detached event ' + new Date().toISOString();
 
-            occurrence.update({
+            await occurrence.update({
               title,
             });
 
@@ -1595,25 +1595,25 @@ export async function test(t) {
           });
 
           t.it('returns a reminder by its ID', async () => {
-            const fetchedReminder = ExpoCalendarReminder.get(reminder.id);
+            const fetchedReminder = await ExpoCalendarReminder.get(reminder.id);
             t.expect(fetchedReminder).toBeDefined();
             t.expect(fetchedReminder).toEqual(reminder);
           });
 
           t.it('throws an error when getting a non-existent reminder', async () => {
             try {
-              ExpoCalendarReminder.get('non-existent-reminder-id');
+              await ExpoCalendarReminder.get('non-existent-reminder-id');
             } catch (e) {
               t.expect(e).toBeDefined();
             }
           });
 
           t.it('returns a modified reminder', async () => {
-            reminder.update({
+            await reminder.update({
               title: 'New title',
             });
 
-            const fetchedReminder = ExpoCalendarReminder.get(reminder.id);
+            const fetchedReminder = await ExpoCalendarReminder.get(reminder.id);
             t.expect(fetchedReminder).toBeDefined();
             t.expect(fetchedReminder.title).toBe('New title');
           });
@@ -1627,7 +1627,7 @@ export async function test(t) {
           });
 
           t.afterEach(async () => {
-            reminder.delete();
+            await reminder.delete();
           });
         });
 
@@ -1651,7 +1651,7 @@ export async function test(t) {
               notes: `New notes ${new Date().toISOString()}`,
               dueDate: new Date(2025, 1, 1).toISOString(),
             };
-            reminder.update(updatedData);
+            await reminder.update(updatedData);
 
             t.expect(reminder.title).toBe(updatedData.title);
             // TODO: Fix - for some reason, the location is not being updated.
@@ -1665,7 +1665,7 @@ export async function test(t) {
           });
 
           t.it('updates the listed reminder', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               dueDate: new Date(2025, 0, 2),
             });
             const reminders = await reminderCalendar.listReminders(
@@ -1677,7 +1677,7 @@ export async function test(t) {
             t.expect(found).toBeDefined();
 
             const newTitle = `New title ${new Date().toISOString()}`;
-            found.update({
+            await found.update({
               title: newTitle,
               dueDate: new Date(2025, 0, 5),
             });
@@ -1687,23 +1687,23 @@ export async function test(t) {
           });
 
           t.it('marks a reminder as completed', async () => {
-            reminder = createTestReminder(reminderCalendar);
+            reminder = await createTestReminder(reminderCalendar);
             t.expect(reminder.completed).toBe(false);
 
-            reminder.update({
+            await reminder.update({
               completed: true,
             });
             t.expect(reminder.completed).toBe(true);
             t.expect(reminder.completionDate).toBeDefined();
 
-            reminder.update({
+            await reminder.update({
               completed: false,
             });
             t.expect(reminder.completed).toBe(false);
           });
 
           t.it('supports alarms', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               alarms: [
                 {
                   relativeOffset: -60,
@@ -1718,7 +1718,7 @@ export async function test(t) {
           });
 
           t.it('supports alarms with absolute dates', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               alarms: [
                 {
                   absoluteDate: new Date(2025, 0, 1, 12, 0, 0).toISOString(),
@@ -1735,14 +1735,14 @@ export async function test(t) {
 
           t.it('clears multiple fields when set to null', async () => {
             const url = 'https://example.com';
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               url,
             });
 
             t.expect(reminder.notes).toBe(defaultEventData.notes);
             t.expect(reminder.url).toBe(url);
 
-            reminder.update({
+            await reminder.update({
               notes: null,
               url: null,
             });
@@ -1753,12 +1753,12 @@ export async function test(t) {
           });
 
           t.it('clears alarms when set to null', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               alarms: [{ relativeOffset: -60 }],
             });
             t.expect(reminder.alarms).toEqual([{ relativeOffset: -60 }]);
 
-            reminder.update({
+            await reminder.update({
               alarms: null,
             });
             t.expect(reminder.alarms).toBeNull();
@@ -1766,7 +1766,7 @@ export async function test(t) {
           });
 
           t.it('clears recurrenceRule when set to null', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               recurrenceRule: {
                 frequency: Calendar.Frequency.WEEKLY,
                 interval: 1,
@@ -1776,7 +1776,7 @@ export async function test(t) {
             t.expect(reminder.recurrenceRule).toBeDefined();
             t.expect(reminder.recurrenceRule.frequency).toBe(Calendar.Frequency.WEEKLY);
 
-            reminder.update({
+            await reminder.update({
               recurrenceRule: null,
             });
             t.expect(reminder.recurrenceRule).toBeNull();
@@ -1784,7 +1784,7 @@ export async function test(t) {
           });
 
           t.it('clears dates when set to null', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               startDate: new Date(2025, 0, 1),
               dueDate: new Date(2025, 0, 2),
               completionDate: new Date(2025, 0, 3),
@@ -1794,7 +1794,7 @@ export async function test(t) {
             t.expect(reminder.dueDate).toBe(new Date(2025, 0, 2).toISOString());
             t.expect(reminder.completionDate).toBe(new Date(2025, 0, 3).toISOString());
 
-            reminder.update({
+            await reminder.update({
               startDate: null,
               dueDate: null,
               completionDate: null,
@@ -1807,14 +1807,14 @@ export async function test(t) {
           });
 
           t.it('distinguishes between null and undefined values for reminders', async () => {
-            reminder = createTestReminder(reminderCalendar, {
+            reminder = await createTestReminder(reminderCalendar, {
               location: 'Original location',
               notes: 'Original notes',
             });
             const originalNotes = reminder.notes;
 
             // Update with undefined values (should be ignored)
-            reminder.update({
+            await reminder.update({
               title: 'Updated Title',
             });
 
@@ -1822,7 +1822,7 @@ export async function test(t) {
             t.expect(reminder.notes).toBe(originalNotes);
 
             // Update with null values (should clear fields)
-            reminder.update({
+            await reminder.update({
               notes: null,
             });
 
@@ -1845,8 +1845,8 @@ export async function test(t) {
           });
 
           t.it('deletes a reminder', async () => {
-            reminder = createTestReminder(reminderCalendar);
-            reminder.delete();
+            reminder = await createTestReminder(reminderCalendar);
+            await reminder.delete();
 
             t.expect(reminder.title).toBeNull();
             t.expect(reminder.location).toBeNull();
@@ -1858,11 +1858,11 @@ export async function test(t) {
           });
 
           t.it('throws an error when deleting a non-existent reminder', async () => {
-            reminder = createTestReminder(reminderCalendar);
-            reminder.delete();
+            reminder = await createTestReminder(reminderCalendar);
+            await reminder.delete();
             t.expect(reminder.title).toBeNull();
             try {
-              reminder.delete();
+              await reminder.delete();
             } catch (e) {
               t.expect(e).toBeDefined();
             }
@@ -1870,7 +1870,7 @@ export async function test(t) {
 
           t.afterEach(async () => {
             if (reminder?.title) {
-              reminder.delete();
+              await reminder.delete();
             }
           });
         });
@@ -1888,10 +1888,10 @@ export async function test(t) {
 
       if (Platform.OS === 'ios') {
         t.describe('Attendee on iOS', () => {
-          t.it('createAttendee() throws UnavailabilityError on iOS', () => {
+          t.it('createAttendee() throws UnavailabilityError on iOS', async () => {
             let error;
             try {
-              event.createAttendee(defaultAttendeeData);
+              await event.createAttendee(defaultAttendeeData);
             } catch (e) {
               error = e;
             }

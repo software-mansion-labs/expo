@@ -473,19 +473,19 @@ export declare class ExpoCalendarReminder {
   update(
     details: Partial<ModifiableReminderProperties>,
     nullableFields?: (keyof ModifiableReminderProperties)[]
-  ): void;
+  ): Promise<void>;
 
   /**
    * Deletes the reminder.
    */
-  delete(): void;
+  delete(): Promise<void>;
 
   /**
    * Gets a reminder by its ID. Throws an error if the reminder with the given ID does not exist.
    * @param reminderId The ID of the reminder to get.
    * @returns An [`ExpoCalendarReminder`](#expocalendarreminder) object representing the reminder.
    */
-  static get(reminderId: string): ExpoCalendarReminder;
+  static get(reminderId: string): Promise<ExpoCalendarReminder>;
 }
 
 /**

@@ -69,12 +69,12 @@ export class ExpoCalendarEvent extends InternalExpoCalendar.ExpoCalendarEvent {
  * Represents a calendar reminder object that can be accessed and modified using the Expo Calendar Next API.
  */
 export class ExpoCalendarReminder extends InternalExpoCalendar.ExpoCalendarReminder {
-    update(details) {
+    async update(details) {
         const nullableDetailsFields = getNullableDetailsFields(details);
-        super.update(stringifyDateValues(details), nullableDetailsFields);
+        await super.update(stringifyDateValues(details), nullableDetailsFields);
     }
-    static get(reminderId) {
-        const reminder = InternalExpoCalendar.getReminderById(reminderId);
+    static async get(reminderId) {
+        const reminder = await InternalExpoCalendar.getReminderById(reminderId);
         Object.setPrototypeOf(reminder, ExpoCalendarReminder.prototype);
         return reminder;
     }
@@ -91,8 +91,8 @@ export class ExpoCalendar extends InternalExpoCalendar.ExpoCalendar {
         Object.setPrototypeOf(newEvent, ExpoCalendarEvent.prototype);
         return newEvent;
     }
-    createReminder(details) {
-        const newReminder = super.createReminder(stringifyDateValues(details));
+    async createReminder(details) {
+        const newReminder = await super.createReminder(stringifyDateValues(details));
         Object.setPrototypeOf(newReminder, ExpoCalendarReminder.prototype);
         return newReminder;
     }
