@@ -288,10 +288,6 @@ public final class CalendarNextModule: Module {
           throw CalendarNoLongerExistsException()
         }
 
-        if eventRecord.title == nil {
-          throw MissingParameterException("title")
-        }
-
         let expoCalendarEvent = try ExpoCalendarEvent(calendar: calendar, eventRecord: eventRecord)
 
         try expoCalendarEvent.initialize(eventRecord: eventRecord)
@@ -314,15 +310,11 @@ public final class CalendarNextModule: Module {
           throw CalendarNoLongerExistsException()
         }
 
-        if reminderRecord.title == nil {
-          throw MissingParameterException("title")
-        }
-
         let expoReminder = try ExpoCalendarReminder(calendar: calendarInstance, reminderRecord: reminderRecord)
         try expoReminder.initialize(reminderRecord: reminderRecord)
 
         guard let reminder = expoReminder.reminder else {
-          throw Exception()
+          throw ReminderNotCreatedException("Expo reminder could not be created")
         }
 
         try eventStore.save(reminder, commit: true)
