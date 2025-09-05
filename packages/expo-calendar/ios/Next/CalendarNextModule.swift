@@ -445,9 +445,22 @@ public final class CalendarNextModule: Module {
         controller.event = calendarEvent
         controller.allowsEditing = options?.allowsEditing == true
         controller.allowsCalendarPreview = options?.allowsCalendarPreview == true
-        self.calendarDialogDelegate = CalendarDialogDelegate(promise: promise, onComplete: self.unsetDelegate)
+        
+        self.calendarDialogDelegate = CalendarDialogDelegate(
+          promise: promise,
+          onComplete: { [weak self] in
+            self?.calendarDialogDelegate = nil
+          })
+        
         controller.delegate = self.calendarDialogDelegate
-        let navController = ViewEventViewController(rootViewController: controller, promise: promise, onDismiss: self.unsetDelegate)
+        
+        let navController = ViewEventViewController(
+          rootViewController: controller,
+          promise: promise,
+          onDismiss: { [weak self] in
+            self?.calendarDialogDelegate = nil
+          })
+        
         currentVc.present(navController, animated: true)
       }.runOnQueue(.main)
 
@@ -595,51 +608,27 @@ public final class CalendarNextModule: Module {
     Class(ExpoCalendarAttendee.self) {}
   }
 
-
-  // TODO: Clean up, this is copied from CalendarModule
-  private func createPredicate(
-    for calendars: [EKCalendar], start startDate: Date?, end endDate: Date?, status: String?
-  ) throws -> NSPredicate {
-    guard let status else {
-      return eventStore.predicateForReminders(in: calendars)
-    }
-    switch status {
-    case "incomplete":
-      return eventStore.predicateForIncompleteReminders(
-        withDueDateStarting: startDate,
-        ending: endDate,
-        calendars: calendars
-      )
-    case "completed":
-      return eventStore.predicateForCompletedReminders(
-        withCompletionDateStarting: startDate,
-        ending: endDate,
-        calendars: calendars
-      )
-    default:
-      throw InvalidStatusExceptions(status)
-    }
-  }
-
-  // TODO: Clean up, this is copied from CalendarModule
   private func presentEventEditViewController(event: EKEvent, promise: Promise) throws {
     guard let currentVc = appContext?.utilities?.currentViewController() else {
       throw Exception()
     }
 
-    let controller = EditEventViewController(promise: promise, onDismiss: self.unsetDelegate)
+    let controller = EditEventViewController(
+      promise: promise,
+      onDismiss: { [weak self] in
+        self?.calendarDialogDelegate = nil
+      })
+    
     controller.event = event
     controller.eventStore = self.eventStore
+    
     self.calendarDialogDelegate = CalendarDialogDelegate(
-      promise: promise, onComplete: self.unsetDelegate)
+      promise: promise,
+      onComplete: { [weak self] in
+        self?.calendarDialogDelegate = nil
+      })
+    
     controller.editViewDelegate = self.calendarDialogDelegate
-
     currentVc.present(controller, animated: true)
-  }
-
-
-  // TODO: Clean up, this is copied from CalendarModule
-  private func unsetDelegate() {
-    self.calendarDialogDelegate = nil
   }
 }
