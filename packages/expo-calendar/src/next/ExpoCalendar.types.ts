@@ -187,7 +187,7 @@ export declare class ExpoCalendar {
    */
   createReminder(
     reminderData: Omit<Partial<ExpoCalendarReminder>, 'id' | 'calendarId'>
-  ): ExpoCalendarReminder;
+  ): Promise<ExpoCalendarReminder>;
 
   /**
    * Updates the provided details of an existing calendar stored on the device. To remove a property,

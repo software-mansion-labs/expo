@@ -119,7 +119,7 @@ export declare class ExpoCalendar {
      * @param reminderData A map of details for the reminder to be created.
      * @return An instance of the created reminder.
      */
-    createReminder(reminderData: Omit<Partial<ExpoCalendarReminder>, 'id' | 'calendarId'>): ExpoCalendarReminder;
+    createReminder(reminderData: Omit<Partial<ExpoCalendarReminder>, 'id' | 'calendarId'>): Promise<ExpoCalendarReminder>;
     /**
      * Updates the provided details of an existing calendar stored on the device. To remove a property,
      * explicitly set it to `null` in `details`.
