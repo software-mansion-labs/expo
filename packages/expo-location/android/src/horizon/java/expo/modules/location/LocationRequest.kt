@@ -1,6 +1,10 @@
 package expo.modules.location
 
 import android.location.LocationManager
+import android.os.Build
+import androidx.annotation.RequiresApi
+import expo.modules.location.LocationHelpers.Companion.mapAccuracyToQuality
+import android.location.LocationRequest as AndroidLocationRequest
 
 data class LocationRequest(
   val interval: Long,
@@ -15,4 +19,17 @@ data class LocationRequest(
     const val PRIORITY_LOW_POWER = LocationManager.PASSIVE_PROVIDER
     const val PRIORITY_NO_POWER = LocationManager.PASSIVE_PROVIDER
   }
-} 
+
+  /**
+   * Transforms this LocationRequest into an android.location.LocationRequest using the builder.
+   */
+  @RequiresApi(Build.VERSION_CODES.S)
+  fun toAndroidLocationRequest(): AndroidLocationRequest {
+    return AndroidLocationRequest.Builder(interval)
+      .setMinUpdateIntervalMillis(minUpdateIntervalMillis)
+      .setMaxUpdateDelayMillis(maxUpdateDelayMillis)
+      .setMinUpdateDistanceMeters(minUpdateDistanceMeters)
+      .setQuality(mapAccuracyToQuality(priority))
+      .build()
+  }
+}

@@ -3,6 +3,11 @@ package expo.modules.location
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
+import android.location.LocationRequest.QUALITY_BALANCED_POWER_ACCURACY
+import android.location.LocationRequest.QUALITY_HIGH_ACCURACY
+import android.location.LocationRequest.QUALITY_LOW_POWER
+import android.os.Build
+import androidx.annotation.RequiresApi
 import expo.modules.core.utilities.VRUtilities
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
@@ -33,13 +38,33 @@ class LocationHelpers(context: Context) {
         return
       }
 
-      val location = mLocationManager.getLastKnownLocation(provider)
-      if (location == null) {
-        promise.reject(CurrentLocationIsUnavailableException())
-        return
+      // Use getCurrentLocation for API 31+ (Android 12+)
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        val cancellationSignal = android.os.CancellationSignal()
+        val mainExecutor = java.util.concurrent.Executor { command ->
+          android.os.Handler(android.os.Looper.getMainLooper()).post(command)
+        }
+        mLocationManager.getCurrentLocation(
+          provider,
+          locationRequest.toAndroidLocationRequest(),
+          cancellationSignal,
+          mainExecutor
+        ) { location ->
+          if (location == null) {
+            promise.reject(CurrentLocationIsUnavailableException())
+          } else {
+            promise.resolve(LocationResponse(location))
+          }
+        }
+      } else {
+        // Fallback for older APIs
+        val location = mLocationManager.getLastKnownLocation(provider)
+        if (location == null) {
+          promise.reject(CurrentLocationIsUnavailableException())
+          return
+        }
+        promise.resolve(LocationResponse(location))
       }
-
-      promise.resolve(LocationResponse(location))
     } catch (e: SecurityException) {
       promise.reject(LocationRequestRejectedException(e))
     }
@@ -111,6 +136,16 @@ class LocationHelpers(context: Context) {
         LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> LocationModule.ACCURACY_BALANCED
         LocationModule.ACCURACY_LOWEST -> LocationModule.ACCURACY_LOWEST
         else -> LocationModule.ACCURACY_BALANCED
+      }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    internal fun mapAccuracyToQuality(accuracy: Int): Int {
+      return when (accuracy) {
+        LocationModule.ACCURACY_BEST_FOR_NAVIGATION, LocationModule.ACCURACY_HIGHEST, LocationModule.ACCURACY_HIGH -> QUALITY_HIGH_ACCURACY
+        LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> QUALITY_BALANCED_POWER_ACCURACY
+        LocationModule.ACCURACY_LOWEST -> QUALITY_LOW_POWER
+        else -> QUALITY_BALANCED_POWER_ACCURACY
       }
     }
 
