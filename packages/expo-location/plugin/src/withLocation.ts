@@ -6,8 +6,11 @@ import {
   withInfoPlist,
 } from 'expo/config-plugins';
 
+import withHorizon from './withHorizon';
+
 const pkg = require('expo-location/package.json');
 const LOCATION_USAGE = 'Allow $(PRODUCT_NAME) to access your location';
+const useHorizon = !!process.env.EXPO_HORIZON;
 
 const withBackgroundLocation: ConfigPlugin = (config) => {
   return withInfoPlist(config, (config) => {
@@ -43,6 +46,11 @@ const withLocation: ConfigPlugin<
 ) => {
   if (isIosBackgroundLocationEnabled) {
     config = withBackgroundLocation(config);
+  }
+
+  // Add Horizon support
+  if (useHorizon) {
+    config = withHorizon(config);
   }
 
   IOSConfig.Permissions.createPermissionsPlugin({
