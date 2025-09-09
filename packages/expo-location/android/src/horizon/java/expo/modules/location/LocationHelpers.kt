@@ -11,7 +11,6 @@ import androidx.annotation.RequiresApi
 import expo.modules.core.utilities.VRUtilities
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
-import expo.modules.location.records.LocationLastKnownOptions
 import expo.modules.location.records.LocationOptions
 import expo.modules.location.records.LocationResponse
 
@@ -21,17 +20,7 @@ class LocationHelpers(context: Context) {
 
   fun requestSingleLocation(locationRequest: LocationRequest, promise: Promise) {
     try {
-      val provider = when (locationRequest.priority) {
-        LocationModule.ACCURACY_BEST_FOR_NAVIGATION, LocationModule.ACCURACY_HIGHEST, LocationModule.ACCURACY_HIGH -> {
-          if (VRUtilities.isQuest()) LocationManager.NETWORK_PROVIDER else LocationManager.GPS_PROVIDER
-        }
-
-        LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> LocationManager.NETWORK_PROVIDER
-        LocationModule.ACCURACY_LOWEST -> LocationManager.PASSIVE_PROVIDER
-        else -> {
-          if (VRUtilities.isQuest()) LocationManager.NETWORK_PROVIDER else LocationManager.GPS_PROVIDER
-        }
-      }
+      val provider = mapPriorityToProvider(locationRequest.priority)
 
       if (!mLocationManager.isProviderEnabled(provider)) {
         promise.reject(CurrentLocationIsUnavailableException())
@@ -144,6 +133,25 @@ class LocationHelpers(context: Context) {
       return when (accuracy) {
         LocationModule.ACCURACY_BEST_FOR_NAVIGATION, LocationModule.ACCURACY_HIGHEST, LocationModule.ACCURACY_HIGH -> QUALITY_HIGH_ACCURACY
         LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> QUALITY_BALANCED_POWER_ACCURACY
+        LocationModule.ACCURACY_LOWEST -> QUALITY_LOW_POWER
+        else -> QUALITY_BALANCED_POWER_ACCURACY
+      }
+    }
+
+    internal fun mapPriorityToProvider(priority: Int): String {
+      return when (priority) {
+        LocationModule.ACCURACY_HIGHEST -> if (VRUtilities.isQuest()) LocationManager.NETWORK_PROVIDER else LocationManager.GPS_PROVIDER
+        LocationModule.ACCURACY_BALANCED -> LocationManager.NETWORK_PROVIDER
+        LocationModule.ACCURACY_LOWEST -> LocationManager.PASSIVE_PROVIDER
+        else -> if (VRUtilities.isQuest()) LocationManager.NETWORK_PROVIDER else LocationManager.GPS_PROVIDER
+      }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    internal fun mapPriorityToQuality(priority: Int): Int {
+      return when (priority) {
+        LocationModule.ACCURACY_HIGHEST -> QUALITY_HIGH_ACCURACY
+        LocationModule.ACCURACY_BALANCED -> QUALITY_BALANCED_POWER_ACCURACY
         LocationModule.ACCURACY_LOWEST -> QUALITY_LOW_POWER
         else -> QUALITY_BALANCED_POWER_ACCURACY
       }

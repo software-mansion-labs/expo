@@ -12,7 +12,9 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Geocoder
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
+import android.location.LocationProvider
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
@@ -21,8 +23,6 @@ import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.ActivityCompat
 import androidx.core.location.LocationManagerCompat
 import androidx.core.os.bundleOf
-import android.location.LocationListener
-import android.location.LocationProvider
 import expo.modules.core.interfaces.ActivityEventListener
 import expo.modules.core.interfaces.LifecycleEventListener
 import expo.modules.core.interfaces.services.UIManager
@@ -37,6 +37,7 @@ import expo.modules.location.records.GeocodeResponse
 import expo.modules.location.records.GeofencingOptions
 import expo.modules.location.records.Heading
 import expo.modules.location.records.HeadingEventResponse
+import expo.modules.location.records.LocationErrorEventResponse
 import expo.modules.location.records.LocationLastKnownOptions
 import expo.modules.location.records.LocationOptions
 import expo.modules.location.records.LocationProviderStatus
@@ -91,7 +92,7 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
       locationHelpers = LocationHelpers(mContext)
     }
 
-    Events(HEADING_EVENT_NAME, LOCATION_EVENT_NAME)
+    Events(HEADING_EVENT_NAME, LOCATION_EVENT_NAME, LOCATION_ERROR_EVENT_NAME)
 
     // Deprecated
     AsyncFunction("requestPermissionsAsync") Coroutine { ->
@@ -440,9 +441,11 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
           LocationProvider.AVAILABLE -> {
             // Provider is available
           }
+
           LocationProvider.TEMPORARILY_UNAVAILABLE -> {
             callbacks.onLocationError(LocationUnavailableException())
           }
+
           LocationProvider.OUT_OF_SERVICE -> {
             callbacks.onLocationError(LocationUnavailableException())
           }
@@ -457,18 +460,13 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
     }
 
     try {
-      val provider = when (locationRequest.priority) {
-        LocationModule.ACCURACY_BEST_FOR_NAVIGATION, LocationModule.ACCURACY_HIGHEST, LocationModule.ACCURACY_HIGH -> LocationManager.GPS_PROVIDER
-        LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> LocationManager.NETWORK_PROVIDER
-        LocationModule.ACCURACY_LOWEST -> LocationManager.PASSIVE_PROVIDER
-        else -> LocationManager.GPS_PROVIDER
-      }
-      
+      val provider = LocationHelpers.mapPriorityToProvider(locationRequest.priority)
+
       if (!locationManager.isProviderEnabled(provider)) {
         callbacks.onRequestFailed(LocationUnavailableException())
         return
       }
-      
+
       locationManager.requestLocationUpdates(
         provider,
         locationRequest.minUpdateIntervalMillis,
@@ -502,7 +500,7 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
       LocationModule.ACCURACY_LOWEST -> LocationManager.PASSIVE_PROVIDER
       else -> LocationManager.GPS_PROVIDER
     }
-    
+
     if (mLocationManager.isProviderEnabled(provider)) {
       // Location services are enabled
       executePendingRequests(Activity.RESULT_OK)
@@ -561,16 +559,23 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
         }
       }
     }
-    mSensorManager.registerListener(
-      this,
-      mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
-      SensorManager.SENSOR_DELAY_NORMAL
-    )
-    mSensorManager.registerListener(
-      this,
-      mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-      SensorManager.SENSOR_DELAY_NORMAL
-    )
+    val magneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+    val accelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    if (magneticSensor != null && accelerometerSensor != null) {
+      mSensorManager.registerListener(
+        this,
+        magneticSensor,
+        SensorManager.SENSOR_DELAY_NORMAL
+      )
+      mSensorManager.registerListener(
+        this,
+        accelerometerSensor,
+        SensorManager.SENSOR_DELAY_NORMAL
+      )
+    } else {
+      Log.e(TAG, "No magnetic or accelerometer sensor found")
+      sendEvent(LOCATION_ERROR_EVENT_NAME, LocationErrorEventResponse(mHeadingId, "Heading updates not available - magnetic and accelerometer sensors are required").toBundle())
+    }
   }
 
   private fun sendUpdate() {
@@ -675,13 +680,8 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
       val locationListener = mLocationCallbacks[requestId] ?: return
       val locationRequest = mLocationRequests[requestId] ?: return
       try {
-        val provider = when (locationRequest.priority) {
-          LocationModule.ACCURACY_BEST_FOR_NAVIGATION, LocationModule.ACCURACY_HIGHEST, LocationModule.ACCURACY_HIGH -> LocationManager.GPS_PROVIDER
-          LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> LocationManager.NETWORK_PROVIDER
-          LocationModule.ACCURACY_LOWEST -> LocationManager.PASSIVE_PROVIDER
-          else -> LocationManager.GPS_PROVIDER
-        }
-        
+        val provider = LocationHelpers.mapPriorityToProvider(locationRequest.priority)
+
         if (mLocationManager.isProviderEnabled(provider)) {
           mLocationManager.requestLocationUpdates(
             provider,
@@ -842,6 +842,7 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
     internal val TAG = LocationModule::class.java.simpleName
     private const val LOCATION_EVENT_NAME = "Expo.locationChanged"
     private const val HEADING_EVENT_NAME = "Expo.headingChanged"
+    private const val LOCATION_ERROR_EVENT_NAME = "Expo.locationError"
     private const val CHECK_SETTINGS_REQUEST_CODE = 42
 
     const val ACCURACY_LOWEST = 1

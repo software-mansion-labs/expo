@@ -1,9 +1,8 @@
 package expo.modules.location
 
-import android.location.LocationManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import expo.modules.location.LocationHelpers.Companion.mapAccuracyToQuality
+import expo.modules.location.LocationHelpers.Companion.mapPriorityToQuality
 import android.location.LocationRequest as AndroidLocationRequest
 
 data class LocationRequest(
@@ -13,13 +12,6 @@ data class LocationRequest(
   val minUpdateDistanceMeters: Float,
   val priority: Int
 ) {
-  companion object {
-    const val PRIORITY_HIGH_ACCURACY = LocationManager.GPS_PROVIDER
-    const val PRIORITY_BALANCED_POWER_ACCURACY = LocationManager.NETWORK_PROVIDER
-    const val PRIORITY_LOW_POWER = LocationManager.PASSIVE_PROVIDER
-    const val PRIORITY_NO_POWER = LocationManager.PASSIVE_PROVIDER
-  }
-
   /**
    * Transforms this LocationRequest into an android.location.LocationRequest using the builder.
    */
@@ -29,7 +21,7 @@ data class LocationRequest(
       .setMinUpdateIntervalMillis(minUpdateIntervalMillis)
       .setMaxUpdateDelayMillis(maxUpdateDelayMillis)
       .setMinUpdateDistanceMeters(minUpdateDistanceMeters)
-      .setQuality(mapAccuracyToQuality(priority))
+      .setQuality(mapPriorityToQuality(priority))
       .build()
   }
 }

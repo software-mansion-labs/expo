@@ -146,13 +146,8 @@ class LocationTaskConsumer(context: Context, taskManagerUtils: TaskManagerUtilsI
     }
 
     try {
-      val provider = when (locationRequest.priority) {
-        LocationModule.ACCURACY_BEST_FOR_NAVIGATION, LocationModule.ACCURACY_HIGHEST, LocationModule.ACCURACY_HIGH -> LocationManager.GPS_PROVIDER
-        LocationModule.ACCURACY_BALANCED, LocationModule.ACCURACY_LOW -> LocationManager.NETWORK_PROVIDER
-        LocationModule.ACCURACY_LOWEST -> LocationManager.PASSIVE_PROVIDER
-        else -> LocationManager.GPS_PROVIDER
-      }
-      
+      val provider = LocationHelpers.mapPriorityToProvider(locationRequest.priority)
+
       if (mLocationManager.isProviderEnabled(provider)) {
         mLocationManager.requestLocationUpdates(
           provider,
