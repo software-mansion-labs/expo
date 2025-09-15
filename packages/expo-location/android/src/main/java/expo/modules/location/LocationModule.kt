@@ -60,6 +60,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
+import com.meta.horizon.platform.ovr.Core
 
 class LocationModule : Module(), LifecycleEventListener, SensorEventListener, ActivityEventListener {
   private var mGeofield: GeomagneticField? = null
@@ -84,6 +85,8 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
       ?: throw TaskManagerNotFoundException()
   }
 
+  private val APP_ID = "31229554193356425"
+
   override fun definition() = ModuleDefinition {
     Name("ExpoLocation")
 
@@ -93,6 +96,8 @@ class LocationModule : Module(), LifecycleEventListener, SensorEventListener, Ac
       mLocationProvider = LocationServices.getFusedLocationProviderClient(mContext)
       mSensorManager = mContext.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
         ?: throw SensorManagerUnavailable()
+
+      Core.asyncInitialize(APP_ID, mContext);
     }
 
     Events(HEADING_EVENT_NAME, LOCATION_EVENT_NAME)
