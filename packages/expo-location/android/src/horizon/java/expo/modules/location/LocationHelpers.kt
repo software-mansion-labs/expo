@@ -8,7 +8,6 @@ import android.location.LocationRequest.QUALITY_HIGH_ACCURACY
 import android.location.LocationRequest.QUALITY_LOW_POWER
 import android.os.Build
 import androidx.annotation.RequiresApi
-import expo.modules.core.utilities.VRUtilities
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.location.records.LocationOptions

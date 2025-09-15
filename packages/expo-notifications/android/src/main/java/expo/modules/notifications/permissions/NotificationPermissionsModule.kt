@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
 import expo.modules.core.arguments.ReadableArguments
+import expo.modules.core.utilities.VRUtilities
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.interfaces.permissions.PermissionsResponse
 import expo.modules.interfaces.permissions.PermissionsStatus
@@ -54,7 +55,7 @@ class NotificationPermissionsModule : Module() {
     permissions.getPermissions(
       { permissionsMap: Map<String, PermissionsResponse> ->
         val managerCompat = NotificationManagerCompat.from(context)
-        val areEnabled = managerCompat.areNotificationsEnabled()
+        val areEnabled = managerCompat.areNotificationsEnabled() || VRUtilities.isQuest()
         val platformBundle = bundleOf(
           IMPORTANCE_KEY to managerCompat.importance
         ).apply {

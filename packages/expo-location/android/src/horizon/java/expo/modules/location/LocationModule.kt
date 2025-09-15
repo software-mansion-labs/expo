@@ -26,7 +26,6 @@ import androidx.core.os.bundleOf
 import expo.modules.core.interfaces.ActivityEventListener
 import expo.modules.core.interfaces.LifecycleEventListener
 import expo.modules.core.interfaces.services.UIManager
-import expo.modules.core.utilities.VRUtilities
 import expo.modules.interfaces.taskManager.TaskManagerInterface
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.Exceptions
